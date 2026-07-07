@@ -4,6 +4,16 @@ import {
   Menu, X, FileText, Eye, Download, Printer, Copy, 
   ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, Loader2, Check 
 } from 'lucide-react';
+import { 
+  trackNavigationClick, 
+  trackResumeViewed, 
+  trackResumeDownload, 
+  trackEmailClick, 
+  trackGitHubClick, 
+  trackLinkedInClick, 
+  trackProjectClick 
+} from '../utils/analytics';
+import { downloadResume } from '../utils/resume';
 
 const navLinks = [
   { name: 'Home', id: 'home' },
@@ -284,6 +294,10 @@ function Navbar() {
       if (targetId && navLinks.some(link => link.id === targetId)) {
         isManualScrollRef.current = true;
         setActiveSection(targetId);
+        
+        const sectionName = targetId === 'home' ? 'Hero' : targetId.charAt(0).toUpperCase() + targetId.slice(1);
+        trackNavigationClick(sectionName);
+
         if (manualScrollTimeoutRef.current) clearTimeout(manualScrollTimeoutRef.current);
         manualScrollTimeoutRef.current = setTimeout(() => {
           isManualScrollRef.current = false;
@@ -299,6 +313,9 @@ function Navbar() {
     e.preventDefault();
     const element = document.getElementById(id);
     if (!element) return;
+
+    const sectionName = id === 'home' ? 'Hero' : id.charAt(0).toUpperCase() + id.slice(1);
+    trackNavigationClick(sectionName);
 
     // Temporarily bypass scroll spy observer to allow direct slide animation to clicked item
     isManualScrollRef.current = true;
@@ -348,41 +365,9 @@ function Navbar() {
   const handleDownloadResume = () => {
     if (downloadState !== 'idle') return;
     setDownloadState('downloading');
-
-    // Compile mock resume text content
-    const resumeText = `KAVYA MAKHAN
-Mechanical Engineer & AI Algorithms Developer
-Location: India | GitHub: github.com/kavya-makhan | Email: kavya.makhan@example.com
-
-EDUCATION:
-- Bachelor of Mechanical Engineering, Minor in Artificial Intelligence
-  GPA: 3.9/4.0 | Focus: Cyber-Physical Systems, Robotic Controller Optimization
-
-TECHNICAL SKILLS:
-- Languages & Frameworks: Python (PyTorch, TensorFlow, FastAPI), ROS2, C++, React.js, Tailwind
-- Mechanical Systems: SolidWorks (CSWP - Certified Professional, Finite Element Analysis (FEA), CFD)
-
-SELECTED PROJECTS:
-1. Cybernetic Neural Robotic Controller:
-   Designed a neural network to stabilize a 3-DOF arm; modeled in SolidWorks, simulated in ROS2.
-2. High-Performance Thermal Dissipation Rack:
-   FEA/CFD analysis of heat sink assemblies in SolidWorks for high-power desktop AI servers.
-3. Autonomous Pathfinder Obstacle Avoidance Drone:
-   Path planning algorithms implemented on embedded ARM microcontrollers.
-
-CERTIFICATIONS:
-- AWS Certified Machine Learning - Specialty
-- Certified SolidWorks Professional (CSWP)`;
-
-    const blob = new Blob([resumeText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'Kavya_Makhan_Resume.txt';
     
     setTimeout(() => {
-      link.click();
-      URL.revokeObjectURL(url);
+      downloadResume();
       setDownloadState('completed');
       
       // Reset button state
@@ -638,6 +623,7 @@ CERTIFICATIONS:
                     
                     <button
                       onClick={() => {
+                        trackResumeViewed();
                         setIsModalOpen(true);
                         setIsDropdownOpen(false);
                       }}
@@ -876,11 +862,33 @@ CERTIFICATIONS:
                         <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-[10px] font-mono text-zinc-500 mt-4 uppercase tracking-wide">
                           <span>India</span>
                           <span>•</span>
-                          <span>kavya.makhan@example.com</span>
+                          <a 
+                            href="mailto:kavya.makhan@example.com" 
+                            className="hover:text-cyan-600 transition-colors pointer-events-auto cursor-pointer"
+                            onClick={() => trackEmailClick('Resume Modal Email')}
+                          >
+                            kavya.makhan@example.com
+                          </a>
                           <span>•</span>
-                          <span>github.com/kavya-makhan</span>
+                          <a 
+                            href="https://github.com/kavya-makhan" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="hover:text-cyan-600 transition-colors pointer-events-auto cursor-pointer"
+                            onClick={() => trackGitHubClick('Resume Modal GitHub')}
+                          >
+                            github.com/kavya-makhan
+                          </a>
                           <span>•</span>
-                          <span>linkedin.com/in/kavya-makhan</span>
+                          <a 
+                            href="https://linkedin.com/in/kavya-makhan" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="hover:text-cyan-600 transition-colors pointer-events-auto cursor-pointer"
+                            onClick={() => trackLinkedInClick('Resume Modal LinkedIn')}
+                          >
+                            linkedin.com/in/kavya-makhan
+                          </a>
                         </div>
                       </div>
 
@@ -930,36 +938,105 @@ CERTIFICATIONS:
                           
                           <div>
                             <div className="flex justify-between items-baseline">
-                              <h3 className="text-xs font-bold uppercase text-zinc-800">
+                              <h3 
+                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto"
+                                onClick={() => trackProjectClick('Cybernetic Neural Robotic Controller', 'Open')}
+                              >
                                 Cybernetic Neural Robotic Controller
                               </h3>
                               <span className="text-[10px] font-mono text-zinc-400 font-bold">PyTorch, ROS2, SolidWorks</span>
                             </div>
-                            <p className="text-[11px] text-zinc-600 mt-1 leading-relaxed">
+                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1.5 pointer-events-auto">
+                              <a 
+                                href="https://github.com/kavya-makhan/robotic-controller" 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="hover:underline cursor-pointer"
+                                onClick={() => trackProjectClick('Cybernetic Neural Robotic Controller', 'GitHub Repository')}
+                              >
+                                [GITHUB REPOSITORY]
+                              </a>
+                              <a 
+                                href="https://demo.kavya-makhan.dev/robotic-controller" 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="hover:underline cursor-pointer"
+                                onClick={() => trackProjectClick('Cybernetic Neural Robotic Controller', 'Live Demo')}
+                              >
+                                [LIVE DEMO]
+                              </a>
+                            </div>
+                            <p className="text-[11px] text-zinc-600 mt-1.5 leading-relaxed">
                               Designed and programmed a deep reinforcement learning model in PyTorch to optimize stability margins in a 3-DOF robot manipulator assembly. Created precise component meshes and dynamics parameters in SolidWorks, exporting directly to ROS2 nodes for real-time physics testing.
                             </p>
                           </div>
 
                           <div>
                             <div className="flex justify-between items-baseline">
-                              <h3 className="text-xs font-bold uppercase text-zinc-800">
+                              <h3 
+                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto"
+                                onClick={() => trackProjectClick('Thermally-Optimized Computing Chassis', 'Open')}
+                              >
                                 Thermally-Optimized Computing Chassis
                               </h3>
                               <span className="text-[10px] font-mono text-zinc-400 font-bold">SolidWorks FEA & CFD, Matlab</span>
                             </div>
-                            <p className="text-[11px] text-zinc-600 mt-1 leading-relaxed">
+                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1.5 pointer-events-auto">
+                              <a 
+                                href="https://github.com/kavya-makhan/thermal-chassis" 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="hover:underline cursor-pointer"
+                                onClick={() => trackProjectClick('Thermally-Optimized Computing Chassis', 'GitHub Repository')}
+                              >
+                                [GITHUB REPOSITORY]
+                              </a>
+                              <a 
+                                href="https://demo.kavya-makhan.dev/thermal-chassis" 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="hover:underline cursor-pointer"
+                                onClick={() => trackProjectClick('Thermally-Optimized Computing Chassis', 'Live Demo')}
+                              >
+                                [LIVE DEMO]
+                              </a>
+                            </div>
+                            <p className="text-[11px] text-zinc-600 mt-1.5 leading-relaxed">
                               Modeled high-performance heat sink fins and optimized spatial airflow geometries for edge AI computing cards. Performed rigorous fluid-structure thermal coupling analyses, demonstrating a 14.2% reduction in junction hot spots compared to benchmark server chassis.
                             </p>
                           </div>
 
                           <div>
                             <div className="flex justify-between items-baseline">
-                              <h3 className="text-xs font-bold uppercase text-zinc-800">
+                              <h3 
+                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto"
+                                onClick={() => trackProjectClick('Autonomous Pathfinder Obstacle Avoidance UAV', 'Open')}
+                              >
                                 Autonomous Pathfinder Obstacle Avoidance UAV
                               </h3>
                               <span className="text-[10px] font-mono text-zinc-400 font-bold">Python, ARM Microcontrollers, OpenCV</span>
                             </div>
-                            <p className="text-[11px] text-zinc-600 mt-1 leading-relaxed">
+                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1.5 pointer-events-auto">
+                              <a 
+                                href="https://github.com/kavya-makhan/obstacle-avoidance-uav" 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="hover:underline cursor-pointer"
+                                onClick={() => trackProjectClick('Autonomous Pathfinder Obstacle Avoidance UAV', 'GitHub Repository')}
+                              >
+                                [GITHUB REPOSITORY]
+                              </a>
+                              <a 
+                                href="https://demo.kavya-makhan.dev/obstacle-avoidance-uav" 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="hover:underline cursor-pointer"
+                                onClick={() => trackProjectClick('Autonomous Pathfinder Obstacle Avoidance UAV', 'Live Demo')}
+                              >
+                                [LIVE DEMO]
+                              </a>
+                            </div>
+                            <p className="text-[11px] text-zinc-600 mt-1.5 leading-relaxed">
                               Developed a lightweight computer vision pipeline using Python and OpenCV for obstacle detection and map routing in real-time, compiled and optimized for resource-constrained ARM Cortex flight controllers.
                             </p>
                           </div>

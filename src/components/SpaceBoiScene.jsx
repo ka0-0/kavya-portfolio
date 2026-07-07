@@ -2,6 +2,7 @@ import React, { Suspense, useRef, useMemo, useState, useEffect, memo } from 'rea
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { downloadResume } from '../utils/resume';
 
 
 const SpaceBoi = memo(function SpaceBoi({ onModelLoaded }) {
@@ -11,17 +12,25 @@ const SpaceBoi = memo(function SpaceBoi({ onModelLoaded }) {
   // Run on mount or load to compute bounding box, center the model's geometry locally
   useEffect(() => {
     if (scene) {
-      const box = new THREE.Box3().setFromObject(scene);
-      const center = box.getCenter(new THREE.Vector3());
-      const sphere = box.getBoundingSphere(new THREE.Sphere());
+      if (!scene.userData.isCentered) {
+        // Reset position to (0,0,0) before computing bounding box
+        scene.position.set(0, 0, 0);
 
-      // Center geometry around (0,0,0) locally so rotation has no orbital wobble
-      scene.position.set(-center.x, -center.y, -center.z);
-      console.log('SPHERE_RADIUS:', sphere.radius, 'CENTER:', center);
+        const box = new THREE.Box3().setFromObject(scene);
+        const center = box.getCenter(new THREE.Vector3());
+        const sphere = box.getBoundingSphere(new THREE.Sphere());
+
+        // Center geometry around (0,0,0) locally so rotation has no orbital wobble
+        scene.position.set(-center.x, -center.y, -center.z);
+
+        scene.userData.center = center;
+        scene.userData.radius = sphere.radius;
+        scene.userData.isCentered = true;
+      }
 
       // Report model's bounding radius to frame the camera
       if (onModelLoaded) {
-        onModelLoaded(sphere.radius);
+        onModelLoaded(scene.userData.radius);
       }
     }
   }, [scene, onModelLoaded]);
@@ -75,7 +84,6 @@ const CameraFitter = memo(function CameraFitter({ modelRadius }) {
       const distance = modelRadius / (3 * Math.sin(theta));
 
       camera.position.set(0, 0, distance);
-      console.log('CAMERA_DISTANCE:', distance, 'ASPECT:', aspect, 'SIZE:', size);
       camera.near = distance / 20;
       camera.far = distance * 20;
       camera.updateProjectionMatrix();
@@ -89,6 +97,21 @@ function SpaceBoiScene() {
   const containerRef = useRef(null);
   const [isInView, setIsInView] = useState(false);
   const [modelRadius, setModelRadius] = useState(0);
+  const [downloadState, setDownloadState] = useState('idle');
+
+  const handleDownload = (e) => {
+    e.preventDefault();
+    if (downloadState !== 'idle') return;
+    setDownloadState('downloading');
+
+    setTimeout(() => {
+      downloadResume();
+      setDownloadState('completed');
+      setTimeout(() => {
+        setDownloadState('idle');
+      }, 1500);
+    }, 600);
+  };
 
   // Viewport Intersection Observer to freeze Canvas rendering when out of view
   useEffect(() => {
@@ -160,10 +183,13 @@ function SpaceBoiScene() {
             </p>
             <a
               href="#"
-              className="btn-gradient-pill inline-flex items-center space-x-2 px-8 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-lg"
+              onClick={handleDownload}
+              className="btn-gradient-pill inline-flex items-center space-x-2 px-8 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-lg cursor-pointer"
               data-interactive="true"
             >
-              DOWNLOAD RESUME PDF
+              {downloadState === 'idle' && 'DOWNLOAD RESUME PDF'}
+              {downloadState === 'downloading' && 'DOWNLOADING...'}
+              {downloadState === 'completed' && 'DOWNLOAD COMPLETED'}
             </a>
           </div>
         </div>
