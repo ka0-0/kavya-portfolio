@@ -1,0 +1,802 @@
+diff --git a/.gitignore b/.gitignore
+index 7325705..e404516 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -27,4 +27,3 @@ dist-ssr
+ .env
+ .env.local
+ .env.*.local
+-
+diff --git a/index.html b/index.html
+index 212a1ac..1f3a9e6 100644
+--- a/index.html
++++ b/index.html
+@@ -6,6 +6,16 @@
+     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
++    <!-- Google tag (gtag.js) -->
++    <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"></script>
++    <script>
++      window.dataLayer = window.dataLayer || [];
++      function gtag(){dataLayer.push(arguments);}
++      gtag('js', new Date());
++      gtag('config', '%VITE_GA_MEASUREMENT_ID%', {
++        send_page_view: false
++      });
++    </script>
+     <title>Kavya Makhan — Mechanical Engineer & AI Developer Portfolio</title>
+     <meta name="description" content="Portfolio of Kavya Makhan — Mechanical Engineering Student, AI Developer & Full Stack Developer crafting intelligent systems and high-performance digital experiences." />
+     
+diff --git a/src/App.jsx b/src/App.jsx
+index 2fd1664..5359e24 100644
+--- a/src/App.jsx
++++ b/src/App.jsx
+@@ -9,25 +9,103 @@ import SectionHeader from './components/SectionHeader';
+ import SpaceBoiScene from './components/SpaceBoiScene';
+ import Lenis from 'lenis';
+ import { useGLTF } from '@react-three/drei';
+-import { 
+-  initializeAnalytics,
+-  trackPageView, 
+-  trackSectionView, 
+-  trackScrollDepth, 
+-  trackSessionDuration, 
+-  trackOutboundLink,
+-  trackLoadingStarted,
+-  trackLoadingCompleted 
+-} from './utils/analytics';
+ 
+ // Preload the Hero robot model asset during the loading screen phase
+ useGLTF.preload('/models/small_robot.glb');
+ 
++import { 
++  trackLoadingStarted,
++  trackLoadingCompleted,
++  trackPageView,
++  trackSectionView,
++  trackScrollDepth,
++  trackSessionDuration,
++  trackOutboundLink
++} from './utils/analytics';
++
+ export default function App() {
+   const [isLoading, setIsLoading] = useState(true);
+   const [isPortfolioVisible, setIsPortfolioVisible] = useState(false);
+   const [isTransitionComplete, setIsTransitionComplete] = useState(false);
+ 
++  // 1. Track loading started on initial mount
++  useEffect(() => {
++    trackLoadingStarted();
++  }, []);
++
++  // 2. Track page views, sections, scroll depth, and session duration after loading transitions complete
++  useEffect(() => {
++    if (!isTransitionComplete) return;
++
++    // Track loading complete
++    trackLoadingCompleted();
++
++    // Trigger initial page view
++    trackPageView();
++
++    // A. Automatic section discovery and tracking
++    const observer = new IntersectionObserver(
++      (entries) => {
++        entries.forEach((entry) => {
++          if (entry.isIntersecting) {
++            const id = entry.target.id;
++            let name = id.charAt(0).toUpperCase() + id.slice(1);
++            if (id === 'home') name = 'Hero';
++            if (id === 'resume') name = 'Resume';
++            trackSectionView(name);
++          }
++        });
++      },
++      { threshold: 0.2 }
++    );
++
++    const sections = document.querySelectorAll('section[id]');
++    sections.forEach((sec) => observer.observe(sec));
++
++    // B. Scroll depth tracker (only tracks once per threshold)
++    const handleScroll = () => {
++      const scrollTop = window.scrollY;
++      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
++      if (docHeight <= 0) return;
++
++      const scrollPercent = Math.round((scrollTop / docHeight) * 100);
++      const thresholds = [25, 50, 75, 100];
++      thresholds.forEach((threshold) => {
++        if (scrollPercent >= threshold) {
++          trackScrollDepth(threshold);
++        }
++      });
++    };
++    window.addEventListener('scroll', handleScroll, { passive: true });
++
++    // C. Outbound link click tracker
++    const handleOutboundClick = (e) => {
++      const anchor = e.target.closest('a');
++      if (anchor && anchor.href) {
++        const url = anchor.href;
++        const isOutbound = url.startsWith('http') && !url.includes(window.location.hostname);
++        if (isOutbound) {
++          trackOutboundLink(url);
++        }
++      }
++    };
++    window.addEventListener('click', handleOutboundClick);
++
++    // D. Session duration milestones
++    const timers = [
++      setTimeout(() => trackSessionDuration(30), 30000),
++      setTimeout(() => trackSessionDuration(60), 60000),
++      setTimeout(() => trackSessionDuration(120), 120000),
++    ];
++
++    return () => {
++      observer.disconnect();
++      window.removeEventListener('scroll', handleScroll);
++      window.removeEventListener('click', handleOutboundClick);
++      timers.forEach((t) => clearTimeout(t));
++    };
++  }, [isTransitionComplete]);
++
+   useEffect(() => {
+     // Initialize Lenis smooth scroll engine (optimized for high refresh rate displays with responsive physics)
+     const lenis = new Lenis({
+@@ -79,85 +157,6 @@ export default function App() {
+     }
+   }, [isTransitionComplete]);
+ 
+-  // Track loading started on mount
+-  useEffect(() => {
+-    initializeAnalytics();
+-    trackLoadingStarted();
+-  }, []);
+-
+-  // GA4 Trackers & Listeners (Activated once loading screen closes and transition completes)
+-  useEffect(() => {
+-    if (!isTransitionComplete) return;
+-
+-    // 1. Dynamic Section View Discovery & Intersection Tracking
+-    const getSectionName = (id) => {
+-      if (id === 'home') return 'Hero';
+-      return id.charAt(0).toUpperCase() + id.slice(1);
+-    };
+-
+-    // Find all sections that have an ID attribute
+-    const sectionElements = document.querySelectorAll('section[id]');
+-    const observer = new IntersectionObserver((entries) => {
+-      entries.forEach(entry => {
+-        if (entry.isIntersecting) {
+-          const sectionId = entry.target.id;
+-          const sectionName = getSectionName(sectionId);
+-          trackSectionView(sectionName);
+-        }
+-      });
+-    }, {
+-      threshold: 0.2 // Trigger when 20% of the section area is visible
+-    });
+-
+-    sectionElements.forEach(el => observer.observe(el));
+-
+-    // 2. Throttled Scroll Depth Tracking
+-    const handleScroll = () => {
+-      const scrollTop = window.scrollY;
+-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+-      if (docHeight <= 0) return;
+-
+-      const scrollPercent = Math.round((scrollTop / docHeight) * 100);
+-      const thresholds = [25, 50, 75, 100];
+-      
+-      thresholds.forEach(threshold => {
+-        if (scrollPercent >= threshold) {
+-          trackScrollDepth(threshold);
+-        }
+-      });
+-    };
+-
+-    window.addEventListener('scroll', handleScroll, { passive: true });
+-
+-    // 3. Session Duration Milestone Timers
+-    const milestones = [30, 60, 120];
+-    const timers = milestones.map(seconds => {
+-      return setTimeout(() => {
+-        trackSessionDuration(seconds);
+-      }, seconds * 1000);
+-    });
+-
+-    // 4. Automatic Outbound Link Tracking
+-    const handleOutboundClick = (e) => {
+-      const anchor = e.target.closest('a');
+-      if (anchor && anchor.href) {
+-        const url = anchor.href;
+-        const isOutbound = url.startsWith('http') && !url.includes(window.location.hostname);
+-        if (isOutbound) {
+-          trackOutboundLink(url);
+-        }
+-      }
+-    };
+-    window.addEventListener('click', handleOutboundClick);
+-
+-    return () => {
+-      observer.disconnect();
+-      window.removeEventListener('scroll', handleScroll);
+-      timers.forEach(t => clearTimeout(t));
+-      window.removeEventListener('click', handleOutboundClick);
+-    };
+-  }, [isTransitionComplete]);
+-
+   return (
+     <>
+       {isLoading && (
+@@ -166,8 +165,6 @@ export default function App() {
+           onComplete={() => {
+             setIsTransitionComplete(true);
+             setIsLoading(false);
+-            trackLoadingCompleted();
+-            trackPageView();
+           }}
+         />
+       )}
+diff --git a/src/components/Navbar.jsx b/src/components/Navbar.jsx
+index 42bf0cf..6ce7c49 100644
+--- a/src/components/Navbar.jsx
++++ b/src/components/Navbar.jsx
+@@ -7,14 +7,12 @@ import {
+ import { 
+   trackNavigationClick, 
+   trackResumeViewed, 
+-  trackResumeDownload, 
+-  trackEmailClick, 
+-  trackGitHubClick, 
+-  trackLinkedInClick, 
+-  trackProjectClick 
++  trackProjectClick,
++  trackEmailClick,
++  trackLinkedInClick,
++  trackGitHubClick
+ } from '../utils/analytics';
+ import { downloadResume } from '../utils/resume';
+-
+ const navLinks = [
+   { name: 'Home', id: 'home' },
+   { name: 'About', id: 'about' },
+@@ -114,6 +112,9 @@ function Navbar() {
+   // Scroll Lock & Lenis Control for Resume Modal
+   useEffect(() => {
+     if (isModalOpen) {
++      // Track Resume Viewed
++      trackResumeViewed();
++
+       // 1. Lock body scrolling in all major browsers
+       const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+       document.body.style.overflow = 'hidden';
+@@ -294,10 +295,6 @@ function Navbar() {
+       if (targetId && navLinks.some(link => link.id === targetId)) {
+         isManualScrollRef.current = true;
+         setActiveSection(targetId);
+-        
+-        const sectionName = targetId === 'home' ? 'Hero' : targetId.charAt(0).toUpperCase() + targetId.slice(1);
+-        trackNavigationClick(sectionName);
+-
+         if (manualScrollTimeoutRef.current) clearTimeout(manualScrollTimeoutRef.current);
+         manualScrollTimeoutRef.current = setTimeout(() => {
+           isManualScrollRef.current = false;
+@@ -314,6 +311,7 @@ function Navbar() {
+     const element = document.getElementById(id);
+     if (!element) return;
+ 
++    // Track Navigation Click
+     const sectionName = id === 'home' ? 'Hero' : id.charAt(0).toUpperCase() + id.slice(1);
+     trackNavigationClick(sectionName);
+ 
+@@ -623,7 +621,6 @@ function Navbar() {
+                     
+                     <button
+                       onClick={() => {
+-                        trackResumeViewed();
+                         setIsModalOpen(true);
+                         setIsDropdownOpen(false);
+                       }}
+@@ -865,7 +862,7 @@ function Navbar() {
+                           <a 
+                             href="mailto:kavya.makhan@example.com" 
+                             className="hover:text-cyan-600 transition-colors pointer-events-auto cursor-pointer"
+-                            onClick={() => trackEmailClick('Resume Modal Email')}
++                            onClick={() => trackEmailClick('Resume Modal')}
+                           >
+                             kavya.makhan@example.com
+                           </a>
+@@ -875,7 +872,7 @@ function Navbar() {
+                             target="_blank" 
+                             rel="noopener noreferrer" 
+                             className="hover:text-cyan-600 transition-colors pointer-events-auto cursor-pointer"
+-                            onClick={() => trackGitHubClick('Resume Modal GitHub')}
++                            onClick={() => trackGitHubClick('Resume Modal')}
+                           >
+                             github.com/kavya-makhan
+                           </a>
+@@ -885,7 +882,7 @@ function Navbar() {
+                             target="_blank" 
+                             rel="noopener noreferrer" 
+                             className="hover:text-cyan-600 transition-colors pointer-events-auto cursor-pointer"
+-                            onClick={() => trackLinkedInClick('Resume Modal LinkedIn')}
++                            onClick={() => trackLinkedInClick('Resume Modal')}
+                           >
+                             linkedin.com/in/kavya-makhan
+                           </a>
+@@ -939,19 +936,19 @@ function Navbar() {
+                           <div>
+                             <div className="flex justify-between items-baseline">
+                               <h3 
+-                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto"
++                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto select-none"
+                                 onClick={() => trackProjectClick('Cybernetic Neural Robotic Controller', 'Open')}
+                               >
+                                 Cybernetic Neural Robotic Controller
+                               </h3>
+                               <span className="text-[10px] font-mono text-zinc-400 font-bold">PyTorch, ROS2, SolidWorks</span>
+                             </div>
+-                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1.5 pointer-events-auto">
++                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1 pointer-events-auto">
+                               <a 
+                                 href="https://github.com/kavya-makhan/robotic-controller" 
+                                 target="_blank" 
+                                 rel="noopener noreferrer" 
+-                                className="hover:underline cursor-pointer"
++                                className="hover:underline cursor-pointer animate-pulse"
+                                 onClick={() => trackProjectClick('Cybernetic Neural Robotic Controller', 'GitHub Repository')}
+                               >
+                                 [GITHUB REPOSITORY]
+@@ -960,7 +957,7 @@ function Navbar() {
+                                 href="https://demo.kavya-makhan.dev/robotic-controller" 
+                                 target="_blank" 
+                                 rel="noopener noreferrer" 
+-                                className="hover:underline cursor-pointer"
++                                className="hover:underline cursor-pointer animate-pulse"
+                                 onClick={() => trackProjectClick('Cybernetic Neural Robotic Controller', 'Live Demo')}
+                               >
+                                 [LIVE DEMO]
+@@ -974,19 +971,19 @@ function Navbar() {
+                           <div>
+                             <div className="flex justify-between items-baseline">
+                               <h3 
+-                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto"
++                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto select-none"
+                                 onClick={() => trackProjectClick('Thermally-Optimized Computing Chassis', 'Open')}
+                               >
+                                 Thermally-Optimized Computing Chassis
+                               </h3>
+                               <span className="text-[10px] font-mono text-zinc-400 font-bold">SolidWorks FEA & CFD, Matlab</span>
+                             </div>
+-                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1.5 pointer-events-auto">
++                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1 pointer-events-auto">
+                               <a 
+                                 href="https://github.com/kavya-makhan/thermal-chassis" 
+                                 target="_blank" 
+                                 rel="noopener noreferrer" 
+-                                className="hover:underline cursor-pointer"
++                                className="hover:underline cursor-pointer animate-pulse"
+                                 onClick={() => trackProjectClick('Thermally-Optimized Computing Chassis', 'GitHub Repository')}
+                               >
+                                 [GITHUB REPOSITORY]
+@@ -995,7 +992,7 @@ function Navbar() {
+                                 href="https://demo.kavya-makhan.dev/thermal-chassis" 
+                                 target="_blank" 
+                                 rel="noopener noreferrer" 
+-                                className="hover:underline cursor-pointer"
++                                className="hover:underline cursor-pointer animate-pulse"
+                                 onClick={() => trackProjectClick('Thermally-Optimized Computing Chassis', 'Live Demo')}
+                               >
+                                 [LIVE DEMO]
+@@ -1009,19 +1006,19 @@ function Navbar() {
+                           <div>
+                             <div className="flex justify-between items-baseline">
+                               <h3 
+-                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto"
++                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto select-none"
+                                 onClick={() => trackProjectClick('Autonomous Pathfinder Obstacle Avoidance UAV', 'Open')}
+                               >
+                                 Autonomous Pathfinder Obstacle Avoidance UAV
+                               </h3>
+                               <span className="text-[10px] font-mono text-zinc-400 font-bold">Python, ARM Microcontrollers, OpenCV</span>
+                             </div>
+-                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1.5 pointer-events-auto">
++                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1 pointer-events-auto">
+                               <a 
+                                 href="https://github.com/kavya-makhan/obstacle-avoidance-uav" 
+                                 target="_blank" 
+                                 rel="noopener noreferrer" 
+-                                className="hover:underline cursor-pointer"
++                                className="hover:underline cursor-pointer animate-pulse"
+                                 onClick={() => trackProjectClick('Autonomous Pathfinder Obstacle Avoidance UAV', 'GitHub Repository')}
+                               >
+                                 [GITHUB REPOSITORY]
+@@ -1030,7 +1027,7 @@ function Navbar() {
+                                 href="https://demo.kavya-makhan.dev/obstacle-avoidance-uav" 
+                                 target="_blank" 
+                                 rel="noopener noreferrer" 
+-                                className="hover:underline cursor-pointer"
++                                className="hover:underline cursor-pointer animate-pulse"
+                                 onClick={() => trackProjectClick('Autonomous Pathfinder Obstacle Avoidance UAV', 'Live Demo')}
+                               >
+                                 [LIVE DEMO]
+diff --git a/src/components/SpaceBoiScene.jsx b/src/components/SpaceBoiScene.jsx
+index 653ab11..9ca21ff 100644
+--- a/src/components/SpaceBoiScene.jsx
++++ b/src/components/SpaceBoiScene.jsx
+@@ -13,7 +13,7 @@ const SpaceBoi = memo(function SpaceBoi({ onModelLoaded }) {
+   useEffect(() => {
+     if (scene) {
+       if (!scene.userData.isCentered) {
+-        // Reset position to (0,0,0) before computing bounding box
++        // Reset position to (0,0,0) before computing bounding box to ensure original bounds are evaluated
+         scene.position.set(0, 0, 0);
+ 
+         const box = new THREE.Box3().setFromObject(scene);
+@@ -103,13 +103,11 @@ function SpaceBoiScene() {
+     e.preventDefault();
+     if (downloadState !== 'idle') return;
+     setDownloadState('downloading');
+-
++    
+     setTimeout(() => {
+       downloadResume();
+       setDownloadState('completed');
+-      setTimeout(() => {
+-        setDownloadState('idle');
+-      }, 1500);
++      setTimeout(() => setDownloadState('idle'), 1500);
+     }, 600);
+   };
+ 
+@@ -184,7 +182,7 @@ function SpaceBoiScene() {
+             <a
+               href="#"
+               onClick={handleDownload}
+-              className="btn-gradient-pill inline-flex items-center space-x-2 px-8 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-lg cursor-pointer"
++              className="btn-gradient-pill inline-flex items-center space-x-2 px-8 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-lg cursor-pointer select-none"
+               data-interactive="true"
+             >
+               {downloadState === 'idle' && 'DOWNLOAD RESUME PDF'}
+diff --git a/src/utils/analytics.js b/src/utils/analytics.js
+index be659ed..7f26267 100644
+--- a/src/utils/analytics.js
++++ b/src/utils/analytics.js
+@@ -1,71 +1,40 @@
+-// Google Analytics 4 (GA4) Integration Utility
+-// Handles user interactions, section visibility, scroll depth, and loading state tracking.
+-// Guarantees zero PII leakage and graceful degradation if GA is blocked by ad-blockers.
+-
+-const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
+-
+-const trackedSections = new Set();
+-const trackedScrollDepths = new Set();
++// Google Analytics 4 (GA4) Utility Module
+ 
+ /**
+- * Dynamically initializes Google Analytics 4 using the Measurement ID from environment.
+- * If the Measurement ID is missing, analytics initialization is skipped completely.
+- */
+-export function initializeAnalytics() {
+-  if (typeof window === 'undefined') return;
+-  if (!GA_MEASUREMENT_ID) {
+-    console.warn('VITE_GA_MEASUREMENT_ID is missing. Analytics tracking is disabled.');
+-    return;
+-  }
+-
+-  // Prevent duplicate script injection
+-  if (document.getElementById('google-analytics-script')) return;
+-
+-  // Initialize dataLayer and gtag synchronously so calls can queue immediately
+-  window.dataLayer = window.dataLayer || [];
+-  function gtag() {
+-    window.dataLayer.push(arguments);
+-  }
+-  window.gtag = gtag;
+-
+-  gtag('js', new Date());
+-  gtag('config', GA_MEASUREMENT_ID, {
+-    send_page_view: false // Manual tracking in App.jsx to avoid double-counting
+-  });
+-
+-  // Inject the gtag script tag asynchronously
+-  const script = document.createElement('script');
+-  script.id = 'google-analytics-script';
+-  script.async = true;
+-  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+-  document.head.appendChild(script);
+-}
+-
+-/**
+- * Safely calls window.gtag if it is defined (graceful failure when GA is blocked).
++ * Safely calls window.gtag if it is initialized, preventing console errors
++ * if Google Analytics is blocked by an ad-blocker or fails to load.
+  */
+ function safeGtag(...args) {
+   if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+-    window.gtag(...args);
++    try {
++      window.gtag(...args);
++    } catch {
++      // Fail silently and let the portfolio function normally
++    }
+   }
+ }
+ 
+ /**
+- * Tracks the initial page view.
++ * Tracks a page view event.
++ * @param {string} pagePath
++ * @param {string} pageTitle
+  */
+-export function trackPageView() {
++export function trackPageView(pagePath = window.location.pathname, pageTitle = document.title) {
+   safeGtag('event', 'page_view', {
+-    page_path: window.location.pathname,
+-    page_title: document.title
++    page_path: pagePath,
++    page_title: pageTitle
+   });
+ }
+ 
+ /**
+- * Tracks when a specific section is viewed (only once per session per section).
+- * @param {string} sectionName Capitalized name of the section (e.g. 'Hero', 'About')
++ * Tracks when a specific section is viewed (only once per session for each section).
+  */
++const trackedSections = new Set();
+ export function trackSectionView(sectionName) {
+-  const eventName = `${sectionName} Viewed`;
++  // Strip any potential personal info from sectionName
++  const cleanSection = String(sectionName).replace(/[^\w\s-]/g, '').trim();
++  const eventName = `${cleanSection} Viewed`;
++  
+   if (trackedSections.has(eventName)) return;
+   trackedSections.add(eventName);
+ 
+@@ -76,9 +45,9 @@ export function trackSectionView(sectionName) {
+ }
+ 
+ /**
+- * Tracks scroll depth thresholds (25%, 50%, 75%, 100%) exactly once per session.
+- * @param {number} depth Scroll depth percentage threshold
++ * Tracks scroll depth thresholds (only once per threshold per session).
+  */
++const trackedScrollDepths = new Set();
+ export function trackScrollDepth(depth) {
+   if (trackedScrollDepths.has(depth)) return;
+   trackedScrollDepths.add(depth);
+@@ -92,8 +61,7 @@ export function trackScrollDepth(depth) {
+ }
+ 
+ /**
+- * Tracks session duration milestones (30s, 60s, 120s).
+- * @param {number} seconds Time elapsed in seconds
++ * Tracks engagement duration milestones.
+  */
+ export function trackSessionDuration(seconds) {
+   safeGtag('event', 'Session Duration', {
+@@ -105,7 +73,7 @@ export function trackSessionDuration(seconds) {
+ }
+ 
+ /**
+- * Tracks when the resume modal is opened and viewed.
++ * Tracks resume modal viewer open events.
+  */
+ export function trackResumeViewed() {
+   safeGtag('event', 'Resume Viewed', {
+@@ -116,7 +84,7 @@ export function trackResumeViewed() {
+ }
+ 
+ /**
+- * Tracks when the resume is downloaded.
++ * Tracks resume download event.
+  */
+ export function trackResumeDownload() {
+   safeGtag('event', 'Resume Downloaded', {
+@@ -127,14 +95,14 @@ export function trackResumeDownload() {
+ }
+ 
+ /**
+- * Tracks project clicks (Open, Live Demo, GitHub Repository).
+- * @param {string} projectTitle Name of the project
+- * @param {string} type 'Open' | 'Live Demo' | 'GitHub Repository'
++ * Tracks project interaction clicks (Open, Live Demo, GitHub Repository).
++ * Privacy Safe: Only contains project title label (static metadata).
+  */
+-export function trackProjectClick(projectTitle, type) {
+-  const cleanTitle = projectTitle.replace(/[^a-zA-Z0-9\s-_]/g, '').trim(); // Basic sanitization
++export function trackProjectClick(projectTitle, interactionType) {
++  const cleanTitle = String(projectTitle).replace(/[^\w\s-]/g, '').trim();
++  const cleanType = String(interactionType).replace(/[^\w\s-]/g, '').trim();
+ 
+-  if (type === 'Open') {
++  if (cleanType === 'Open') {
+     safeGtag('event', 'Project Opened', {
+       event_category: 'Projects',
+       event_action: 'Open',
+@@ -143,92 +111,102 @@ export function trackProjectClick(projectTitle, type) {
+   } else {
+     safeGtag('event', 'click', {
+       event_category: 'Projects',
+-      event_action: `${type} Click`,
++      event_action: `${cleanType} Click`,
+       event_label: cleanTitle
+     });
+   }
+ }
+ 
+ /**
+- * Tracks navbar clicks.
+- * @param {string} targetSection Section that was clicked
++ * Tracks contact button clicks.
++ * Privacy Safe: Never sends the actual email addresses or personal input.
++ * Only sends the location context of the click (e.g. 'Resume Modal' or 'Navbar').
+  */
+-export function trackNavigationClick(targetSection) {
+-  safeGtag('event', 'Navigation Click', {
+-    event_category: 'Navigation',
++export function trackEmailClick(locationContext) {
++  safeGtag('event', 'Email Click', {
++    event_category: 'Contact',
+     event_action: 'Click',
+-    event_label: targetSection
++    event_label: String(locationContext).replace(/[^\w\s-]/g, '').trim()
+   });
+ }
+ 
+-/**
+- * Tracks LinkedIn link clicks.
+- * @param {string} location Where the link was clicked (e.g. 'Resume Modal', 'Hero')
+- */
+-export function trackLinkedInClick(location) {
++export function trackLinkedInClick(locationContext) {
+   safeGtag('event', 'LinkedIn Click', {
+     event_category: 'Contact',
+     event_action: 'Click',
+-    event_label: location
++    event_label: String(locationContext).replace(/[^\w\s-]/g, '').trim()
+   });
+ }
+ 
+-/**
+- * Tracks GitHub link clicks.
+- * @param {string} location Where the link was clicked (e.g. 'Resume Modal', 'Hero')
+- */
+-export function trackGitHubClick(location) {
++export function trackGitHubClick(locationContext) {
+   safeGtag('event', 'GitHub Click', {
+     event_category: 'Contact',
+     event_action: 'Click',
+-    event_label: location
++    event_label: String(locationContext).replace(/[^\w\s-]/g, '').trim()
+   });
+ }
+ 
+ /**
+- * Tracks Email link clicks.
+- * @param {string} location Where the link was clicked (e.g. 'Resume Modal')
++ * Tracks navigation menu clicks.
+  */
+-export function trackEmailClick(location) {
+-  safeGtag('event', 'Email Click', {
+-    event_category: 'Contact',
++export function trackNavigationClick(targetSection) {
++  safeGtag('event', 'Navigation Click', {
++    event_category: 'Navigation',
+     event_action: 'Click',
+-    event_label: location
++    event_label: String(targetSection).replace(/[^\w\s-]/g, '').trim()
+   });
+ }
+ 
+ /**
+- * Tracks outbound link clicks.
+- * @param {string} url Destination URL
++ * Tracks outbound link clicks automatically.
+  */
+ export function trackOutboundLink(url) {
+-  // Sanitize: strip out any query params to protect query/user token strings
+-  const sanitizedUrl = url.split('?')[0];
+-
+-  safeGtag('event', 'click', {
+-    event_category: 'Outbound Link',
+-    event_action: 'Click',
+-    event_label: sanitizedUrl,
+-    transport_type: 'beacon'
+-  });
++  // Privacy protection: clean URL query parameters to avoid sending potential personal codes/tokens
++  try {
++    const parsedUrl = new URL(url);
++    const cleanUrl = `${parsedUrl.origin}${parsedUrl.pathname}`;
++    safeGtag('event', 'click', {
++      event_category: 'Outbound Link',
++      event_action: 'Click',
++      event_label: cleanUrl,
++      transport_type: 'beacon'
++    });
++  } catch {
++    // If not a valid URL structure, send the raw string safely truncated/cleansed
++    const cleanUrl = String(url).split('?')[0].replace(/[^\w\s-/:.]/g, '').substring(0, 100);
++    safeGtag('event', 'click', {
++      event_category: 'Outbound Link',
++      event_action: 'Click',
++      event_label: cleanUrl,
++      transport_type: 'beacon'
++    });
++  }
+ }
+ 
+ /**
+- * Tracks when custom loading screens begin.
++ * Tracks loading screen events.
+  */
+ export function trackLoadingStarted() {
+   safeGtag('event', 'Loading Started', {
+     event_category: 'System',
+-    event_action: 'Load'
++    event_action: 'Start'
+   });
+ }
+ 
+-/**
+- * Tracks when custom loading screens complete.
+- */
+ export function trackLoadingCompleted() {
+   safeGtag('event', 'Loading Completed', {
+     event_category: 'System',
+-    event_action: 'Load'
++    event_action: 'Complete'
++  });
++}
++
++/**
++ * Custom button tracking wrapper.
++ */
++export function trackButtonClick(buttonName, category = 'Button Click', label = '') {
++  safeGtag('event', 'click', {
++    event_category: category,
++    event_action: 'Click',
++    event_label: label || buttonName
+   });
+ }
+diff --git a/src/utils/resume.js b/src/utils/resume.js
+index 897765f..0a104e5 100644
+--- a/src/utils/resume.js
++++ b/src/utils/resume.js
+@@ -1,17 +1,13 @@
+-// Shared Resume Utility Module
+-// Centralizes resume download generation and fires respective GA4 tracking.
+-
+ import { trackResumeDownload } from './analytics';
+ 
+ /**
+- * Triggers the browser-native file download for the mock portfolio resume
+- * and logs the Resume Downloaded event in Google Analytics.
++ * Generates the mock portfolio CV text document, triggers a local browser download,
++ * and records the event in Google Analytics.
+  */
+ export function downloadResume() {
+-  // Fire analytics event
++  // Track download event
+   trackResumeDownload();
+ 
+-  // Compile mock resume text content
+   const resumeText = `KAVYA MAKHAN
+ Mechanical Engineer & AI Algorithms Developer
+ Location: India | GitHub: github.com/kavya-makhan | Email: kavya.makhan@example.com
+@@ -45,5 +41,9 @@ CERTIFICATIONS:
+   document.body.appendChild(link);
+   link.click();
+   document.body.removeChild(link);
+-  URL.revokeObjectURL(url);
++  
++  // Revoke object URL after click to release browser memory
++  setTimeout(() => {
++    URL.revokeObjectURL(url);
++  }, 100);
+ }

@@ -1,71 +1,41 @@
-// Google Analytics 4 (GA4) Integration Utility
-// Handles user interactions, section visibility, scroll depth, and loading state tracking.
-// Guarantees zero PII leakage and graceful degradation if GA is blocked by ad-blockers.
-
-const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
-
-const trackedSections = new Set();
-const trackedScrollDepths = new Set();
+// Google Analytics 4 (GA4) Utility Module
 
 /**
- * Dynamically initializes Google Analytics 4 using the Measurement ID from environment.
- * If the Measurement ID is missing, analytics initialization is skipped completely.
- */
-export function initializeAnalytics() {
-  if (typeof window === 'undefined') return;
-  if (!GA_MEASUREMENT_ID) {
-    console.warn('VITE_GA_MEASUREMENT_ID is missing. Analytics tracking is disabled.');
-    return;
-  }
-
-  // Prevent duplicate script injection
-  if (document.getElementById('google-analytics-script')) return;
-
-  // Initialize dataLayer and gtag synchronously so calls can queue immediately
-  window.dataLayer = window.dataLayer || [];
-  function gtag() {
-    window.dataLayer.push(arguments);
-  }
-  window.gtag = gtag;
-
-  gtag('js', new Date());
-  gtag('config', GA_MEASUREMENT_ID, {
-    send_page_view: false // Manual tracking in App.jsx to avoid double-counting
-  });
-
-  // Inject the gtag script tag asynchronously
-  const script = document.createElement('script');
-  script.id = 'google-analytics-script';
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-  document.head.appendChild(script);
-}
-
-/**
- * Safely calls window.gtag if it is defined (graceful failure when GA is blocked).
+ * Safely calls window.gtag if it is initialized, preventing console errors
+ * if Google Analytics is blocked by an ad-blocker or fails to load.
  */
 function safeGtag(...args) {
   if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
-    window.gtag(...args);
+    try {
+      window.gtag(...args);
+    } catch {
+      // Fail silently and let the portfolio function normally
+    }
   }
 }
 
 /**
- * Tracks the initial page view.
+ * Tracks a page view event.
+ * @param {string} pagePath
+ * @param {string} pageTitle
  */
-export function trackPageView() {
+export function trackPageView(pagePath = window.location.pathname, pageTitle = document.title) {
   safeGtag('event', 'page_view', {
-    page_path: window.location.pathname,
-    page_title: document.title
+    page_title: pageTitle,
+    page_location: window.location.href,
+    page_path: pagePath
   });
 }
 
 /**
- * Tracks when a specific section is viewed (only once per session per section).
- * @param {string} sectionName Capitalized name of the section (e.g. 'Hero', 'About')
+ * Tracks when a specific section is viewed (only once per session for each section).
  */
+const trackedSections = new Set();
 export function trackSectionView(sectionName) {
-  const eventName = `${sectionName} Viewed`;
+  // Strip any potential personal info from sectionName
+  const cleanSection = String(sectionName).replace(/[^\w\s-]/g, '').trim();
+  const eventName = `${cleanSection} Viewed`;
+  
   if (trackedSections.has(eventName)) return;
   trackedSections.add(eventName);
 
@@ -76,9 +46,9 @@ export function trackSectionView(sectionName) {
 }
 
 /**
- * Tracks scroll depth thresholds (25%, 50%, 75%, 100%) exactly once per session.
- * @param {number} depth Scroll depth percentage threshold
+ * Tracks scroll depth thresholds (only once per threshold per session).
  */
+const trackedScrollDepths = new Set();
 export function trackScrollDepth(depth) {
   if (trackedScrollDepths.has(depth)) return;
   trackedScrollDepths.add(depth);
@@ -92,8 +62,7 @@ export function trackScrollDepth(depth) {
 }
 
 /**
- * Tracks session duration milestones (30s, 60s, 120s).
- * @param {number} seconds Time elapsed in seconds
+ * Tracks engagement duration milestones.
  */
 export function trackSessionDuration(seconds) {
   safeGtag('event', 'Session Duration', {
@@ -105,7 +74,7 @@ export function trackSessionDuration(seconds) {
 }
 
 /**
- * Tracks when the resume modal is opened and viewed.
+ * Tracks resume modal viewer open events.
  */
 export function trackResumeViewed() {
   safeGtag('event', 'Resume Viewed', {
@@ -116,7 +85,7 @@ export function trackResumeViewed() {
 }
 
 /**
- * Tracks when the resume is downloaded.
+ * Tracks resume download event.
  */
 export function trackResumeDownload() {
   safeGtag('event', 'Resume Downloaded', {
@@ -127,14 +96,14 @@ export function trackResumeDownload() {
 }
 
 /**
- * Tracks project clicks (Open, Live Demo, GitHub Repository).
- * @param {string} projectTitle Name of the project
- * @param {string} type 'Open' | 'Live Demo' | 'GitHub Repository'
+ * Tracks project interaction clicks (Open, Live Demo, GitHub Repository).
+ * Privacy Safe: Only contains project title label (static metadata).
  */
-export function trackProjectClick(projectTitle, type) {
-  const cleanTitle = projectTitle.replace(/[^a-zA-Z0-9\s-_]/g, '').trim(); // Basic sanitization
+export function trackProjectClick(projectTitle, interactionType) {
+  const cleanTitle = String(projectTitle).replace(/[^\w\s-]/g, '').trim();
+  const cleanType = String(interactionType).replace(/[^\w\s-]/g, '').trim();
 
-  if (type === 'Open') {
+  if (cleanType === 'Open') {
     safeGtag('event', 'Project Opened', {
       event_category: 'Projects',
       event_action: 'Open',
@@ -143,92 +112,102 @@ export function trackProjectClick(projectTitle, type) {
   } else {
     safeGtag('event', 'click', {
       event_category: 'Projects',
-      event_action: `${type} Click`,
+      event_action: `${cleanType} Click`,
       event_label: cleanTitle
     });
   }
 }
 
 /**
- * Tracks navbar clicks.
- * @param {string} targetSection Section that was clicked
+ * Tracks contact button clicks.
+ * Privacy Safe: Never sends the actual email addresses or personal input.
+ * Only sends the location context of the click (e.g. 'Resume Modal' or 'Navbar').
+ */
+export function trackEmailClick(locationContext) {
+  safeGtag('event', 'Email Click', {
+    event_category: 'Contact',
+    event_action: 'Click',
+    event_label: String(locationContext).replace(/[^\w\s-]/g, '').trim()
+  });
+}
+
+export function trackLinkedInClick(locationContext) {
+  safeGtag('event', 'LinkedIn Click', {
+    event_category: 'Contact',
+    event_action: 'Click',
+    event_label: String(locationContext).replace(/[^\w\s-]/g, '').trim()
+  });
+}
+
+export function trackGitHubClick(locationContext) {
+  safeGtag('event', 'GitHub Click', {
+    event_category: 'Contact',
+    event_action: 'Click',
+    event_label: String(locationContext).replace(/[^\w\s-]/g, '').trim()
+  });
+}
+
+/**
+ * Tracks navigation menu clicks.
  */
 export function trackNavigationClick(targetSection) {
   safeGtag('event', 'Navigation Click', {
     event_category: 'Navigation',
     event_action: 'Click',
-    event_label: targetSection
+    event_label: String(targetSection).replace(/[^\w\s-]/g, '').trim()
   });
 }
 
 /**
- * Tracks LinkedIn link clicks.
- * @param {string} location Where the link was clicked (e.g. 'Resume Modal', 'Hero')
- */
-export function trackLinkedInClick(location) {
-  safeGtag('event', 'LinkedIn Click', {
-    event_category: 'Contact',
-    event_action: 'Click',
-    event_label: location
-  });
-}
-
-/**
- * Tracks GitHub link clicks.
- * @param {string} location Where the link was clicked (e.g. 'Resume Modal', 'Hero')
- */
-export function trackGitHubClick(location) {
-  safeGtag('event', 'GitHub Click', {
-    event_category: 'Contact',
-    event_action: 'Click',
-    event_label: location
-  });
-}
-
-/**
- * Tracks Email link clicks.
- * @param {string} location Where the link was clicked (e.g. 'Resume Modal')
- */
-export function trackEmailClick(location) {
-  safeGtag('event', 'Email Click', {
-    event_category: 'Contact',
-    event_action: 'Click',
-    event_label: location
-  });
-}
-
-/**
- * Tracks outbound link clicks.
- * @param {string} url Destination URL
+ * Tracks outbound link clicks automatically.
  */
 export function trackOutboundLink(url) {
-  // Sanitize: strip out any query params to protect query/user token strings
-  const sanitizedUrl = url.split('?')[0];
-
-  safeGtag('event', 'click', {
-    event_category: 'Outbound Link',
-    event_action: 'Click',
-    event_label: sanitizedUrl,
-    transport_type: 'beacon'
-  });
+  // Privacy protection: clean URL query parameters to avoid sending potential personal codes/tokens
+  try {
+    const parsedUrl = new URL(url);
+    const cleanUrl = `${parsedUrl.origin}${parsedUrl.pathname}`;
+    safeGtag('event', 'click', {
+      event_category: 'Outbound Link',
+      event_action: 'Click',
+      event_label: cleanUrl,
+      transport_type: 'beacon'
+    });
+  } catch {
+    // If not a valid URL structure, send the raw string safely truncated/cleansed
+    const cleanUrl = String(url).split('?')[0].replace(/[^\w\s-/:.]/g, '').substring(0, 100);
+    safeGtag('event', 'click', {
+      event_category: 'Outbound Link',
+      event_action: 'Click',
+      event_label: cleanUrl,
+      transport_type: 'beacon'
+    });
+  }
 }
 
 /**
- * Tracks when custom loading screens begin.
+ * Tracks loading screen events.
  */
 export function trackLoadingStarted() {
   safeGtag('event', 'Loading Started', {
     event_category: 'System',
-    event_action: 'Load'
+    event_action: 'Start'
+  });
+}
+
+export function trackLoadingCompleted() {
+  safeGtag('event', 'Loading Completed', {
+    event_category: 'System',
+    event_action: 'Complete'
   });
 }
 
 /**
- * Tracks when custom loading screens complete.
+ * Custom button tracking wrapper.
  */
-export function trackLoadingCompleted() {
-  safeGtag('event', 'Loading Completed', {
-    event_category: 'System',
-    event_action: 'Load'
+export function trackButtonClick(buttonName, category = 'Button Click', label = '') {
+  safeGtag('event', 'click', {
+    event_category: category,
+    event_action: 'Click',
+    event_label: label || buttonName
   });
 }

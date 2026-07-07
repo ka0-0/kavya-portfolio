@@ -13,7 +13,7 @@ const SpaceBoi = memo(function SpaceBoi({ onModelLoaded }) {
   useEffect(() => {
     if (scene) {
       if (!scene.userData.isCentered) {
-        // Reset position to (0,0,0) before computing bounding box
+        // Reset position to (0,0,0) before computing bounding box to ensure original bounds are evaluated
         scene.position.set(0, 0, 0);
 
         const box = new THREE.Box3().setFromObject(scene);
@@ -103,13 +103,11 @@ function SpaceBoiScene() {
     e.preventDefault();
     if (downloadState !== 'idle') return;
     setDownloadState('downloading');
-
+    
     setTimeout(() => {
       downloadResume();
       setDownloadState('completed');
-      setTimeout(() => {
-        setDownloadState('idle');
-      }, 1500);
+      setTimeout(() => setDownloadState('idle'), 1500);
     }, 600);
   };
 
@@ -184,7 +182,7 @@ function SpaceBoiScene() {
             <a
               href="#"
               onClick={handleDownload}
-              className="btn-gradient-pill inline-flex items-center space-x-2 px-8 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-lg cursor-pointer"
+              className="btn-gradient-pill inline-flex items-center space-x-2 px-8 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-lg cursor-pointer select-none"
               data-interactive="true"
             >
               {downloadState === 'idle' && 'DOWNLOAD RESUME PDF'}

@@ -9,24 +9,102 @@ import SectionHeader from './components/SectionHeader';
 import SpaceBoiScene from './components/SpaceBoiScene';
 import Lenis from 'lenis';
 import { useGLTF } from '@react-three/drei';
-import { 
-  initializeAnalytics,
-  trackPageView, 
-  trackSectionView, 
-  trackScrollDepth, 
-  trackSessionDuration, 
-  trackOutboundLink,
-  trackLoadingStarted,
-  trackLoadingCompleted 
-} from './utils/analytics';
 
 // Preload the Hero robot model asset during the loading screen phase
 useGLTF.preload('/models/small_robot.glb');
+
+import { 
+  trackLoadingStarted,
+  trackLoadingCompleted,
+  trackPageView,
+  trackSectionView,
+  trackScrollDepth,
+  trackSessionDuration,
+  trackOutboundLink
+} from './utils/analytics';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPortfolioVisible, setIsPortfolioVisible] = useState(false);
   const [isTransitionComplete, setIsTransitionComplete] = useState(false);
+
+  // 1. Track loading started on initial mount
+  useEffect(() => {
+    trackLoadingStarted();
+  }, []);
+
+  // 2. Track page views, sections, scroll depth, and session duration after loading transitions complete
+  useEffect(() => {
+    if (!isTransitionComplete) return;
+
+    // Track loading complete
+    trackLoadingCompleted();
+
+    // Trigger initial page view
+    trackPageView();
+
+    // A. Automatic section discovery and tracking
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = entry.target.id;
+            let name = id.charAt(0).toUpperCase() + id.slice(1);
+            if (id === 'home') name = 'Hero';
+            if (id === 'resume') name = 'Resume';
+            trackSectionView(name);
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    const sections = document.querySelectorAll('section[id]');
+    sections.forEach((sec) => observer.observe(sec));
+
+    // B. Scroll depth tracker (only tracks once per threshold)
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight <= 0) return;
+
+      const scrollPercent = Math.round((scrollTop / docHeight) * 100);
+      const thresholds = [25, 50, 75, 100];
+      thresholds.forEach((threshold) => {
+        if (scrollPercent >= threshold) {
+          trackScrollDepth(threshold);
+        }
+      });
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // C. Outbound link click tracker
+    const handleOutboundClick = (e) => {
+      const anchor = e.target.closest('a');
+      if (anchor && anchor.href) {
+        const url = anchor.href;
+        const isOutbound = url.startsWith('http') && !url.includes(window.location.hostname);
+        if (isOutbound) {
+          trackOutboundLink(url);
+        }
+      }
+    };
+    window.addEventListener('click', handleOutboundClick);
+
+    // D. Session duration milestones
+    const timers = [
+      setTimeout(() => trackSessionDuration(30), 30000),
+      setTimeout(() => trackSessionDuration(60), 60000),
+      setTimeout(() => trackSessionDuration(120), 120000),
+    ];
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('click', handleOutboundClick);
+      timers.forEach((t) => clearTimeout(t));
+    };
+  }, [isTransitionComplete]);
 
   useEffect(() => {
     // Initialize Lenis smooth scroll engine (optimized for high refresh rate displays with responsive physics)
@@ -79,85 +157,6 @@ export default function App() {
     }
   }, [isTransitionComplete]);
 
-  // Track loading started on mount
-  useEffect(() => {
-    initializeAnalytics();
-    trackLoadingStarted();
-  }, []);
-
-  // GA4 Trackers & Listeners (Activated once loading screen closes and transition completes)
-  useEffect(() => {
-    if (!isTransitionComplete) return;
-
-    // 1. Dynamic Section View Discovery & Intersection Tracking
-    const getSectionName = (id) => {
-      if (id === 'home') return 'Hero';
-      return id.charAt(0).toUpperCase() + id.slice(1);
-    };
-
-    // Find all sections that have an ID attribute
-    const sectionElements = document.querySelectorAll('section[id]');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const sectionId = entry.target.id;
-          const sectionName = getSectionName(sectionId);
-          trackSectionView(sectionName);
-        }
-      });
-    }, {
-      threshold: 0.2 // Trigger when 20% of the section area is visible
-    });
-
-    sectionElements.forEach(el => observer.observe(el));
-
-    // 2. Throttled Scroll Depth Tracking
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (docHeight <= 0) return;
-
-      const scrollPercent = Math.round((scrollTop / docHeight) * 100);
-      const thresholds = [25, 50, 75, 100];
-      
-      thresholds.forEach(threshold => {
-        if (scrollPercent >= threshold) {
-          trackScrollDepth(threshold);
-        }
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    // 3. Session Duration Milestone Timers
-    const milestones = [30, 60, 120];
-    const timers = milestones.map(seconds => {
-      return setTimeout(() => {
-        trackSessionDuration(seconds);
-      }, seconds * 1000);
-    });
-
-    // 4. Automatic Outbound Link Tracking
-    const handleOutboundClick = (e) => {
-      const anchor = e.target.closest('a');
-      if (anchor && anchor.href) {
-        const url = anchor.href;
-        const isOutbound = url.startsWith('http') && !url.includes(window.location.hostname);
-        if (isOutbound) {
-          trackOutboundLink(url);
-        }
-      }
-    };
-    window.addEventListener('click', handleOutboundClick);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('scroll', handleScroll);
-      timers.forEach(t => clearTimeout(t));
-      window.removeEventListener('click', handleOutboundClick);
-    };
-  }, [isTransitionComplete]);
-
   return (
     <>
       {isLoading && (
@@ -166,8 +165,6 @@ export default function App() {
           onComplete={() => {
             setIsTransitionComplete(true);
             setIsLoading(false);
-            trackLoadingCompleted();
-            trackPageView();
           }}
         />
       )}

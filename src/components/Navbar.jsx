@@ -7,14 +7,12 @@ import {
 import { 
   trackNavigationClick, 
   trackResumeViewed, 
-  trackResumeDownload, 
-  trackEmailClick, 
-  trackGitHubClick, 
-  trackLinkedInClick, 
-  trackProjectClick 
+  trackProjectClick,
+  trackEmailClick,
+  trackLinkedInClick,
+  trackGitHubClick
 } from '../utils/analytics';
 import { downloadResume } from '../utils/resume';
-
 const navLinks = [
   { name: 'Home', id: 'home' },
   { name: 'About', id: 'about' },
@@ -114,6 +112,9 @@ function Navbar() {
   // Scroll Lock & Lenis Control for Resume Modal
   useEffect(() => {
     if (isModalOpen) {
+      // Track Resume Viewed
+      trackResumeViewed();
+
       // 1. Lock body scrolling in all major browsers
       const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
@@ -294,10 +295,6 @@ function Navbar() {
       if (targetId && navLinks.some(link => link.id === targetId)) {
         isManualScrollRef.current = true;
         setActiveSection(targetId);
-        
-        const sectionName = targetId === 'home' ? 'Hero' : targetId.charAt(0).toUpperCase() + targetId.slice(1);
-        trackNavigationClick(sectionName);
-
         if (manualScrollTimeoutRef.current) clearTimeout(manualScrollTimeoutRef.current);
         manualScrollTimeoutRef.current = setTimeout(() => {
           isManualScrollRef.current = false;
@@ -314,6 +311,7 @@ function Navbar() {
     const element = document.getElementById(id);
     if (!element) return;
 
+    // Track Navigation Click
     const sectionName = id === 'home' ? 'Hero' : id.charAt(0).toUpperCase() + id.slice(1);
     trackNavigationClick(sectionName);
 
@@ -623,7 +621,6 @@ function Navbar() {
                     
                     <button
                       onClick={() => {
-                        trackResumeViewed();
                         setIsModalOpen(true);
                         setIsDropdownOpen(false);
                       }}
@@ -865,7 +862,7 @@ function Navbar() {
                           <a 
                             href="mailto:kavya.makhan@example.com" 
                             className="hover:text-cyan-600 transition-colors pointer-events-auto cursor-pointer"
-                            onClick={() => trackEmailClick('Resume Modal Email')}
+                            onClick={() => trackEmailClick('Resume Modal')}
                           >
                             kavya.makhan@example.com
                           </a>
@@ -875,7 +872,7 @@ function Navbar() {
                             target="_blank" 
                             rel="noopener noreferrer" 
                             className="hover:text-cyan-600 transition-colors pointer-events-auto cursor-pointer"
-                            onClick={() => trackGitHubClick('Resume Modal GitHub')}
+                            onClick={() => trackGitHubClick('Resume Modal')}
                           >
                             github.com/kavya-makhan
                           </a>
@@ -885,7 +882,7 @@ function Navbar() {
                             target="_blank" 
                             rel="noopener noreferrer" 
                             className="hover:text-cyan-600 transition-colors pointer-events-auto cursor-pointer"
-                            onClick={() => trackLinkedInClick('Resume Modal LinkedIn')}
+                            onClick={() => trackLinkedInClick('Resume Modal')}
                           >
                             linkedin.com/in/kavya-makhan
                           </a>
@@ -939,19 +936,19 @@ function Navbar() {
                           <div>
                             <div className="flex justify-between items-baseline">
                               <h3 
-                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto"
+                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto select-none"
                                 onClick={() => trackProjectClick('Cybernetic Neural Robotic Controller', 'Open')}
                               >
                                 Cybernetic Neural Robotic Controller
                               </h3>
                               <span className="text-[10px] font-mono text-zinc-400 font-bold">PyTorch, ROS2, SolidWorks</span>
                             </div>
-                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1.5 pointer-events-auto">
+                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1 pointer-events-auto">
                               <a 
                                 href="https://github.com/kavya-makhan/robotic-controller" 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="hover:underline cursor-pointer"
+                                className="hover:underline cursor-pointer animate-pulse"
                                 onClick={() => trackProjectClick('Cybernetic Neural Robotic Controller', 'GitHub Repository')}
                               >
                                 [GITHUB REPOSITORY]
@@ -960,7 +957,7 @@ function Navbar() {
                                 href="https://demo.kavya-makhan.dev/robotic-controller" 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="hover:underline cursor-pointer"
+                                className="hover:underline cursor-pointer animate-pulse"
                                 onClick={() => trackProjectClick('Cybernetic Neural Robotic Controller', 'Live Demo')}
                               >
                                 [LIVE DEMO]
@@ -974,19 +971,19 @@ function Navbar() {
                           <div>
                             <div className="flex justify-between items-baseline">
                               <h3 
-                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto"
+                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto select-none"
                                 onClick={() => trackProjectClick('Thermally-Optimized Computing Chassis', 'Open')}
                               >
                                 Thermally-Optimized Computing Chassis
                               </h3>
                               <span className="text-[10px] font-mono text-zinc-400 font-bold">SolidWorks FEA & CFD, Matlab</span>
                             </div>
-                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1.5 pointer-events-auto">
+                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1 pointer-events-auto">
                               <a 
                                 href="https://github.com/kavya-makhan/thermal-chassis" 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="hover:underline cursor-pointer"
+                                className="hover:underline cursor-pointer animate-pulse"
                                 onClick={() => trackProjectClick('Thermally-Optimized Computing Chassis', 'GitHub Repository')}
                               >
                                 [GITHUB REPOSITORY]
@@ -995,7 +992,7 @@ function Navbar() {
                                 href="https://demo.kavya-makhan.dev/thermal-chassis" 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="hover:underline cursor-pointer"
+                                className="hover:underline cursor-pointer animate-pulse"
                                 onClick={() => trackProjectClick('Thermally-Optimized Computing Chassis', 'Live Demo')}
                               >
                                 [LIVE DEMO]
@@ -1009,19 +1006,19 @@ function Navbar() {
                           <div>
                             <div className="flex justify-between items-baseline">
                               <h3 
-                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto"
+                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto select-none"
                                 onClick={() => trackProjectClick('Autonomous Pathfinder Obstacle Avoidance UAV', 'Open')}
                               >
                                 Autonomous Pathfinder Obstacle Avoidance UAV
                               </h3>
                               <span className="text-[10px] font-mono text-zinc-400 font-bold">Python, ARM Microcontrollers, OpenCV</span>
                             </div>
-                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1.5 pointer-events-auto">
+                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1 pointer-events-auto">
                               <a 
                                 href="https://github.com/kavya-makhan/obstacle-avoidance-uav" 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="hover:underline cursor-pointer"
+                                className="hover:underline cursor-pointer animate-pulse"
                                 onClick={() => trackProjectClick('Autonomous Pathfinder Obstacle Avoidance UAV', 'GitHub Repository')}
                               >
                                 [GITHUB REPOSITORY]
@@ -1030,7 +1027,7 @@ function Navbar() {
                                 href="https://demo.kavya-makhan.dev/obstacle-avoidance-uav" 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="hover:underline cursor-pointer"
+                                className="hover:underline cursor-pointer animate-pulse"
                                 onClick={() => trackProjectClick('Autonomous Pathfinder Obstacle Avoidance UAV', 'Live Demo')}
                               >
                                 [LIVE DEMO]

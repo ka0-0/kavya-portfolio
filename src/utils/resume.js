@@ -1,17 +1,13 @@
-// Shared Resume Utility Module
-// Centralizes resume download generation and fires respective GA4 tracking.
-
 import { trackResumeDownload } from './analytics';
 
 /**
- * Triggers the browser-native file download for the mock portfolio resume
- * and logs the Resume Downloaded event in Google Analytics.
+ * Generates the mock portfolio CV text document, triggers a local browser download,
+ * and records the event in Google Analytics.
  */
 export function downloadResume() {
-  // Fire analytics event
+  // Track download event
   trackResumeDownload();
 
-  // Compile mock resume text content
   const resumeText = `KAVYA MAKHAN
 Mechanical Engineer & AI Algorithms Developer
 Location: India | GitHub: github.com/kavya-makhan | Email: kavya.makhan@example.com
@@ -45,5 +41,9 @@ CERTIFICATIONS:
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  
+  // Revoke object URL after click to release browser memory
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 100);
 }
