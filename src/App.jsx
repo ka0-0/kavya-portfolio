@@ -10,6 +10,7 @@ import SpaceBoiScene from './components/SpaceBoiScene';
 import Lenis from 'lenis';
 import { useGLTF } from '@react-three/drei';
 import { 
+  initializeAnalytics,
   trackPageView, 
   trackSectionView, 
   trackScrollDepth, 
@@ -80,6 +81,7 @@ export default function App() {
 
   // Track loading started on mount
   useEffect(() => {
+    initializeAnalytics();
     trackLoadingStarted();
   }, []);
 

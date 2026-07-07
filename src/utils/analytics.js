@@ -2,8 +2,44 @@
 // Handles user interactions, section visibility, scroll depth, and loading state tracking.
 // Guarantees zero PII leakage and graceful degradation if GA is blocked by ad-blockers.
 
+const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
+
 const trackedSections = new Set();
 const trackedScrollDepths = new Set();
+
+/**
+ * Dynamically initializes Google Analytics 4 using the Measurement ID from environment.
+ * If the Measurement ID is missing, analytics initialization is skipped completely.
+ */
+export function initializeAnalytics() {
+  if (typeof window === 'undefined') return;
+  if (!GA_MEASUREMENT_ID) {
+    console.warn('VITE_GA_MEASUREMENT_ID is missing. Analytics tracking is disabled.');
+    return;
+  }
+
+  // Prevent duplicate script injection
+  if (document.getElementById('google-analytics-script')) return;
+
+  // Initialize dataLayer and gtag synchronously so calls can queue immediately
+  window.dataLayer = window.dataLayer || [];
+  function gtag() {
+    window.dataLayer.push(arguments);
+  }
+  window.gtag = gtag;
+
+  gtag('js', new Date());
+  gtag('config', GA_MEASUREMENT_ID, {
+    send_page_view: false // Manual tracking in App.jsx to avoid double-counting
+  });
+
+  // Inject the gtag script tag asynchronously
+  const script = document.createElement('script');
+  script.id = 'google-analytics-script';
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+  document.head.appendChild(script);
+}
 
 /**
  * Safely calls window.gtag if it is defined (graceful failure when GA is blocked).
