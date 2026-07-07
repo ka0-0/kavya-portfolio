@@ -17,6 +17,7 @@ const SpaceBoi = memo(function SpaceBoi({ onModelLoaded }) {
 
       // Center geometry around (0,0,0) locally so rotation has no orbital wobble
       scene.position.set(-center.x, -center.y, -center.z);
+      console.log('SPHERE_RADIUS:', sphere.radius, 'CENTER:', center);
 
       // Report model's bounding radius to frame the camera
       if (onModelLoaded) {
@@ -74,6 +75,7 @@ const CameraFitter = memo(function CameraFitter({ modelRadius }) {
       const distance = modelRadius / (3 * Math.sin(theta));
 
       camera.position.set(0, 0, distance);
+      console.log('CAMERA_DISTANCE:', distance, 'ASPECT:', aspect, 'SIZE:', size);
       camera.near = distance / 20;
       camera.far = distance * 20;
       camera.updateProjectionMatrix();
