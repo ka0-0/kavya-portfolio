@@ -34,7 +34,7 @@ const trackedSections = new Set();
 export function trackSectionView(sectionName) {
   // Strip any potential personal info from sectionName
   const cleanSection = String(sectionName).replace(/[^\w\s-]/g, '').trim();
-  const eventName = `${cleanSection} Viewed`;
+  const eventName = `${cleanSection.toLowerCase().replace(/[\s-]+/g, '_')}_viewed`;
   
   if (trackedSections.has(eventName)) return;
   trackedSections.add(eventName);
@@ -53,7 +53,7 @@ export function trackScrollDepth(depth) {
   if (trackedScrollDepths.has(depth)) return;
   trackedScrollDepths.add(depth);
 
-  safeGtag('event', 'Scroll Depth', {
+  safeGtag('event', 'scroll_depth', {
     event_category: 'Engagement',
     event_action: 'Scroll',
     event_label: `${depth}%`,
@@ -65,7 +65,7 @@ export function trackScrollDepth(depth) {
  * Tracks engagement duration milestones.
  */
 export function trackSessionDuration(seconds) {
-  safeGtag('event', 'Session Duration', {
+  safeGtag('event', 'session_duration', {
     event_category: 'Engagement',
     event_action: 'Time Spent',
     event_label: `${seconds}s`,
@@ -77,7 +77,7 @@ export function trackSessionDuration(seconds) {
  * Tracks resume modal viewer open events.
  */
 export function trackResumeViewed() {
-  safeGtag('event', 'Resume Viewed', {
+  safeGtag('event', 'resume_viewed', {
     event_category: 'Resume',
     event_action: 'View',
     event_label: 'Resume Modal'
@@ -88,7 +88,7 @@ export function trackResumeViewed() {
  * Tracks resume download event.
  */
 export function trackResumeDownload() {
-  safeGtag('event', 'Resume Downloaded', {
+  safeGtag('event', 'resume_downloaded', {
     event_category: 'Resume',
     event_action: 'Download',
     event_label: 'Resume PDF'
@@ -104,7 +104,7 @@ export function trackProjectClick(projectTitle, interactionType) {
   const cleanType = String(interactionType).replace(/[^\w\s-]/g, '').trim();
 
   if (cleanType === 'Open') {
-    safeGtag('event', 'Project Opened', {
+    safeGtag('event', 'project_opened', {
       event_category: 'Projects',
       event_action: 'Open',
       event_label: cleanTitle
@@ -124,7 +124,7 @@ export function trackProjectClick(projectTitle, interactionType) {
  * Only sends the location context of the click (e.g. 'Resume Modal' or 'Navbar').
  */
 export function trackEmailClick(locationContext) {
-  safeGtag('event', 'Email Click', {
+  safeGtag('event', 'email_click', {
     event_category: 'Contact',
     event_action: 'Click',
     event_label: String(locationContext).replace(/[^\w\s-]/g, '').trim()
@@ -132,7 +132,7 @@ export function trackEmailClick(locationContext) {
 }
 
 export function trackLinkedInClick(locationContext) {
-  safeGtag('event', 'LinkedIn Click', {
+  safeGtag('event', 'linkedin_click', {
     event_category: 'Contact',
     event_action: 'Click',
     event_label: String(locationContext).replace(/[^\w\s-]/g, '').trim()
@@ -140,7 +140,7 @@ export function trackLinkedInClick(locationContext) {
 }
 
 export function trackGitHubClick(locationContext) {
-  safeGtag('event', 'GitHub Click', {
+  safeGtag('event', 'github_click', {
     event_category: 'Contact',
     event_action: 'Click',
     event_label: String(locationContext).replace(/[^\w\s-]/g, '').trim()
@@ -151,7 +151,7 @@ export function trackGitHubClick(locationContext) {
  * Tracks navigation menu clicks.
  */
 export function trackNavigationClick(targetSection) {
-  safeGtag('event', 'Navigation Click', {
+  safeGtag('event', 'navigation_click', {
     event_category: 'Navigation',
     event_action: 'Click',
     event_label: String(targetSection).replace(/[^\w\s-]/g, '').trim()
@@ -188,14 +188,14 @@ export function trackOutboundLink(url) {
  * Tracks loading screen events.
  */
 export function trackLoadingStarted() {
-  safeGtag('event', 'Loading Started', {
+  safeGtag('event', 'loading_started', {
     event_category: 'System',
     event_action: 'Start'
   });
 }
 
 export function trackLoadingCompleted() {
-  safeGtag('event', 'Loading Completed', {
+  safeGtag('event', 'loading_completed', {
     event_category: 'System',
     event_action: 'Complete'
   });
