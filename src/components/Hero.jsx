@@ -39,16 +39,16 @@ function Hero({ showRobot }) {
   return (
     <section
       ref={heroRef}
-      className="relative min-h-screen flex flex-col justify-between pt-24 pb-12 px-6 md:px-12 lg:px-20 bg-[#090909] text-white overflow-hidden select-none z-[1] isolate"
+      className="relative min-h-screen flex flex-col justify-between pt-[110px] md:pt-24 pb-12 px-6 md:px-12 lg:px-20 bg-[#090909] text-white overflow-hidden select-none z-[1] isolate"
     >
       {/* Background Ambient Radial Glow */}
       <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(30,58,138,0.1)_0%,transparent_70%)] rounded-full pointer-events-none z-0" />
 
       {/* Main 2-Column Hero Grid (Text 45% | Hero 3D Model 55%) */}
-      <div className="w-full max-w-7xl mx-auto my-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center z-[5] relative py-8">
+      <div className="w-full max-w-7xl mx-auto my-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-12 lg:gap-8 items-center z-[5] relative py-8">
         
         {/* LEFT SIDE: Text & CTA Buttons (45% width -> 5 cols on lg) */}
-        <div className="lg:col-span-5 flex flex-col items-start text-left space-y-6 -translate-y-20 lg:-translate-y-28">
+        <div className="lg:col-span-5 flex flex-col items-start text-left space-y-6 translate-y-0 md:-translate-y-20 lg:-translate-y-28">
           {/* HI, I'M */}
           <span className="font-mono text-xs sm:text-sm font-semibold tracking-[0.25em] text-cyan-400 uppercase">
             HI, I'M
@@ -180,12 +180,12 @@ function Hero({ showRobot }) {
         </div>
 
         {/* RIGHT SIDE: Hero 3D Avatar (small_robot.glb) (55% width -> 7 cols on lg, shifted 48px right) */}
-        <div className="lg:col-span-7 relative flex items-center justify-center min-h-[500px] sm:min-h-[600px] lg:min-h-[700px] w-full lg:translate-x-12">
+        <div className="lg:col-span-7 relative flex items-center justify-center min-h-[340px] md:min-h-[500px] sm:min-h-[600px] lg:min-h-[700px] w-full lg:translate-x-12 -translate-y-4 md:translate-y-0">
           {/* Subtle Electric Blue Ambient Radial Glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] sm:w-[520px] sm:h-[520px] bg-[radial-gradient(circle,rgba(6,182,212,0.18)_0%,rgba(37,99,235,0.09)_50%,transparent_70%)] pointer-events-none z-0" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180px] h-[180px] md:w-[350px] md:h-[350px] sm:w-[520px] sm:h-[520px] bg-[radial-gradient(circle,rgba(6,182,212,0.08)_0%,transparent_70%)] md:bg-[radial-gradient(circle,rgba(6,182,212,0.18)_0%,rgba(37,99,235,0.09)_50%,transparent_70%)] pointer-events-none z-0" />
 
           {/* Glowing Circular Platform Pedestal Beneath Model */}
-          <div className="absolute bottom-28 sm:bottom-36 left-1/2 -translate-x-1/2 w-[300px] sm:w-[440px] h-[65px] sm:h-[95px] rounded-[100%] bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.35)_0%,rgba(37,99,235,0.2)_50%,transparent_80%)] border border-cyan-400/30 blur-[2px] shadow-[0_0_50px_rgba(6,182,212,0.4)] pointer-events-none animate-pulse z-0" />
+          <div className="absolute bottom-[72px] md:bottom-28 sm:bottom-36 left-1/2 -translate-x-1/2 w-[150px] md:w-[300px] sm:w-[440px] h-[30px] md:h-[65px] sm:h-[95px] rounded-[100%] bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.18)_0%,transparent_80%)] md:bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.35)_0%,rgba(37,99,235,0.2)_50%,transparent_80%)] border border-cyan-500/10 md:border-cyan-400/30 blur-[1px] md:blur-[2px] shadow-[0_0_15px_rgba(6,182,212,0.15)] md:shadow-[0_0_50px_rgba(6,182,212,0.4)] pointer-events-none animate-pulse z-0" />
 
           {/* Render ONLY the NEW Hero GLB Avatar (/models/small_robot.glb) */}
           <div className="relative z-10 w-full h-full flex items-center justify-center">

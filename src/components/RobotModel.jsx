@@ -339,7 +339,7 @@ export default function RobotModel({ onLoad }) {
   return (
     <div 
       ref={containerRef} 
-      className="relative flex items-center justify-center pointer-events-none w-full h-[520px] sm:h-[620px] lg:h-[700px] bg-transparent transition-opacity duration-150 ease-in-out"
+      className="relative flex items-center justify-center pointer-events-none w-full h-[340px] md:h-[520px] sm:h-[620px] lg:h-[700px] bg-transparent transition-opacity duration-150 ease-in-out"
       style={{ opacity: isReady ? 1 : 0 }}
     >
       <Canvas

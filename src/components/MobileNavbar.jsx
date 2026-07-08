@@ -1,51 +1,56 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
-const rows = [
-  [
-    { id: 'home', label: 'HOME', fullWidth: true }
-  ],
-  [
-    { id: 'about', label: 'ABOUT' },
-    { id: 'skills', label: 'SKILLS' }
-  ],
-  [
-    { id: 'projects', label: 'PROJECTS' },
-    { id: 'certificates', label: 'CERTIFICATES' }
-  ],
-  [
-    { id: 'contact', label: "LET'S TALK", fullWidth: true }
-  ]
+const navItems = [
+  { id: 'home', label: 'HOME' },
+  { id: 'about', label: 'ABOUT' },
+  { id: 'skills', label: 'SKILLS' },
+  { id: 'projects', label: 'PROJECTS' },
+  { id: 'certificates', label: 'CERTIFICATES' },
+  { id: 'contact', label: "LET'S TALK" }
 ];
 
 function MobileNavbar({ activeSection, handleNavClick }) {
   const shouldReduceMotion = useReducedMotion();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Long press haptic & interaction states
+  // Animation and interaction lock state (prevents accidental double taps)
+  const isAnimatingRef = useRef(false);
+
+  // Long press haptic & interaction states (only active when closed)
   const [isPressing, setIsPressing] = useState(false);
-  const [isLongPressed, setIsLongPressed] = useState(false);
   const pressTimeoutRef = useRef(null);
 
-  // Spring transition curve mimicking Apple's motion language (with overshoot)
+  // Snappy spring transition curve mimicking Apple/VisionOS/Nothing OS (completing in ~220ms)
   const springTransition = shouldReduceMotion
-    ? { duration: 0.25, ease: 'easeInOut' }
+    ? { duration: 0.20, ease: 'easeInOut' }
     : {
         type: 'spring',
-        stiffness: 450,
-        damping: 32,
+        stiffness: 480,
+        damping: 35,
         mass: 0.8,
       };
 
+  const toggleMenu = () => {
+    if (isAnimatingRef.current) return;
+
+    isAnimatingRef.current = true;
+    setIsOpen((prev) => !prev);
+
+    // Cooldown duration matches the animation transition timeframe (220ms)
+    setTimeout(() => {
+      isAnimatingRef.current = false;
+    }, 220);
+  };
+
   const startPress = (e) => {
+    if (isAnimatingRef.current) return;
     // Prevent double triggers on touch devices firing mouse events
     if (e.type === 'mousedown' && 'ontouchstart' in window) return;
 
     setIsPressing(true);
-    setIsLongPressed(false);
 
     pressTimeoutRef.current = setTimeout(() => {
-      setIsLongPressed(true);
       // Trigger haptic vibration on long press activation
       if (navigator.vibrate) {
         try {
@@ -64,7 +69,7 @@ function MobileNavbar({ activeSection, handleNavClick }) {
 
     if (isPressing) {
       setIsPressing(false);
-      setIsOpen((prev) => !prev);
+      toggleMenu();
     }
   };
 
@@ -73,7 +78,25 @@ function MobileNavbar({ activeSection, handleNavClick }) {
       clearTimeout(pressTimeoutRef.current);
     }
     setIsPressing(false);
-    setIsLongPressed(false);
+  };
+
+  const releaseScrollLock = () => {
+    document.body.style.overflow = '';
+    document.body.style.touchAction = '';
+    if (window.lenis) {
+      window.lenis.start();
+    }
+  };
+
+  const handleItemClick = (e, sectionId) => {
+    if (isAnimatingRef.current) return;
+    
+    // Release scroll lock synchronously BEFORE scroll is triggered
+    releaseScrollLock();
+    // Scroll to section
+    handleNavClick(e, sectionId);
+    // Morph back into circular hamburger trigger
+    toggleMenu();
   };
 
   // 1. Manage scroll locking, touch-action locking, and Lenis scroll engine locking
@@ -85,47 +108,56 @@ function MobileNavbar({ activeSection, handleNavClick }) {
         window.lenis.stop();
       }
     } else {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-      if (window.lenis) {
-        window.lenis.start();
-      }
+      releaseScrollLock();
     }
 
     return () => {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-      if (window.lenis) {
-        window.lenis.start();
-      }
+      releaseScrollLock();
     };
   }, [isOpen]);
 
-  // 2. Dismiss logic: close on orientation change, window resize, hashchange, or scroll fallback
+  // 2. Dismiss logic: close on orientation change, window resize, or hashchange
   useEffect(() => {
     if (!isOpen) return;
 
-    const handleDismiss = () => setIsOpen(false);
+    const handleDismiss = () => {
+      releaseScrollLock();
+      toggleMenu();
+    };
 
     window.addEventListener('orientationchange', handleDismiss);
     window.addEventListener('resize', handleDismiss);
     window.addEventListener('hashchange', handleDismiss);
-    window.addEventListener('scroll', handleDismiss, { passive: true });
 
     return () => {
       window.removeEventListener('orientationchange', handleDismiss);
       window.removeEventListener('resize', handleDismiss);
       window.removeEventListener('hashchange', handleDismiss);
-      window.removeEventListener('scroll', handleDismiss);
     };
   }, [isOpen]);
 
-  // Animation variants for floating menu reveal
+  // Animation variants for floating menu reveal (slides/fades upward on open, down on close)
   const containerVariants = {
-    hidden: {},
-    visible: {
+    hidden: {
+      opacity: 0,
+      y: 16,
       transition: {
-        staggerChildren: 0.05,
+        duration: 0.18,
+        ease: 'easeInOut',
+      },
+      transitionEnd: {
+        display: 'none',
+      },
+    },
+    visible: {
+      display: 'flex',
+      opacity: 1,
+      y: 0,
+      transition: {
+        staggerChildren: 0.04,
+        delayChildren: 0.05,
+        duration: 0.20,
+        ease: 'easeOut',
       },
     },
   };
@@ -133,31 +165,31 @@ function MobileNavbar({ activeSection, handleNavClick }) {
   const itemVariants = {
     hidden: {
       opacity: 0,
-      y: 15,
+      y: 12,
     },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
         type: 'spring',
-        stiffness: 260,
-        damping: 22,
+        stiffness: 300,
+        damping: 24,
       },
     },
   };
 
   return (
     <>
-      {/* 1. iOS-style Backdrop overlay (uses pure opacity for extreme performance on Android) */}
+      {/* 1. iOS-style Backdrop overlay (uses pure opacity and subtle dimming for performance on Android) */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.22, ease: 'easeInOut' }}
-            onClick={() => setIsOpen(false)}
-            className="fixed inset-0 z-[95] bg-black/55 pointer-events-auto"
+            transition={{ duration: 0.18, ease: 'easeInOut' }}
+            onClick={() => toggleMenu()}
+            className="fixed inset-0 z-[95] bg-black/35 pointer-events-auto"
           />
         )}
       </AnimatePresence>
@@ -170,121 +202,124 @@ function MobileNavbar({ activeSection, handleNavClick }) {
         dragElastic={0.12}
         onDragEnd={(e, info) => {
           if (info.offset.y > 60) {
-            setIsOpen(false);
+            toggleMenu();
           }
         }}
         style={{
           bottom: 'calc(env(safe-area-inset-bottom) + 20px)',
-          width: isOpen ? 310 : 64,
-          height: isOpen ? 342 : 64,
-          borderRadius: isOpen ? 28 : 32,
+          width: isOpen ? 240 : 74,
+          height: isOpen ? 328 : 52,
+          borderRadius: isOpen ? 18 : 26,
         }}
         animate={
-          shouldReduceMotion
-            ? {}
+          isOpen
+            ? {
+                scale: 1.00,
+              }
             : {
-                scale: !isOpen && isLongPressed ? 1.15 : !isOpen && isPressing ? 1.08 : 1,
-                boxShadow: isOpen
-                  ? '0 20px 40px rgba(0,0,0,0.55), 0 0 30px rgba(255,255,255,0.01)'
-                  : isLongPressed
-                  ? '0 0 20px 4px rgba(34, 211, 238, 0.4), 0 10px 30px rgba(0,0,0,0.5)'
-                  : isPressing
-                  ? '0 0 12px 2px rgba(34, 211, 238, 0.2), 0 10px 25px rgba(0,0,0,0.45)'
-                  : '0 10px 30px rgba(0,0,0,0.45)',
+                scale: isPressing ? 1.05 : [0.96, 1.00, 0.96],
               }
         }
-        transition={springTransition}
-        className="fixed left-1/2 -translate-x-1/2 z-[100] border border-white/10 bg-[#0c0c0e] shadow-2xl flex flex-col items-center justify-center overflow-hidden pointer-events-auto select-none touch-pan-y"
+        transition={
+          isOpen
+            ? springTransition
+            : {
+                default: springTransition,
+                scale: isPressing
+                  ? { type: 'spring', stiffness: 400, damping: 25 }
+                  : {
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }
+              }
+        }
+        className={`fixed left-1/2 -translate-x-1/2 z-[100] border border-white/5 bg-[#0c0c0e]/90 backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.5)] flex flex-col items-center justify-start overflow-hidden pointer-events-auto select-none touch-pan-y ${
+          !isOpen ? 'subtle-cyan-pulse' : 'pt-4 px-3 pb-3'
+        }`}
       >
-        <AnimatePresence mode="wait">
-          {isOpen ? (
-            <motion.div
-              key="menu-content"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="w-full h-full flex flex-col items-center px-5 pb-5 pt-3 gap-4"
-            >
-              {/* Drag indicator bar */}
-              <div className="w-10 h-1 bg-white/20 rounded-full flex-shrink-0 cursor-grab active:cursor-grabbing" />
-
-              {/* Staggered Navigation Grid */}
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-col gap-3 w-full"
+        {/* A. Navigation Grid (Stays above the Close pill in open state) */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate={isOpen ? "visible" : "hidden"}
+          className="w-full flex flex-col gap-y-1 overflow-hidden"
+          style={{
+            pointerEvents: isOpen ? 'auto' : 'none',
+          }}
+        >
+          {navItems.map((item) => {
+            const isActive = item.id === activeSection;
+            return (
+              <motion.button
+                key={item.id}
+                variants={itemVariants}
+                onClick={(e) => handleItemClick(e, item.id)}
+                className={`relative h-9 rounded-[12px] flex items-center justify-start font-sans font-bold text-[12px] uppercase tracking-[0.05em] px-4 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE] focus-visible:ring-offset-2 focus-visible:ring-offset-black cursor-pointer select-none active:scale-[0.98] w-full border border-transparent ${
+                  isActive
+                    ? 'text-[#22CBE3] bg-[#22CBE3]/10 border-[#22CBE3]/20 font-extrabold shadow-[0_0_12px_rgba(34,203,227,0.05)]'
+                    : 'text-zinc-400 bg-transparent hover:text-white hover:bg-white/5'
+                }`}
+                aria-label={`Go to ${item.label} section`}
+                aria-current={isActive ? 'true' : 'false'}
               >
-                {rows.map((row, rowIndex) => (
-                  <div key={rowIndex} className="flex gap-3 w-full justify-between">
-                    {row.map((item) => {
-                      const isActive = item.id === activeSection;
-                      return (
-                        <motion.button
-                          key={item.id}
-                          variants={itemVariants}
-                          onClick={(e) => {
-                            handleNavClick(e, item.id);
-                            setIsOpen(false);
-                          }}
-                          className={`relative h-14 rounded-2xl flex items-center justify-center font-sans font-bold text-[10px] uppercase tracking-[0.15em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE] focus-visible:ring-offset-2 focus-visible:ring-offset-black cursor-pointer select-none active:scale-[0.97] ${
-                            isActive
-                              ? 'text-black font-extrabold'
-                              : 'text-zinc-400 bg-white/5 border border-white/5 hover:text-white'
-                          } ${item.fullWidth ? 'w-full' : 'w-[calc(50%-6px)]'}`}
-                          aria-label={`Go to ${item.label} section`}
-                          aria-current={isActive ? 'true' : 'false'}
-                        >
-                          {isActive && (
-                            <motion.div
-                              layoutId="active-mobile-pill-sheet"
-                              className="absolute inset-0 bg-[#22D3EE] rounded-2xl -z-10 shadow-[0_0_12px_rgba(34,211,238,0.4)]"
-                              transition={springTransition}
-                            />
-                          )}
-                          <span className="relative z-10">{item.label}</span>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                ))}
-              </motion.div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="icon-content"
-              onMouseDown={startPress}
-              onMouseUp={endPress}
-              onMouseLeave={cancelPress}
-              onTouchStart={startPress}
-              onTouchEnd={endPress}
-              onTouchCancel={cancelPress}
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.85 }}
-              transition={{ duration: 0.15 }}
-              className="w-full h-full flex items-center justify-center relative cursor-pointer"
-            >
-              {/* Circular Touch Ripple Effect */}
-              {isPressing && (
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0.5 }}
-                  animate={{ scale: 1.45, opacity: 0 }}
-                  transition={{ duration: 0.65, ease: 'easeOut', repeat: Infinity }}
-                  className="absolute inset-0 rounded-full border border-[#22D3EE]/40 pointer-events-none"
-                />
-              )}
+                <span className="relative z-10">{item.label}</span>
+              </motion.button>
+            );
+          })}
+        </motion.div>
 
-              {/* Robot/AI Emblem Icon */}
-              <img
-                src="/emblem.png"
-                className="w-[62%] h-[62%] object-contain select-none pointer-events-none filter drop-shadow-[0_0_6px_rgba(6,182,212,0.7)]"
-                alt="Robot AI Icon"
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* B. Bottom Close Pill (Fills container when closed, matches centered Close pill at bottom when open) */}
+        <motion.button
+          layout
+          onClick={toggleMenu}
+          onMouseDown={!isOpen ? startPress : undefined}
+          onMouseUp={!isOpen ? endPress : undefined}
+          onMouseLeave={!isOpen ? cancelPress : undefined}
+          onTouchStart={!isOpen ? startPress : undefined}
+          onTouchEnd={!isOpen ? endPress : undefined}
+          onTouchCancel={!isOpen ? cancelPress : undefined}
+          style={{
+            width: isOpen ? 74 : '100%',
+            height: isOpen ? 52 : '100%',
+          }}
+          transition={springTransition}
+          className={`flex items-center justify-center gap-2 cursor-pointer select-none transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE] focus-visible:ring-offset-2 focus-visible:ring-offset-black flex-shrink-0 active:scale-95 rounded-full ${
+            isOpen
+              ? 'bg-white/5 border border-white/5 shadow-md mt-3'
+              : 'bg-transparent border-none'
+          }`}
+          aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={isOpen}
+        >
+          {/* Hamburger -> X Morph Icon Lines */}
+          <div className="relative w-5 h-5 flex flex-col items-center justify-center">
+            <motion.span
+              animate={{
+                y: isOpen ? 0 : -6,
+                rotate: isOpen ? 45 : 0,
+              }}
+              transition={springTransition}
+              className="absolute w-5 h-0.5 bg-white rounded-full"
+            />
+            <motion.span
+              animate={{
+                opacity: isOpen ? 0 : 1,
+                scaleX: isOpen ? 0 : 1,
+              }}
+              transition={springTransition}
+              className="absolute w-5 h-0.5 bg-white rounded-full"
+            />
+            <motion.span
+              animate={{
+                y: isOpen ? 0 : 6,
+                rotate: isOpen ? -45 : 0,
+              }}
+              transition={springTransition}
+              className="absolute w-5 h-0.5 bg-white rounded-full"
+            />
+          </div>
+        </motion.button>
       </motion.div>
     </>
   );

@@ -272,18 +272,13 @@ function Navbar({ activeSection, handleNavClick }) {
         }`}
       />
       <header className="fixed top-0 left-0 right-0 z-[100] pointer-events-none w-full">
-        {/* Outer content boundary matching the max-w-7xl px-6 md:px-4 grid alignment of the page */}
+        {/* Outer content boundary matching the max-w-7xl px-4 grid alignment of the page */}
         <div 
-          className="max-w-7xl mx-auto px-6 md:px-4 h-24 relative w-full"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'auto 1fr auto',
-            alignItems: 'center'
-          }}
+          className="max-w-7xl mx-auto px-4 md:px-4 h-24 relative w-full mobile-header-container"
         >
           
           {/* Column 1: Brand Logo & Emblem - Far Left */}
-          <div className="flex items-center gap-[16px] pointer-events-auto select-none">
+          <div className="pointer-events-auto select-none mobile-contents-column">
             {/* Matte Black Decepticon-style brand emblem */}
             <motion.div
               initial="hidden"
