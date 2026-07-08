@@ -413,7 +413,7 @@ function CyberCard({
       </div>
 
       {/* Card Content */}
-      <div className="p-6 min-h-[220px] relative flex-1 flex flex-col justify-between">
+      <div className="p-4 md:p-6 min-h-[220px] relative flex-1 flex flex-col justify-between">
         {children}
       </div>
     </div>
@@ -504,7 +504,7 @@ export default function AboutSection() {
     <section
       ref={sectionRef}
       id="about"
-      className="relative w-full bg-[#0a0a0c] text-white flex flex-col justify-center px-6 pt-6 md:pt-8 pb-10 md:pb-12 overflow-hidden select-none border-t border-t-zinc-900/60"
+      className="relative w-full bg-[#0a0a0c] text-white flex flex-col justify-center px-3 md:px-6 pt-6 md:pt-8 pb-10 md:pb-12 overflow-hidden select-none border-t border-t-zinc-900/60"
     >
       {/* Background Blueprint Grid details - Completely static */}
       <div className="absolute inset-0 blueprint-grid opacity-[0.8] pointer-events-none" />
@@ -606,7 +606,7 @@ export default function AboutSection() {
       />
 
       {/* Main OS status panel bar */}
-      <div className="max-w-7xl mx-auto w-full px-6 md:px-8 mb-8 font-mono text-[9px] flex flex-wrap justify-between items-center gap-4 border-b border-zinc-900 pb-4 text-zinc-500 z-10">
+      <div className="max-w-7xl mx-auto w-full px-3 md:px-8 mb-8 font-mono text-[9px] flex flex-wrap justify-between items-center gap-4 border-b border-zinc-900 pb-4 text-zinc-500 z-10">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
           <span>PORTFOLIO OS ENGINE: OPERATIONAL</span>
@@ -624,7 +624,7 @@ export default function AboutSection() {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.25 }}
-        className="max-w-7xl mx-auto w-full px-6 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 z-10"
+        className="max-w-7xl mx-auto w-full px-3 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6 z-10"
       >
 
         {/* ROW 1: Card 1 (Profile Info) & Card 2 (Network Map) */}
@@ -665,7 +665,7 @@ export default function AboutSection() {
               </div>
 
               {/* Column/Card: Futuristic Android Avatar Container */}
-              <div className="flex flex-col items-center justify-center p-2.5 border border-zinc-800/40 rounded-lg bg-zinc-950/20 w-full md:w-[190px] self-stretch relative overflow-hidden">
+              <div className="flex flex-col items-center justify-center p-2.5 border border-zinc-800/40 rounded-lg bg-zinc-950/20 w-full md:w-[190px] h-[200px] sm:h-[240px] md:h-auto self-stretch relative overflow-hidden">
                 {/* Subtle tech background grid texture */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.03),transparent_70%)] pointer-events-none" />
                 {/* Static Image Wrapper */}
@@ -733,7 +733,7 @@ export default function AboutSection() {
             <div className="w-full h-full flex flex-col justify-between relative">
               {/* Tab Header List */}
               <div
-                className="flex border-b border-zinc-900/60 pb-2 mb-5 gap-1.5 relative z-10"
+                className="flex flex-wrap border-b border-zinc-900/60 pb-2 mb-5 gap-1 sm:gap-1.5 relative z-10"
                 role="tablist"
                 aria-label="Cognitive spectrum sections"
               >
@@ -940,11 +940,11 @@ export default function AboutSection() {
             isBootComplete={bootComplete.metrics}
           >
             <div className="w-full h-full flex flex-col justify-between">
-              <div className="grid grid-cols-2 gap-y-6 gap-x-4 flex-1 items-center py-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-y-6 md:gap-x-4 flex-1 items-center py-4">
                 {metricsData.map((m, idx) => (
                   <div
                     key={idx}
-                    className="p-5 border border-zinc-900/60 rounded bg-zinc-950/20 flex flex-col justify-between min-h-[155px] hover:border-cyan-500/20 transition-colors duration-300"
+                    className="p-3.5 sm:p-5 border border-zinc-900/60 rounded bg-zinc-950/20 flex flex-col justify-between min-h-[150px] sm:min-h-[155px] hover:border-cyan-500/20 transition-colors duration-300"
                   >
                     <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-wider leading-tight">{m.label}</span>
                     <div className="text-2xl font-black text-white font-sans mt-1">
@@ -970,7 +970,7 @@ export default function AboutSection() {
         whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true, amount: 0.25 }}
         transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-        className="max-w-7xl mx-auto w-full px-6 md:px-8 mt-8 z-10"
+        className="max-w-7xl mx-auto w-full px-3 md:px-8 mt-8 z-10"
       >
         <CyberCard
           title="TIME ON EARTH"
