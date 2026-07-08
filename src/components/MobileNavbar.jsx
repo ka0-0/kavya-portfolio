@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
 
 const rows = [
   [
@@ -19,7 +18,7 @@ const rows = [
   ]
 ];
 
-export default function MobileNavbar({ activeSection, handleNavClick }) {
+function MobileNavbar({ activeSection, handleNavClick }) {
   const shouldReduceMotion = useReducedMotion();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -58,7 +57,7 @@ export default function MobileNavbar({ activeSection, handleNavClick }) {
     }, 250);
   };
 
-  const endPress = (e) => {
+  const endPress = () => {
     if (pressTimeoutRef.current) {
       clearTimeout(pressTimeoutRef.current);
     }
@@ -134,13 +133,11 @@ export default function MobileNavbar({ activeSection, handleNavClick }) {
   const itemVariants = {
     hidden: {
       opacity: 0,
-      y: 20,
-      filter: shouldReduceMotion ? 'none' : 'blur(6px)',
+      y: 15,
     },
     visible: {
       opacity: 1,
       y: 0,
-      filter: 'blur(0px)',
       transition: {
         type: 'spring',
         stiffness: 260,
@@ -151,53 +148,66 @@ export default function MobileNavbar({ activeSection, handleNavClick }) {
 
   return (
     <>
-      {/* 1. iOS-style Backdrop Blur & Dimming Overlay */}
+      {/* 1. iOS-style Backdrop overlay (uses pure opacity for extreme performance on Android) */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            transition={{ duration: 0.22, ease: 'easeInOut' }}
             onClick={() => setIsOpen(false)}
-            className="fixed inset-0 z-[95] bg-black/40 backdrop-blur-md pointer-events-auto"
+            className="fixed inset-0 z-[95] bg-black/55 pointer-events-auto"
           />
         )}
       </AnimatePresence>
 
-      {/* 2. Floating Navigation Sheet & Trigger Button */}
-      <div 
-        className="fixed left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center pointer-events-none"
-        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}
+      {/* 2. Morphing Button & Expanded Menu container */}
+      <motion.div
+        layout
+        drag={isOpen ? 'y' : false}
+        dragConstraints={{ top: -10, bottom: 200 }}
+        dragElastic={0.12}
+        onDragEnd={(e, info) => {
+          if (info.offset.y > 60) {
+            setIsOpen(false);
+          }
+        }}
+        style={{
+          bottom: 'calc(env(safe-area-inset-bottom) + 20px)',
+          width: isOpen ? 310 : 64,
+          height: isOpen ? 342 : 64,
+          borderRadius: isOpen ? 28 : 32,
+        }}
+        animate={
+          shouldReduceMotion
+            ? {}
+            : {
+                scale: !isOpen && isLongPressed ? 1.15 : !isOpen && isPressing ? 1.08 : 1,
+                boxShadow: isOpen
+                  ? '0 20px 40px rgba(0,0,0,0.55), 0 0 30px rgba(255,255,255,0.01)'
+                  : isLongPressed
+                  ? '0 0 20px 4px rgba(34, 211, 238, 0.4), 0 10px 30px rgba(0,0,0,0.5)'
+                  : isPressing
+                  ? '0 0 12px 2px rgba(34, 211, 238, 0.2), 0 10px 25px rgba(0,0,0,0.45)'
+                  : '0 10px 30px rgba(0,0,0,0.45)',
+              }
+        }
+        transition={springTransition}
+        className="fixed left-1/2 -translate-x-1/2 z-[100] border border-white/10 bg-[#0c0c0e] shadow-2xl flex flex-col items-center justify-center overflow-hidden pointer-events-auto select-none touch-pan-y"
       >
-        {/* Expanded Navigation Sheet Capsule */}
-        <AnimatePresence>
-          {isOpen && (
+        <AnimatePresence mode="wait">
+          {isOpen ? (
             <motion.div
-              initial={
-                shouldReduceMotion
-                  ? { opacity: 0, y: 15 }
-                  : { opacity: 0, scale: 0.9, y: 40 }
-              }
-              animate={{ opacity: 1, scale: 1, y: -16 }}
-              exit={
-                shouldReduceMotion
-                  ? { opacity: 0, y: 15 }
-                  : { opacity: 0, scale: 0.9, y: 40 }
-              }
-              transition={springTransition}
-              drag="y"
-              dragConstraints={{ top: -20, bottom: 200 }}
-              dragElastic={0.15}
-              onDragEnd={(e, info) => {
-                if (info.offset.y > 60) {
-                  setIsOpen(false);
-                }
-              }}
-              className="w-[310px] p-5 rounded-[28px] border border-white/10 bg-zinc-950/85 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.6),_0_0_30px_rgba(255,255,255,0.02)] flex flex-col gap-4 items-center pointer-events-auto select-none touch-pan-y"
+              key="menu-content"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="w-full h-full flex flex-col items-center px-5 pb-5 pt-3 gap-4"
             >
-              {/* Drag Indicator Bar */}
-              <div className="w-10 h-1 bg-white/20 rounded-full mb-1 flex-shrink-0 cursor-grab active:cursor-grabbing" />
+              {/* Drag indicator bar */}
+              <div className="w-10 h-1 bg-white/20 rounded-full flex-shrink-0 cursor-grab active:cursor-grabbing" />
 
               {/* Staggered Navigation Grid */}
               <motion.div
@@ -241,58 +251,43 @@ export default function MobileNavbar({ activeSection, handleNavClick }) {
                 ))}
               </motion.div>
             </motion.div>
+          ) : (
+            <motion.div
+              key="icon-content"
+              onMouseDown={startPress}
+              onMouseUp={endPress}
+              onMouseLeave={cancelPress}
+              onTouchStart={startPress}
+              onTouchEnd={endPress}
+              onTouchCancel={cancelPress}
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ duration: 0.15 }}
+              className="w-full h-full flex items-center justify-center relative cursor-pointer"
+            >
+              {/* Circular Touch Ripple Effect */}
+              {isPressing && (
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0.5 }}
+                  animate={{ scale: 1.45, opacity: 0 }}
+                  transition={{ duration: 0.65, ease: 'easeOut', repeat: Infinity }}
+                  className="absolute inset-0 rounded-full border border-[#22D3EE]/40 pointer-events-none"
+                />
+              )}
+
+              {/* Robot/AI Emblem Icon */}
+              <img
+                src="/emblem.png"
+                className="w-[62%] h-[62%] object-contain select-none pointer-events-none filter drop-shadow-[0_0_6px_rgba(6,182,212,0.7)]"
+                alt="Robot AI Icon"
+              />
+            </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Circular Floating Trigger Button */}
-        <motion.button
-          onMouseDown={startPress}
-          onMouseUp={endPress}
-          onMouseLeave={cancelPress}
-          onTouchStart={startPress}
-          onTouchEnd={endPress}
-          onTouchCancel={cancelPress}
-          animate={
-            shouldReduceMotion
-              ? {}
-              : {
-                  scale: isLongPressed ? 1.15 : isPressing ? 1.08 : 1,
-                  boxShadow: isLongPressed
-                    ? '0 0 20px 4px rgba(34, 211, 238, 0.4), 0 10px 30px rgba(0,0,0,0.5)'
-                    : isPressing
-                    ? '0 0 12px 2px rgba(34, 211, 238, 0.2), 0 10px 25px rgba(0,0,0,0.45)'
-                    : '0 0 0px rgba(0,0,0,0), 0 10px 30px rgba(0,0,0,0.5)',
-                }
-          }
-          transition={springTransition}
-          className="relative w-16 h-16 rounded-full border border-white/15 bg-zinc-950/80 backdrop-blur-md flex items-center justify-center cursor-pointer pointer-events-auto select-none active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE] focus-visible:ring-offset-4 focus-visible:ring-offset-black"
-          aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
-          aria-expanded={isOpen}
-        >
-          {/* Circular Touch Ripple Effect */}
-          {isPressing && (
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0.5 }}
-              animate={{ scale: 1.45, opacity: 0 }}
-              transition={{ duration: 0.65, ease: 'easeOut', repeat: Infinity }}
-              className="absolute inset-0 rounded-full border border-[#22D3EE]/40 pointer-events-none"
-            />
-          )}
-
-          {/* Morphing Menu Icon */}
-          <motion.div
-            animate={{ rotate: isOpen ? 90 : 0 }}
-            transition={springTransition}
-            className="flex items-center justify-center pointer-events-none"
-          >
-            {isOpen ? (
-              <X className="w-6 h-6 text-white" />
-            ) : (
-              <Menu className="w-6 h-6 text-white" />
-            )}
-          </motion.div>
-        </motion.button>
-      </div>
+      </motion.div>
     </>
   );
 }
+
+export default React.memo(MobileNavbar);
