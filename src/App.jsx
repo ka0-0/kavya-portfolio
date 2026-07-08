@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense, lazy } from 'react';
 import LoadingScreen from './components/LoadingScreen';
 import CustomCursor from './components/CustomCursor';
 import Navbar from './components/Navbar';
 import SectionNavigator from './components/SectionNavigator';
+
+// Lazy-load mobile navigation to avoid increasing desktop bundle size or affecting desktop performance
+const MobileNavbar = lazy(() => import('./components/MobileNavbar'));
 import Hero from './components/Hero';
 import AboutSection from './components/AboutSection';
 import Skills from './components/skills/Skills';
@@ -35,6 +38,17 @@ export default function App() {
   const targetSectionRef = useRef(null);
   const manualScrollTimeoutRef = useRef(null);
   const ratiosRef = useRef({});
+
+  // Responsive device query using matchMedia
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const listener = (e) => setIsMobile(e.matches);
+    setIsMobile(media.matches);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, []);
 
   // 1. Track loading started on initial mount
   useEffect(() => {
@@ -288,10 +302,14 @@ export default function App() {
               <Hero showRobot={true} />
             </section>
 
-            {/* Portfolio Content Sections (Deferred until transition completes to ensure a smooth reveal) */}
             {isTransitionComplete && (
               <>
                 <SectionNavigator activeSection={activeSection} handleNavClick={handleNavClick} />
+                {isMobile && (
+                  <Suspense fallback={null}>
+                    <MobileNavbar activeSection={activeSection} handleNavClick={handleNavClick} />
+                  </Suspense>
+                )}
                 <AboutSection />
                 <Skills />
 

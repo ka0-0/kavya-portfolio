@@ -271,7 +271,7 @@ function Navbar({ activeSection, handleNavClick }) {
           isRestarting ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       />
-      <header className="fixed top-0 left-0 right-0 z-[100] pointer-events-none w-full">
+      <header className="fixed top-0 left-0 right-0 z-[100] pointer-events-none w-full hidden md:block">
         {/* Outer content boundary matching the max-w-7xl px-6 md:px-4 grid alignment of the page */}
         <div 
           className="max-w-7xl mx-auto px-6 md:px-4 h-24 relative w-full"
