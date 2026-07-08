@@ -289,5 +289,15 @@
   }
 }
 
+/* Disable default browser cursor on desktop hover-capable devices */
+@media (hover: hover) and (pointer: fine) {
+  html,
+  body,
+  * {
+    cursor: none !important;
+  }
+}
+
+
 
 

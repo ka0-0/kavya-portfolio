@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SectionHeader from './SectionHeader';
-import DottedMap from 'dotted-map';
 
 // ==========================================
 // STATIC PROFILE DATA CONSTANTS
@@ -23,94 +22,7 @@ const terminalData = [
   { label: "Status...............", value: "ONLINE", isStatus: true }
 ];
 
-let mapDots = [];
-let delhiX = 217.5;
-let delhiY = 93.75;
 
-try {
-  const map = new DottedMap({ height: 26, grid: 'vertical' });
-  map.addPin({
-    lat: 28.6139,
-    lng: 77.2090,
-    data: { isDelhi: true }
-  });
-
-  const rawPoints = map.getPoints();
-
-  // Crop viewport to Europe, Africa, Middle East, India, Western Asia (Zooming 20-30%, cutting western Americas)
-  const filteredPoints = rawPoints;
-
-  const pointsX = filteredPoints.map(p => p.x);
-  const pointsY = filteredPoints.map(p => p.y);
-  const minX = Math.min(...pointsX);
-  const maxX = Math.max(...pointsX);
-  const minY = Math.min(...pointsY);
-  const maxY = Math.max(...pointsY);
-
-  mapDots = filteredPoints.map(p => {
-    const isDelhi = p.data?.isDelhi || false;
-    const normX = (p.x - minX) / (maxX - minX);
-    const normY = (p.y - minY) / (maxY - minY);
-    return {
-      x: normX * 260 + 20, // generous padding: 20px on left/right (total width 300)
-      y: normY * 140 + 20, // generous padding: 20px on top/bottom (total height 180)
-      isDelhi
-    };
-  });
-
-  const delhiDot = mapDots.find(d => d.isDelhi);
-  if (delhiDot) {
-    delhiX = delhiDot.x;
-    delhiY = delhiDot.y;
-  }
-} catch (e) {
-  console.warn('dotted-map generation failed, falling back to ASCII map dots:', e);
-  const fallbackGrid = [
-    "                  .###.                                         ",
-    "               .#########.                                      ",
-    "  .###.      .############.                   .##.     .###.    ",
-    " #######.   .##############.      .###.      ######.  #######.  ",
-    "#########. .################.    .#####.    #################.  ",
-    "#########.##################.   .#######.   ##################. ",
-    "#########.##################.  .#########. ###################. ",
-    " #######. .################.   .#########.  #################.  ",
-    "  #####.   .##############.     .#######.    ###############.   ",
-    "   ###.     .############.       .#####.      #############.    ",
-    "    #.       .##########.         .###.        ###########.     ",
-    "              .########.          .###.         .########.      ",
-    "             .##########.        .#####.         .######.       ",
-    "            .############.       .######.         .####.        ",
-    "            .############.      .#######.          .##.         ",
-    "            .###########.       .######.            .           ",
-    "             .#########.        .#####.                         ",
-    "              .#######.          .###.                          ",
-    "               .#####.            .#.            .####.         ",
-    "                .###.                           ########.       ",
-    "                 .#.                            .######.        ",
-    "                                                 .####.         ",
-    "                                                  .##.          ",
-    "                                                   .            "
-  ];
-  const colCount = 60;
-  const rowCount = 24;
-  const colWidth = 300 / colCount;
-  const rowHeight = 180 / rowCount;
-
-  fallbackGrid.forEach((rowStr, r) => {
-    for (let c = 0; c < rowStr.length; c++) {
-      const char = rowStr[c];
-      if (char === '#' || char === '.') {
-        mapDots.push({
-          x: c * colWidth + colWidth / 2,
-          y: r * rowHeight + rowHeight / 2,
-          isDelhi: false
-        });
-      }
-    }
-  });
-  delhiX = 43 * colWidth + colWidth / 2;
-  delhiY = 12 * rowHeight + rowHeight / 2;
-}
 
 
 const metricsData = [
@@ -140,7 +52,7 @@ function CountUp({ end, duration = 1500, trigger = false }) {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
       const easeProgress = progress * (2 - progress); // Ease out quad
-      
+
       setCount(Math.floor(easeProgress * end));
 
       if (progress < 1) {
@@ -159,6 +71,224 @@ function CountUp({ end, duration = 1500, trigger = false }) {
   }, [end, duration, trigger]);
 
   return <span>{count}</span>;
+}
+
+// ==========================================
+// 1.5. Isolated Terminal Content Component (Prevents AboutSection parent re-renders during typewriter ticks)
+// ==========================================
+function TerminalContent({ bootCompleteTerminal }) {
+  const [completedLines, setCompletedLines] = useState([]);
+  const [activeLineText, setActiveLineText] = useState('');
+  const [activeLineIdx, setActiveLineIdx] = useState(0);
+
+  useEffect(() => {
+    if (!bootCompleteTerminal) return;
+
+    let timer;
+    const activeLine = terminalData[activeLineIdx];
+    if (!activeLine) {
+      // Loop: Wait 6s, clear out text, restart boot-compile type effect
+      timer = setTimeout(() => {
+        setCompletedLines([]);
+        setActiveLineText('');
+        setActiveLineIdx(0);
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+
+    const targetText = activeLine.label + (activeLine.value || '');
+
+    if (activeLineText.length < targetText.length) {
+      const nextChar = targetText[activeLineText.length];
+      timer = setTimeout(() => {
+        setActiveLineText(prev => prev + nextChar);
+      }, Math.random() * 15 + 10);
+    } else {
+      timer = setTimeout(() => {
+        setCompletedLines(prev => [...prev, activeLineIdx]);
+        setActiveLineText('');
+        setActiveLineIdx(prev => prev + 1);
+      }, 350);
+    }
+
+    return () => clearTimeout(timer);
+  }, [bootCompleteTerminal, activeLineIdx, activeLineText]);
+
+  // Helper rendering terminal lines
+  const renderTerminalLine = (idx, isCurrent = false) => {
+    const item = terminalData[idx];
+    if (!item) return null;
+
+    if (item.isHeader) {
+      return (
+        <div key={idx} className="text-zinc-500 font-bold">
+          {isCurrent ? activeLineText : item.label}
+          {isCurrent && <span className="terminal-cursor-block inline-block w-1.5 h-3.5 bg-cyan-400 ml-1 align-middle" />}
+        </div>
+      );
+    }
+
+    const labelLen = item.label.length;
+    let dispLabel = '';
+    let dispValue = '';
+
+    if (isCurrent) {
+      if (activeLineText.length <= labelLen) {
+        dispLabel = activeLineText;
+      } else {
+        dispLabel = item.label;
+        dispValue = activeLineText.slice(labelLen);
+      }
+    } else {
+      dispLabel = item.label;
+      dispValue = item.value;
+    }
+
+    return (
+      <div key={idx} className="flex flex-wrap items-center leading-relaxed font-mono">
+        <span className="text-cyan-500/80">{dispLabel}</span>
+        {dispValue && (
+          <span className={item.isStatus
+            ? "text-cyan-400 font-bold shadow-[0_0_8px_rgba(6,182,212,0.4)] px-1.5 py-0.5 rounded bg-cyan-950/40 border border-cyan-500/20 text-[10px] tracking-wider ml-1"
+            : "text-white ml-1 font-sans"}>
+            {dispValue}
+          </span>
+        )}
+        {isCurrent && <span className="terminal-cursor-block inline-block w-1.5 h-3.5 bg-cyan-400 ml-1 align-middle" />}
+      </div>
+    );
+  };
+
+  return (
+    <div className="w-full h-full flex flex-col justify-between font-mono text-[10.5px]">
+      <div className="p-3 bg-zinc-950/45 border border-zinc-900/60 rounded flex-1 flex flex-col justify-start min-h-[380px] space-y-1.5 overflow-hidden pr-1 scrollbar-thin scrollbar-thumb-zinc-800">
+        {completedLines.map(idx => renderTerminalLine(idx))}
+        {completedLines.length < terminalData.length && renderTerminalLine(activeLineIdx, true)}
+      </div>
+      <div className="flex justify-between items-center text-[8px] text-zinc-500 pt-2 uppercase border-t border-zinc-900/60 mt-1">
+        <span>STREAM: ACTIVE_TTY</span>
+        <span>TTY: RES_OK</span>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 1.8. Isolated Interactive Map Component (Prevents AboutSection parent re-renders during map hover)
+// ==========================================
+function InteractiveMapContent({ bootCompleteMap }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const hoverTimeoutRef = useRef(null);
+
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 280);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div className="relative w-full h-full min-h-[220px] flex items-center justify-center overflow-visible rounded-lg bg-zinc-950/10 border border-zinc-900/40">
+      {/* World Map Background Image Container to clip scaled image */}
+      <div className="absolute inset-0 overflow-hidden rounded-lg pointer-events-none">
+        <motion.img 
+          src="/world_map.jpg" 
+          alt="World Map" 
+          initial={{ opacity: 0 }}
+          animate={bootCompleteMap ? { opacity: 0.55 } : {}}
+          transition={{ duration: 1.0, ease: 'easeOut' }}
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none mix-blend-screen"
+          style={{
+            transform: 'scale(1.18)',
+            transformOrigin: 'center center',
+          }}
+        />
+      </div>
+
+      {/* Interactive Wrapper aligned to Delhi */}
+      <div 
+        className="absolute"
+        style={{
+          left: '69.0%',
+          top: '46.8%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 30,
+        }}
+      >
+        {/* Invisible larger hit area (32-40px) */}
+        <div 
+          className="relative flex items-center justify-center cursor-pointer"
+          style={{ width: '40px', height: '40px' }}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          {/* Blue node container */}
+          <div className="map-node-container relative flex items-center justify-center">
+            {/* Concentric expanding pulse rings */}
+            <div className="map-node-ring absolute rounded-full border border-cyan-400/40 bg-cyan-400/5 pointer-events-none w-10 h-10" />
+            <div className="map-node-ring absolute rounded-full border border-cyan-400/20 bg-transparent pointer-events-none w-10 h-10" style={{ animationDelay: '1.1s' }} />
+            
+            {/* Center dot */}
+            <div className={`map-node-dot w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] ${isHovered ? 'map-node-dot-paused' : ''}`} />
+          </div>
+        </div>
+
+        {/* Floating Holographic Location Info Card */}
+        <AnimatePresence>
+          {isHovered && (
+            <motion.div
+              initial={{ opacity: 0, y: -8, scale: 0.96, filter: 'blur(6px)', x: '-50%' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', x: '-50%' }}
+              exit={{ opacity: 0, y: -8, scale: 0.96, filter: 'blur(6px)', x: '-50%' }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+              className="absolute bottom-[28px] left-1/2 p-4 w-[215px] rounded-[20px] bg-[#0c0c0e]/95 border border-cyan-500/30 backdrop-blur-md font-sans text-left z-40 cursor-default select-text"
+              style={{
+                boxShadow: '0 0 20px rgba(6, 182, 212, 0.2), 0 4px 30px rgba(0,0,0,0.85)',
+                transformOrigin: 'bottom center',
+              }}
+            >
+              {/* Connector stem / pointer */}
+              <div className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0c0c0e] border-r border-b border-cyan-500/30 rotate-45 z-[-1]" />
+
+              <div className="flex flex-col gap-1.5">
+                {/* DELHI, INDIA */}
+                <div className="flex items-center gap-1.5 text-white font-black text-[10.5px] uppercase tracking-wide">
+                  <span>📍</span> DELHI, INDIA
+                </div>
+                
+                {/* AI ENGINEER & MECHANICAL ENGINEER */}
+                <div className="text-cyan-400 font-bold text-[8.5px] tracking-wider uppercase font-mono leading-tight mt-0.5">
+                  AI ENGINEER & MECHANICAL ENGINEER
+                </div>
+                
+                {/* Currently Building Intelligent AI Experiences */}
+                <div className="text-zinc-400 text-[9px] leading-relaxed font-light font-mono mt-0.5">
+                  Currently Building Intelligent AI Experiences
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
 }
 
 // ==========================================
@@ -197,11 +327,11 @@ const cardVariants = {
 // ==========================================
 // 3. Cyber HUD Card (Hover tilt & radial light, transform split)
 // ==========================================
-function CyberCard({ 
-  children, 
-  title = '', 
-  nodeCode = '', 
-  isBootComplete = false 
+function CyberCard({
+  children,
+  title = '',
+  nodeCode = '',
+  isBootComplete = false
 }) {
   const cardRef = useRef(null);
 
@@ -213,15 +343,15 @@ function CyberCard({
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     card.style.setProperty('--mouse-x', `${x}px`);
     card.style.setProperty('--mouse-y', `${y}px`);
 
     // Dynamic 3D tilt calculation
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const rotateX = ((centerY - y) / centerY) * 3; 
-    const rotateY = ((x - centerX) / centerX) * -3; 
+    const rotateX = ((centerY - y) / centerY) * 3;
+    const rotateY = ((x - centerX) / centerX) * -3;
     card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-6px)`;
   };
 
@@ -293,282 +423,7 @@ function CyberCard({
 // ==========================================
 // 4. Futuristic Proximity Node Network Map
 // ==========================================
-function NetworkMap({ isBootComplete }) {
-  const containerRef = useRef(null);
-  const rafRef = useRef(null);
-  const targetMouseRef = useRef({ x: 150, y: 90 });
-  const currentMouseRef = useRef({ x: 150, y: 90 });
-  const hoverActiveRef = useRef(0);
-  const isHoveredRef = useRef(false);
 
-  // Tooltip Hover States
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
-  const hideTimeoutRef = useRef(null);
-
-  const handleMarkerMouseEnter = () => {
-    if (hideTimeoutRef.current) {
-      clearTimeout(hideTimeoutRef.current);
-      hideTimeoutRef.current = null;
-    }
-    setIsTooltipVisible(true);
-  };
-
-  const handleMarkerMouseLeave = () => {
-    hideTimeoutRef.current = setTimeout(() => {
-      setIsTooltipVisible(false);
-    }, 150);
-  };
-
-  const handleTooltipMouseEnter = () => {
-    if (hideTimeoutRef.current) {
-      clearTimeout(hideTimeoutRef.current);
-      hideTimeoutRef.current = null;
-    }
-  };
-
-  const handleTooltipMouseLeave = () => {
-    hideTimeoutRef.current = setTimeout(() => {
-      setIsTooltipVisible(false);
-    }, 150);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (hideTimeoutRef.current) {
-        clearTimeout(hideTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isBootComplete) return;
-    const card = containerRef.current;
-    if (!card) return;
-
-    let cachedDots = [];
-
-    const handleMouseEnter = () => {
-      isHoveredRef.current = true;
-      cachedDots = Array.from(card.querySelectorAll('.map-dot')).map(el => ({
-        el,
-        x: parseFloat(el.getAttribute('cx')),
-        y: parseFloat(el.getAttribute('cy')),
-        isModified: false
-      }));
-
-      if (!rafRef.current) {
-        rafRef.current = requestAnimationFrame(tick);
-      }
-    };
-
-    const handleMouseMove = (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width * 300;
-      const y = (e.clientY - rect.top) / rect.height * 180;
-      targetMouseRef.current = { x, y };
-    };
-
-    const handleMouseLeave = () => {
-      isHoveredRef.current = false;
-    };
-
-    const tick = () => {
-      const targetActive = isHoveredRef.current ? 1 : 0;
-      hoverActiveRef.current += (targetActive - hoverActiveRef.current) * 0.12;
-
-      currentMouseRef.current.x += (targetMouseRef.current.x - currentMouseRef.current.x) * 0.12;
-      currentMouseRef.current.y += (targetMouseRef.current.y - currentMouseRef.current.y) * 0.12;
-
-      const currentX = currentMouseRef.current.x;
-      const currentY = currentMouseRef.current.y;
-      const active = hoverActiveRef.current;
-
-      // Update radial glow position and opacity directly
-      const glowEl = card.querySelector('.map-cursor-glow');
-      if (glowEl) {
-        glowEl.style.opacity = active;
-        glowEl.style.background = `radial-gradient(110px circle at ${(currentX / 300) * 100}% ${(currentY / 180) * 100}%, rgba(0, 242, 254, 0.18), transparent 70%)`;
-      }
-
-      cachedDots.forEach(dot => {
-        const dist = Math.hypot(currentX - dot.x, currentY - dot.y);
-        const threshold = 75;
-        
-        if (dist < threshold && active > 0.001) {
-          const rawFactor = 1 - dist / threshold;
-          const factor = rawFactor * rawFactor * active;
-
-          // Opacity: base 0.55 to max 1.0
-          dot.el.style.opacity = 0.55 + factor * 0.45;
-
-          // Radius: base 1.2 to max 2.1
-          dot.el.setAttribute('r', 1.2 + factor * 0.9);
-
-          // Color transition: from #4a4f5d (RGB 74, 79, 93) to #00f2fe (RGB 0, 242, 254)
-          const rVal = Math.round(74 + factor * (0 - 74));
-          const gVal = Math.round(79 + factor * (242 - 79));
-          const bVal = Math.round(93 + factor * (254 - 93));
-          dot.el.style.fill = `rgb(${rVal}, ${gVal}, ${bVal})`;
-          dot.isModified = true;
-        } else if (dot.isModified) {
-          // Smooth decay back to base state
-          dot.el.style.opacity = 0.55;
-          dot.el.setAttribute('r', 1.2);
-          dot.el.style.fill = '#4a4f5d';
-          dot.isModified = false;
-        }
-      });
-
-      if (isHoveredRef.current || active > 0.005) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
-        // Reset all dots fully on shutdown
-        cachedDots.forEach(dot => {
-          dot.el.style.opacity = 0.55;
-          dot.el.setAttribute('r', 1.2);
-          dot.el.style.fill = '#4a4f5d';
-          dot.isModified = false;
-        });
-        if (glowEl) glowEl.style.opacity = 0;
-        rafRef.current = null;
-      }
-    };
-
-    card.addEventListener('mouseenter', handleMouseEnter);
-    card.addEventListener('mousemove', handleMouseMove);
-    card.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      card.removeEventListener('mouseenter', handleMouseEnter);
-      card.removeEventListener('mousemove', handleMouseMove);
-      card.removeEventListener('mouseleave', handleMouseLeave);
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
-    };
-  }, [isBootComplete]);
-
-  // Delhi sits at x = 217.5 in 300 width map (which is center-right), so align left of the marker to prevent overflow.
-  const alignLeft = delhiX > 150;
-
-  return (
-    <div ref={containerRef} className="w-full h-full flex flex-col justify-between relative group">
-      <div className="relative w-full h-[180px] border border-zinc-900/60 rounded bg-zinc-950/20 flex items-center justify-center">
-        {/* Soft radial cyan cursor-following light */}
-        <div 
-          className="map-cursor-glow absolute inset-0 pointer-events-none opacity-0"
-          style={{ mixBlendMode: 'screen' }}
-        />
-
-        <svg 
-          className="w-full h-full" 
-          viewBox="0 0 300 180" 
-          preserveAspectRatio="xMidYMid meet"
-          style={{
-            opacity: isBootComplete ? 1 : 0,
-            transition: 'opacity 0.8s ease-out 0.2s',
-          }}
-        >
-          {/* Static Dotted World Map (Single Layer) */}
-          <g className="map-dots-group">
-            {mapDots.map((dot, idx) => (
-              <circle
-                key={idx}
-                cx={dot.x}
-                cy={dot.y}
-                r={1.2}
-                className="map-dot"
-                style={{
-                  fill: '#4a4f5d',
-                  opacity: 0.55,
-                }}
-              />
-            ))}
-          </g>
-
-          {/* Delhi, India Location Marker (Step 5) */}
-          {isBootComplete && (
-            <g 
-              className="location-marker cursor-pointer"
-              onMouseEnter={handleMarkerMouseEnter}
-              onMouseLeave={handleMarkerMouseLeave}
-            >
-              {/* Outer pulsing ring (2.5s cycle) */}
-              <circle
-                cx={delhiX}
-                cy={delhiY}
-                r={4}
-                className="delhi-pulse"
-                style={{
-                  fill: 'none',
-                  stroke: 'rgba(6, 182, 212, 0.85)',
-                  strokeWidth: 1.2,
-                  transformOrigin: `${delhiX}px ${delhiY}px`,
-                }}
-              />
-              {/* Soft glow */}
-              <circle
-                cx={delhiX}
-                cy={delhiY}
-                r={10}
-                style={{
-                  fill: 'rgba(6, 182, 212, 0.35)',
-                  filter: 'blur(1px)',
-                }}
-              />
-              {/* Cyan center dot */}
-              <circle
-                cx={delhiX}
-                cy={delhiY}
-                r={2.5}
-                style={{
-                  fill: '#00f2fe',
-                }}
-              />
-            </g>
-          )}
-        </svg>
-
-        {/* Premium cyber location tooltip */}
-        {isTooltipVisible && (
-          <div
-            onMouseEnter={handleTooltipMouseEnter}
-            onMouseLeave={handleTooltipMouseLeave}
-            className="absolute z-30 transition-all duration-220 ease-out"
-            style={{
-              left: alignLeft ? 'auto' : `${(delhiX / 300) * 100}%`,
-              right: alignLeft ? `${100 - (delhiX / 300) * 100}%` : 'auto',
-              top: `${(delhiY / 180) * 100}%`,
-              transform: 'translateY(-100%)',
-              paddingBottom: '12px',
-            }}
-          >
-            {/* Tooltip inner card */}
-            <div className="delhi-tooltip-card bg-[#111317] border border-[rgba(0,229,255,0.18)] rounded-[16px] p-[16px_18px] w-[250px] shadow-[0_4px_22px_rgba(6,182,212,0.22)] flex flex-col gap-1.5 text-left font-sans select-text pointer-events-auto">
-              <div className="flex items-center gap-1.5 text-white font-black text-[11px] uppercase tracking-wide">
-                <svg className="w-3.5 h-3.5 text-cyan-400 drop-shadow-[0_0_4px_rgba(6,182,212,0.6)]" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                </svg>
-                DELHI, INDIA
-              </div>
-              <div className="text-cyan-400 font-bold text-[10px] tracking-wider uppercase font-mono leading-tight">
-                AI Engineer & Mechanical Engineer
-              </div>
-              <div className="text-zinc-400 text-[10px] leading-relaxed font-light font-mono">
-                Currently Building Intelligent AI Experiences
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="flex justify-between items-center text-[8px] font-mono text-zinc-500 pt-2 uppercase">
-        <span>LOC: DELHI, INDIA</span>
-        <span>NODE STATE: ACTIVE</span>
-      </div>
-    </div>
-  );
-}
 
 // ==========================================
 // 5. Main Component: Redesigned About Section
@@ -629,7 +484,7 @@ export default function AboutSection() {
 
     return () => cancelAnimationFrame(frameId);
   }, []);
-  
+
   // Keep track of which card completed its Framer Motion spring reveal
   const [bootComplete, setBootComplete] = useState({
     profile: false,
@@ -645,89 +500,6 @@ export default function AboutSection() {
 
   const [activeTab, setActiveTab] = useState('education');
 
-  const [completedLines, setCompletedLines] = useState([]);
-  const [activeLineText, setActiveLineText] = useState('');
-  const [activeLineIdx, setActiveLineIdx] = useState(0);
-
-  // Typewriter effect logic loop for the Terminal Card
-  useEffect(() => {
-    if (!bootComplete.terminal) return;
-
-    let timer;
-    const activeLine = terminalData[activeLineIdx];
-    if (!activeLine) {
-      // Loop: Wait 6s, clear out text, restart boot-compile type effect
-      timer = setTimeout(() => {
-        setCompletedLines([]);
-        setActiveLineText('');
-        setActiveLineIdx(0);
-      }, 6000);
-      return () => clearTimeout(timer);
-    }
-
-    const targetText = activeLine.label + (activeLine.value || '');
-
-    if (activeLineText.length < targetText.length) {
-      const nextChar = targetText[activeLineText.length];
-      timer = setTimeout(() => {
-        setActiveLineText(prev => prev + nextChar);
-      }, Math.random() * 15 + 10);
-    } else {
-      timer = setTimeout(() => {
-        setCompletedLines(prev => [...prev, activeLineIdx]);
-        setActiveLineText('');
-        setActiveLineIdx(prev => prev + 1);
-      }, 350);
-    }
-
-    return () => clearTimeout(timer);
-  }, [bootComplete.terminal, activeLineIdx, activeLineText]);
-
-  // Helper rendering terminal lines
-  const renderTerminalLine = (idx, isCurrent = false) => {
-    const item = terminalData[idx];
-    if (!item) return null;
-
-    if (item.isHeader) {
-      return (
-        <div key={idx} className="text-zinc-500 font-bold">
-          {isCurrent ? activeLineText : item.label}
-          {isCurrent && <span className="terminal-cursor-block inline-block w-1.5 h-3.5 bg-cyan-400 ml-1 align-middle" />}
-        </div>
-      );
-    }
-
-    const labelLen = item.label.length;
-    let dispLabel = '';
-    let dispValue = '';
-
-    if (isCurrent) {
-      if (activeLineText.length <= labelLen) {
-        dispLabel = activeLineText;
-      } else {
-        dispLabel = item.label;
-        dispValue = activeLineText.slice(labelLen);
-      }
-    } else {
-      dispLabel = item.label;
-      dispValue = item.value;
-    }
-
-    return (
-      <div key={idx} className="flex flex-wrap items-center leading-relaxed">
-        <span className="text-cyan-500/80">{dispLabel}</span>
-        {dispValue && (
-          <span className={item.isStatus 
-            ? "text-cyan-400 font-bold shadow-[0_0_8px_rgba(6,182,212,0.4)] px-1.5 py-0.5 rounded bg-cyan-950/40 border border-cyan-500/20 text-[10px] tracking-wider ml-1" 
-            : "text-white ml-1 font-sans"}>
-            {dispValue}
-          </span>
-        )}
-        {isCurrent && <span className="terminal-cursor-block inline-block w-1.5 h-3.5 bg-cyan-400 ml-1 align-middle" />}
-      </div>
-    );
-  };
-
   return (
     <section
       ref={sectionRef}
@@ -736,46 +508,16 @@ export default function AboutSection() {
     >
       {/* Background Blueprint Grid details - Completely static */}
       <div className="absolute inset-0 blueprint-grid opacity-[0.8] pointer-events-none" />
-      
+
       {/* Ambient Radial background glows - Static */}
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-blue-900/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-cyan-950/5 blur-[120px] pointer-events-none" />
 
       {/* Scoped CSS Style Tag for blinking cursor and pulse ring only */}
       <style>{`
-        @keyframes delhiPulse {
-          0% {
-            transform: scale(1);
-            opacity: 0.95;
-          }
-          100% {
-            transform: scale(4);
-            opacity: 0;
-          }
-        }
-
         @keyframes cursorBlink {
           0%, 100% { opacity: 0.1; }
           50% { opacity: 1; }
-        }
-
-        @keyframes tooltipEntrance {
-          0% {
-            opacity: 0;
-            transform: translateY(8px) scale(0.96);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-
-        .delhi-tooltip-card {
-          animation: tooltipEntrance 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        .delhi-pulse {
-          animation: delhiPulse 2.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
         }
 
         .terminal-cursor-block {
@@ -793,6 +535,50 @@ export default function AboutSection() {
           box-shadow: 0 0 10px rgba(6, 182, 212, 0.45);
         }
 
+        /* Cyber Location Card Node Styles */
+        @keyframes nodePulse {
+          0%, 100% {
+            transform: scale(0.95);
+            opacity: 0.95;
+          }
+          50% {
+            transform: scale(1.15);
+            opacity: 1;
+          }
+        }
+
+        @keyframes ringExpand {
+          0% {
+            transform: scale(0.3);
+            opacity: 0.85;
+          }
+          100% {
+            transform: scale(2.2);
+            opacity: 0;
+          }
+        }
+
+        .map-node-dot {
+          animation: nodePulse 2.2s ease-in-out infinite;
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, background-color 0.3s ease;
+        }
+
+        .map-node-ring {
+          width: 40px;
+          height: 40px;
+          animation: ringExpand 2.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+        }
+
+        .map-node-container:hover .map-node-dot {
+          transform: scale(1.4) !important;
+          box-shadow: 0 0 24px rgba(6, 182, 212, 1) !important;
+          background-color: #00f2fe;
+        }
+
+        .map-node-container:hover .map-node-ring {
+          animation-duration: 1.8s;
+        }
+
         /* Keyboard focus visible rings */
         *:focus-visible {
           outline: none;
@@ -800,8 +586,9 @@ export default function AboutSection() {
 
         /* prefers-reduced-motion media query standards */
         @media (prefers-reduced-motion: reduce) {
-          .delhi-pulse, 
-          .terminal-cursor-block {
+          .terminal-cursor-block,
+          .map-node-dot,
+          .map-node-ring {
             animation: none !important;
             transition: none !important;
           }
@@ -832,18 +619,18 @@ export default function AboutSection() {
       </div>
 
       {/* Dashboard 12-Column Layout Grid staggered container */}
-      <motion.div 
+      <motion.div
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.25 }}
         className="max-w-7xl mx-auto w-full px-6 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 z-10"
       >
-        
+
         {/* ROW 1: Card 1 (Profile Info) & Card 2 (Network Map) */}
-        
+
         {/* Card 1: Identity Profile (Span 8) */}
-        <motion.div 
+        <motion.div
           variants={cardVariants}
           onAnimationComplete={(def) => def === 'visible' && handleRevealComplete('profile')}
           className="col-span-12 lg:col-span-8"
@@ -877,23 +664,23 @@ export default function AboutSection() {
                 </div>
               </div>
 
-              {/* Visual Target Ring indicator */}
-              <div className="flex flex-col items-center justify-center p-4 border border-zinc-800/40 rounded-lg bg-zinc-950/20 w-full md:w-auto self-stretch">
-                <div className="relative w-24 h-24 flex items-center justify-center">
-                  <div className="absolute inset-0 rounded-full border border-dashed border-cyan-500/20" />
-                  <div className="absolute w-16 h-16 rounded-full border border-cyan-400/30 flex items-center justify-center bg-cyan-950/5">
-                    <svg className="w-7 h-7 text-cyan-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-13.32 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h-.152c-3.196 0-6.1-1.249-8.25-3.286z" />
-                    </svg>
-                  </div>
-                  <div className="absolute top-0.5 left-0.5 w-2 h-2 border-t-2 border-l-2 border-cyan-400" />
-                  <div className="absolute top-0.5 right-0.5 w-2 h-2 border-t-2 border-r-2 border-cyan-400" />
-                  <div className="absolute bottom-0.5 left-0.5 w-2 h-2 border-b-2 border-l-2 border-cyan-400" />
-                  <div className="absolute bottom-0.5 right-0.5 w-2 h-2 border-b-2 border-r-2 border-cyan-400" />
-                </div>
-                <div className="mt-3 text-center font-mono">
-                  <div className="text-[9px] text-cyan-400 font-bold uppercase tracking-widest">PROFILE LOADED</div>
-                  <div className="text-[7px] text-zinc-500 mt-0.5">ACCESS: SYSTEM_A</div>
+              {/* Column/Card: Futuristic Android Avatar Container */}
+              <div className="flex flex-col items-center justify-center p-2.5 border border-zinc-800/40 rounded-lg bg-zinc-950/20 w-full md:w-[190px] self-stretch relative overflow-hidden">
+                {/* Subtle tech background grid texture */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.03),transparent_70%)] pointer-events-none" />
+                {/* Static Image Wrapper */}
+                <div className="w-full h-full flex items-center justify-center p-1.5">
+                  <img
+                    src="/profile_pic.png"
+                    alt="Futuristic Android AI Identity"
+                    className="w-full h-full object-contain select-none pointer-events-none filter drop-shadow-[0_0_8px_rgba(6,182,212,0.45)] drop-shadow-[0_12px_24px_rgba(59,130,246,0.25)]"
+                    style={{
+                      maxHeight: '94%',
+                      maxWidth: '94%',
+                      transform: 'scale(1.18) translateY(8.5px)',
+                      transformOrigin: 'center center'
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -901,7 +688,7 @@ export default function AboutSection() {
         </motion.div>
 
         {/* Card 2: Interactive Network Map (Span 4) */}
-        <motion.div 
+        <motion.div
           variants={cardVariants}
           onAnimationComplete={(def) => def === 'visible' && handleRevealComplete('map')}
           className="col-span-12 lg:col-span-4"
@@ -911,14 +698,14 @@ export default function AboutSection() {
             nodeCode="SECURE_NODE_02"
             isBootComplete={bootComplete.map}
           >
-            <NetworkMap isBootComplete={bootComplete.map} />
+            <InteractiveMapContent bootCompleteMap={bootComplete.map} />
           </CyberCard>
         </motion.div>
 
         {/* ROW 2: Card 3 (Terminal), Card 4 (Skills), Card 5 (Metrics) */}
 
         {/* Card 3: AI Telemetry Terminal (Span 4) */}
-        <motion.div 
+        <motion.div
           variants={cardVariants}
           onAnimationComplete={(def) => def === 'visible' && handleRevealComplete('terminal')}
           className="col-span-12 md:col-span-6 lg:col-span-4 h-[530px] flex flex-col"
@@ -928,21 +715,12 @@ export default function AboutSection() {
             nodeCode="SECURE_NODE_03"
             isBootComplete={bootComplete.terminal}
           >
-            <div className="w-full h-full flex flex-col justify-between font-mono text-[10.5px]">
-              <div className="p-3 bg-zinc-950/45 border border-zinc-900/60 rounded flex-1 flex flex-col justify-start min-h-[380px] space-y-1.5 overflow-hidden pr-1 scrollbar-thin scrollbar-thumb-zinc-800">
-                {completedLines.map(idx => renderTerminalLine(idx))}
-                {completedLines.length < terminalData.length && renderTerminalLine(activeLineIdx, true)}
-              </div>
-              <div className="flex justify-between items-center text-[8px] text-zinc-500 pt-2 uppercase border-t border-zinc-900/60 mt-1">
-                <span>STREAM: ACTIVE_TTY</span>
-                <span>TTY: RES_OK</span>
-              </div>
-            </div>
+            <TerminalContent bootCompleteTerminal={bootComplete.terminal} />
           </CyberCard>
         </motion.div>
 
         {/* Card 4: Skill Spectrum (Span 4) */}
-        <motion.div 
+        <motion.div
           variants={cardVariants}
           onAnimationComplete={(def) => def === 'visible' && handleRevealComplete('skills')}
           className="col-span-12 md:col-span-6 lg:col-span-4 h-[530px] flex flex-col"
@@ -954,8 +732,8 @@ export default function AboutSection() {
           >
             <div className="w-full h-full flex flex-col justify-between relative">
               {/* Tab Header List */}
-              <div 
-                className="flex border-b border-zinc-900/60 pb-2 mb-5 gap-1.5 relative z-10" 
+              <div
+                className="flex border-b border-zinc-900/60 pb-2 mb-5 gap-1.5 relative z-10"
                 role="tablist"
                 aria-label="Cognitive spectrum sections"
               >
@@ -994,11 +772,10 @@ export default function AboutSection() {
                         const btn = e.currentTarget.parentNode?.children[nextIndex];
                         if (btn) btn.focus();
                       }}
-                      className={`relative px-2.5 py-1 text-[9px] font-mono font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer rounded-md border ${
-                        isActive 
-                          ? 'text-white border-cyan-500/30 bg-cyan-950/20' 
+                      className={`relative px-2.5 py-1 text-[9px] font-mono font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer rounded-md border ${isActive
+                          ? 'text-white border-cyan-500/30 bg-cyan-950/20'
                           : 'text-zinc-500 border-transparent hover:text-zinc-300'
-                      }`}
+                        }`}
                       style={{
                         outline: 'none',
                         boxShadow: isActive ? '0 0 8px rgba(6, 182, 212, 0.15)' : 'none',
@@ -1152,7 +929,7 @@ export default function AboutSection() {
         </motion.div>
 
         {/* Card 5: Engineering Metrics (Span 4) */}
-        <motion.div 
+        <motion.div
           variants={cardVariants}
           onAnimationComplete={(def) => def === 'visible' && handleRevealComplete('metrics')}
           className="col-span-12 lg:col-span-4 h-[530px] flex flex-col"
@@ -1165,8 +942,8 @@ export default function AboutSection() {
             <div className="w-full h-full flex flex-col justify-between">
               <div className="grid grid-cols-2 gap-y-6 gap-x-4 flex-1 items-center py-4">
                 {metricsData.map((m, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className="p-5 border border-zinc-900/60 rounded bg-zinc-950/20 flex flex-col justify-between min-h-[155px] hover:border-cyan-500/20 transition-colors duration-300"
                   >
                     <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-wider leading-tight">{m.label}</span>
@@ -1236,7 +1013,7 @@ export default function AboutSection() {
                     }}
                     className="p-4 border border-zinc-900/60 rounded-lg bg-zinc-950/20 flex flex-col items-center justify-center min-h-[90px] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] select-none"
                   >
-                    <span 
+                    <span
                       ref={item.ref}
                       className={`font-sans font-black text-white ${item.isMs ? 'text-2xl min-w-[3.2rem]' : 'text-3xl min-w-[2.2rem]'} text-center tracking-tight`}
                     >

@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Menu, X, FileText, Eye, Download, Printer, Copy, 
   ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, Loader2, Check 
 } from 'lucide-react';
 import { 
-  trackNavigationClick, 
   trackResumeViewed, 
   trackProjectClick,
   trackEmailClick,
@@ -22,8 +21,7 @@ const navLinks = [
   { name: 'Contact', id: 'contact' },
 ];
 
-function Navbar() {
-  const [activeSection, setActiveSection] = useState('home');
+function Navbar({ activeSection, handleNavClick }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false); // Mobile menu toggle
   const [hoveredSection, setHoveredSection] = useState(null);
@@ -36,53 +34,14 @@ function Navbar() {
   const [zoomScale, setZoomScale] = useState(1.0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '' });
+  const [clickedLogo, setClickedLogo] = useState(null);
+  const [isRestarting, setIsRestarting] = useState(false);
 
-  const isManualScrollRef = useRef(false);
-  const manualScrollTimeoutRef = useRef(null);
   const dropdownRef = useRef(null);
   const modalContainerRef = useRef(null);
   const resumeButtonRef = useRef(null);
 
-  const sectionBoundsRef = useRef([]);
-  const scrollHeightRef = useRef(0);
   const lastIsScrolledRef = useRef(false);
-  const lastActiveSectionRef = useRef('home');
-
-  const updateSectionBounds = useCallback(() => {
-    const bounds = [];
-    for (let i = 0; i < navLinks.length; i++) {
-      const el = document.getElementById(navLinks[i].id);
-      if (el) {
-        bounds.push({
-          id: navLinks[i].id,
-          top: el.offsetTop,
-          height: el.offsetHeight,
-        });
-      }
-    }
-    sectionBoundsRef.current = bounds;
-    scrollHeightRef.current = document.documentElement.scrollHeight - window.innerHeight;
-  }, []);
-
-  // Update bounds on mount, load, and resize to avoid measuring during scroll frames
-  useEffect(() => {
-    // Delay first measurement to next animation frame to prevent layout thrashing on mount
-    const rafId = requestAnimationFrame(() => {
-      updateSectionBounds();
-    });
-    window.addEventListener('resize', updateSectionBounds, { passive: true });
-    window.addEventListener('load', updateSectionBounds, { passive: true });
-
-    // Run a deferred check to account for dynamically loaded assets (like the 3D model)
-    const timer = setTimeout(updateSectionBounds, 1000);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener('resize', updateSectionBounds);
-      window.removeEventListener('load', updateSectionBounds);
-      clearTimeout(timer);
-    };
-  }, [updateSectionBounds]);
   // Dropdown Close Handlers
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -204,7 +163,7 @@ function Navbar() {
     };
   }, [isModalOpen]);
 
-  // Scroll Progress and Scroll Spy tracking
+  // Scroll Progress tracking for header background transition
   useEffect(() => {
     let ticking = false;
 
@@ -216,54 +175,9 @@ function Navbar() {
             lastIsScrolledRef.current = isScrolledVal;
             setIsScrolled(isScrolledVal);
           }
-
-          // Scroll Spy to set active link (fully optimized with cached layout properties)
-          if (!isManualScrollRef.current) {
-            const navbarHeight = 96;
-            const targetY = window.scrollY + navbarHeight + (window.innerHeight - navbarHeight) / 2;
-            
-            let closestSectionId = navLinks[0].id;
-            let minDistance = Infinity;
-
-            const bounds = sectionBoundsRef.current;
-            for (let i = 0; i < bounds.length; i++) {
-              const { id, top, height } = bounds[i];
-              const bottom = top + height;
-              
-              let distance = 0;
-              if (targetY < top) {
-                distance = top - targetY;
-              } else if (targetY > bottom) {
-                distance = targetY - bottom;
-              } else {
-                distance = 0;
-              }
-              
-              if (distance < minDistance) {
-                minDistance = distance;
-                closestSectionId = id;
-              }
-            }
-
-            if (closestSectionId !== lastActiveSectionRef.current) {
-              lastActiveSectionRef.current = closestSectionId;
-              setActiveSection(closestSectionId);
-            }
-          }
-
           ticking = false;
         });
         ticking = true;
-      }
-
-      // Handle locking of scroll spy during smooth scroll
-      if (isManualScrollRef.current) {
-        if (manualScrollTimeoutRef.current) {
-          clearTimeout(manualScrollTimeoutRef.current);
-        }
-        manualScrollTimeoutRef.current = setTimeout(() => {
-          isManualScrollRef.current = false;
-        }, 150);
       }
     };
 
@@ -272,75 +186,24 @@ function Navbar() {
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (manualScrollTimeoutRef.current) clearTimeout(manualScrollTimeoutRef.current);
     };
   }, []);
 
-  // Global click observer to instantly transition active pill for external page scroll triggers (e.g. Hero CTAs)
-  useEffect(() => {
-    const handleGlobalClick = (e) => {
-      const button = e.target.closest('button, a');
-      if (!button) return;
-
-      let targetId = '';
-      if (button.tagName === 'A' && button.hash) {
-        targetId = button.hash.slice(1);
-      } else if (button.textContent) {
-        const text = button.textContent.toUpperCase();
-        if (text.includes("LET'S CONNECT") || text.includes("CONTACT")) {
-          targetId = 'contact';
-        }
-      }
-
-      if (targetId && navLinks.some(link => link.id === targetId)) {
-        isManualScrollRef.current = true;
-        setActiveSection(targetId);
-        if (manualScrollTimeoutRef.current) clearTimeout(manualScrollTimeoutRef.current);
-        manualScrollTimeoutRef.current = setTimeout(() => {
-          isManualScrollRef.current = false;
-        }, 450); // Matches snappy smooth scroll duration
-      }
-    };
-
-    window.addEventListener('click', handleGlobalClick, { passive: true });
-    return () => window.removeEventListener('click', handleGlobalClick);
-  }, []);
-
-  const handleNavClick = (e, id) => {
-    e.preventDefault();
-    const element = document.getElementById(id);
-    if (!element) return;
-
-    // Track Navigation Click
-    const sectionName = id === 'home' ? 'Hero' : id.charAt(0).toUpperCase() + id.slice(1);
-    trackNavigationClick(sectionName);
-
-    // Temporarily bypass scroll spy observer to allow direct slide animation to clicked item
-    isManualScrollRef.current = true;
-    setActiveSection(id);
-
-    if (manualScrollTimeoutRef.current) clearTimeout(manualScrollTimeoutRef.current);
-
-    // 96px navbar height + 54px landing gap (approx 50-60px landing offset)
-    const yOffset = -150;
-    const targetY = element.getBoundingClientRect().top + window.scrollY + yOffset;
-
-    if (window.lenis) {
-      window.lenis.scrollTo(targetY, {
-        duration: 0.45, // Snappy scroll duration
-      });
-    } else {
-      window.scrollTo({
-        top: Math.max(0, targetY),
-        behavior: 'smooth'
-      });
+  const handleRestartClick = (e, logoType) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
     }
+    if (clickedLogo) return;
 
-    manualScrollTimeoutRef.current = setTimeout(() => {
-      isManualScrollRef.current = false;
-    }, 450); // Matches snappy smooth scroll duration
+    setClickedLogo(logoType);
+    setIsRestarting(true);
+
+    setTimeout(() => {
+      window.location.hash = '#home';
+      window.location.reload();
+    }, 350);
   };
-
   // Action: Copy Summary
   const handleCopySummary = () => {
     const summaryText = "Kavya Makhan — AI Developer & Mechanical Engineering Student specializing in Python, React, FastAPI, Artificial Intelligence and Desktop AI Systems.";
@@ -402,102 +265,165 @@ function Navbar() {
 
   return (
     <>
+      {/* Page transition overlay for restart click */}
+      <div 
+        className={`fixed inset-0 bg-black z-[9999] transition-opacity duration-[350ms] ease-in-out ${
+          isRestarting ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      />
       <header className="fixed top-0 left-0 right-0 z-[100] pointer-events-none w-full">
         {/* Outer content boundary matching the max-w-7xl px-6 md:px-4 grid alignment of the page */}
-        <div className="max-w-7xl mx-auto px-6 md:px-4 h-24 flex items-center justify-between relative">
+        <div 
+          className="max-w-7xl mx-auto px-6 md:px-4 h-24 relative w-full"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'auto 1fr auto',
+            alignItems: 'center'
+          }}
+        >
           
-          {/* 1. Brand Logo Floating Capsule - Far Left (Aligned to left page margin) */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, x: -30 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            transition={{ type: 'spring', stiffness: 220, damping: 22, delay: 0.15 }}
-            className="pointer-events-auto select-none md:-translate-x-6"
-          >
-            <div
-              className={`relative p-[1.5px] rounded-full animate-neon-border w-[125px] h-[58px] transition-all duration-500 ease-in-out shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.85),_inset_0_-1px_1px_rgba(0,0,0,0.03),_0_12px_30px_-10px_rgba(0,0,0,0.25)]`}
+          {/* Column 1: Brand Logo & Emblem - Far Left */}
+          <div className="flex items-center gap-[16px] pointer-events-auto select-none">
+            {/* Matte Black Decepticon-style brand emblem */}
+            <motion.div
+              initial="hidden"
+              animate={clickedLogo === 'emblem' ? { scale: 0.95 } : 'visible'}
+              whileHover={clickedLogo === 'emblem' ? undefined : 'hover'}
+              onClick={(e) => handleRestartClick(e, 'emblem')}
+              variants={{
+                hidden: { opacity: 0, scale: 0.9 },
+                visible: {
+                  opacity: 1,
+                  scale: 1,
+                  transition: { duration: 0.6, ease: 'easeOut' }
+                },
+                hover: {
+                  scale: 1.06,
+                  transition: { type: 'spring', stiffness: 300, damping: 20 }
+                }
+              }}
+              className={`relative w-[58px] h-[58px] rounded-full bg-[#090909]/95 border-[1.5px] backdrop-blur-md flex items-center justify-center transition-all duration-300 cursor-pointer overflow-hidden group flex-shrink-0 ${
+                clickedLogo === 'emblem'
+                  ? 'border-cyan-400 shadow-[0_0_30px_rgba(6,182,212,0.8),_inset_0_1.5px_1.5px_rgba(255,255,255,0.2)]'
+                  : 'border-blue-500/80 shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.15),_0_8px_20px_rgba(0,0,0,0.4),_0_0_12px_rgba(59,130,246,0.2)] hover:border-blue-400 hover:shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.2),_0_8px_20px_rgba(0,0,0,0.5),_0_0_20px_rgba(6,182,212,0.4)]'
+              }`}
+              style={{ willChange: 'transform' }}
             >
-              <div className="absolute inset-0 rounded-full animate-neon-border blur-[8px] opacity-15 pointer-events-none" />
+              {/* Subtle purple/cyan gradient glow around edge */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500/10 to-cyan-500/10 opacity-30 group-hover:opacity-75 transition-opacity duration-300 pointer-events-none" />
 
-              <div className="w-full h-full bg-white/95 backdrop-blur-[18px] rounded-full flex items-center justify-center pl-3.5 pr-4">
-                <div className="w-2.5 h-2.5 rounded-full animate-blue-pulse mr-2.5 flex-shrink-0" />
-                <a
-                  href="#home"
-                  onClick={(e) => handleNavClick(e, 'home')}
-                  className="font-display text-sm tracking-widest text-zinc-900 leading-none hover:text-cyan-600 transition-colors"
-                >
-                  KAVYA<span className="text-cyan-500 font-extrabold font-sans">.</span>
-                </a>
-              </div>
-            </div>
-          </motion.div>
+              {/* Small top inner highlight */}
+              <div className="absolute top-[1px] left-1/2 -translate-x-1/2 w-[80%] h-[1px] bg-white/20 pointer-events-none" />
 
-          {/* 2. Center Floating Navigation - Desktop & Tablet (Centering navigation with responsive widths) */}
-          <motion.div
-            initial={{ opacity: 0, y: -25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.3 }}
-            className="hidden md:block absolute left-1/2 -translate-x-1/2 pointer-events-auto"
-          >
-            <div
-              className={`relative p-[1.5px] rounded-full animate-neon-border transition-all duration-500 ease-in-out md:w-[360px] lg:w-[630px] xl:w-[886px] h-[58px]`}
+              {/* Icon inside */}
+              <motion.img
+                src="/emblem.png"
+                variants={{
+                  hover: { rotate: 4, transition: { type: 'spring', stiffness: 200, damping: 10 } },
+                  rest: { rotate: 0, transition: { type: 'spring', stiffness: 200, damping: 15 } }
+                }}
+                initial="rest"
+                className="w-[62%] h-[62%] object-contain mix-blend-screen select-none pointer-events-none filter drop-shadow-[0_0_6px_rgba(6,182,212,0.7)]"
+              />
+            </motion.div>
+
+            {/* Existing KAVYA. Logo Pill */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, x: -30 }}
+              animate={clickedLogo === 'kavya' ? { scale: 0.95 } : { opacity: 1, scale: 1, x: 0 }}
+              transition={{ type: 'spring', stiffness: 220, damping: 22, delay: 0.15 }}
+              onClick={(e) => handleRestartClick(e, 'kavya')}
+              className="cursor-pointer"
             >
-              <div className="absolute inset-0 rounded-full animate-neon-border blur-[12px] opacity-18 pointer-events-none" />
-
               <div
-                className={`w-full h-full bg-white/95 backdrop-blur-[18px] rounded-full shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.85),_inset_0_-1px_1px_rgba(0,0,0,0.03),_0_15px_45px_-12px_rgba(0,0,0,0.22)] transition-all duration-500 ease-in-out px-4`}
+                className={`relative p-[1.5px] rounded-full animate-neon-border w-[125px] h-[58px] transition-all duration-500 ease-in-out shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.85),_inset_0_-1px_1px_rgba(0,0,0,0.03),_0_12px_30px_-10px_rgba(0,0,0,0.25)] ${
+                  clickedLogo === 'kavya' ? 'shadow-[0_0_30px_rgba(6,182,212,0.8)] border-cyan-400' : ''
+                }`}
               >
-                <nav className="flex items-center justify-between w-full h-full relative z-10">
-                  {navLinks.map((link) => {
-                    const isActive = activeSection === link.id;
-                    return (
-                      <a
-                        key={link.id}
-                        href={`#${link.id}`}
-                        onClick={(e) => handleNavClick(e, link.id)}
-                        onMouseEnter={() => setHoveredSection(link.id)}
-                        onMouseLeave={() => setHoveredSection(null)}
-                        className="relative cursor-pointer group flex-grow flex-1 flex items-center justify-center h-full active:scale-98 transition-transform duration-100"
-                      >
-                        {/* Inner padded container centering active pill & text */}
-                        <div className="relative px-[14px] py-[6px] md:px-[16px] md:py-[8px] lg:px-[20px] lg:py-[10px] flex items-center justify-center">
-                          
-                          {/* Single Shared Layout Capsule */}
-                          {isActive && (
-                            <motion.div
-                              layoutId="active-pill"
-                              className="absolute inset-0 bg-[#ebf5ff]/65 backdrop-blur-[18px] border border-[rgba(100,200,255,0.4)] rounded-full -z-10 shadow-[inset_0_1.5px_0_rgba(255,255,255,0.9),_0_0_24px_rgba(0,170,255,0.18),_0_4px_12px_rgba(59,130,246,0.12)]"
-                              style={{ 
-                                willChange: 'transform, opacity',
-                                transform: 'translateZ(0)',
-                                backfaceVisibility: 'hidden',
-                              }}
-                              transition={{
-                                type: 'spring',
-                                stiffness: 700,
-                                damping: 50,
-                                mass: 0.55,
-                              }}
-                            />
-                          )}
+                <div className="absolute inset-0 rounded-full animate-neon-border blur-[8px] opacity-15 pointer-events-none" />
 
-                          <span
-                            className={`relative z-10 block font-sans font-bold text-[10px] lg:text-xs uppercase tracking-[0.15em] select-none transition-[color,transform] duration-300 ease-out group-hover:-translate-y-[2px] ${
-                              isActive ? 'text-black' : 'text-zinc-500 group-hover:text-zinc-950'
-                            }`}
-                          >
-                            {link.name}
-                          </span>
-                        </div>
-                      </a>
-                    );
-                  })}
-                </nav>
+                <div className="w-full h-full bg-white/95 backdrop-blur-[18px] rounded-full flex items-center justify-center pl-3.5 pr-4">
+                  <div className="w-2.5 h-2.5 rounded-full animate-blue-pulse mr-2.5 flex-shrink-0" />
+                  <a
+                    href="#home"
+                    onClick={(e) => handleRestartClick(e, 'kavya')}
+                    className="font-display text-sm tracking-widest text-zinc-900 leading-none hover:text-cyan-600 transition-colors"
+                  >
+                    KAVYA<span className="text-cyan-500 font-extrabold font-sans">.</span>
+                  </a>
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
 
-          {/* 3. Center Floating Menu - Mobile Menu Trigger */}
-          <div className="md:hidden absolute left-1/2 -translate-x-1/2 pointer-events-auto">
+          {/* Column 2: Center Floating Navigation (Centered visually in-between on desktop) */}
+          <div className="hidden md:flex justify-center w-full pointer-events-auto">
+            <motion.div
+              initial={{ opacity: 0, y: -25 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.3 }}
+            >
+              <div
+                className={`relative p-[1.5px] rounded-full animate-neon-border transition-all duration-500 ease-in-out md:w-[360px] lg:w-[630px] xl:w-[886px] h-[58px]`}
+              >
+                <div className="absolute inset-0 rounded-full animate-neon-border blur-[12px] opacity-18 pointer-events-none" />
+
+                <div
+                  className={`w-full h-full bg-white/95 backdrop-blur-[18px] rounded-full shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.85),_inset_0_-1px_1px_rgba(0,0,0,0.03),_0_15px_45px_-12px_rgba(0,0,0,0.22)] transition-all duration-500 ease-in-out px-4`}
+                >
+                  <nav className="flex items-center justify-between w-full h-full relative z-10">
+                    {navLinks.map((link) => {
+                      const isActive = activeSection === link.id;
+                      return (
+                        <a
+                          key={link.id}
+                          href={`#${link.id}`}
+                          onClick={(e) => handleNavClick(e, link.id)}
+                          onMouseEnter={() => setHoveredSection(link.id)}
+                          onMouseLeave={() => setHoveredSection(null)}
+                          className="relative cursor-pointer group flex-grow flex-1 flex items-center justify-center h-full active:scale-98 transition-transform duration-100"
+                        >
+                          {/* Inner padded container centering active pill & text */}
+                          <div className="relative px-[14px] py-[6px] md:px-[16px] md:py-[8px] lg:px-[20px] lg:py-[10px] flex items-center justify-center">
+                            
+                            {/* Single Shared Layout Capsule */}
+                            {isActive && (
+                              <motion.div
+                                layoutId="active-pill"
+                                className="absolute inset-0 bg-[#ebf5ff]/65 backdrop-blur-[18px] border border-[rgba(100,200,255,0.4)] rounded-full -z-10 shadow-[inset_0_1.5px_0_rgba(255,255,255,0.9),_0_0_24px_rgba(0,170,255,0.18),_0_4px_12px_rgba(59,130,246,0.12)]"
+                                style={{ 
+                                  willChange: 'transform, opacity',
+                                  transform: 'translateZ(0)',
+                                  backfaceVisibility: 'hidden',
+                                }}
+                                transition={{
+                                  type: 'spring',
+                                  stiffness: 700,
+                                  damping: 50,
+                                  mass: 0.55,
+                                }}
+                              />
+                            )}
+
+                            <span
+                              className={`relative z-10 block font-sans font-bold text-[10px] lg:text-xs uppercase tracking-[0.15em] select-none transition-[color,transform] duration-300 ease-out group-hover:-translate-y-[2px] ${
+                                isActive ? 'text-black' : 'text-zinc-500 group-hover:text-zinc-950'
+                              }`}
+                            >
+                              {link.name}
+                            </span>
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </nav>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Column 2 (Mobile): Center Floating Menu - Mobile Menu Trigger */}
+          <div className="md:hidden flex justify-center w-full pointer-events-auto">
             <motion.div
               layout
               initial={{ borderRadius: 9999 }}
@@ -573,7 +499,7 @@ function Navbar() {
             </motion.div>
           </div>
 
-          {/* 4. Resume Floating Widget Capsule - Far Right (Aligned to right page margin) */}
+          {/* Column 3: Resume Floating Widget Capsule - Far Right */}
           <div className="relative pointer-events-auto" ref={dropdownRef}>
             <motion.div
               initial={{ opacity: 0, scale: 0.9, x: 30 }}

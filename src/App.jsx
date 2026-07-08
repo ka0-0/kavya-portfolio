@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import LoadingScreen from './components/LoadingScreen';
 import CustomCursor from './components/CustomCursor';
 import Navbar from './components/Navbar';
+import SectionNavigator from './components/SectionNavigator';
 import Hero from './components/Hero';
 import AboutSection from './components/AboutSection';
 import Skills from './components/skills/Skills';
@@ -20,17 +21,62 @@ import {
   trackSectionView,
   trackScrollDepth,
   trackSessionDuration,
-  trackOutboundLink
+  trackOutboundLink,
+  trackNavigationClick
 } from './utils/analytics';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPortfolioVisible, setIsPortfolioVisible] = useState(false);
   const [isTransitionComplete, setIsTransitionComplete] = useState(false);
+  
+  // Shared navigation state
+  const [activeSection, setActiveSection] = useState('home');
+  const targetSectionRef = useRef(null);
+  const manualScrollTimeoutRef = useRef(null);
+  const ratiosRef = useRef({});
 
   // 1. Track loading started on initial mount
   useEffect(() => {
     trackLoadingStarted();
+  }, []);
+
+  // Shared navigation click handler supporting the transition lock
+  const handleNavClick = useCallback((e, id) => {
+    if (e) e.preventDefault();
+    const element = document.getElementById(id);
+    if (!element) return;
+
+    // Track Navigation Click
+    const sectionName = id === 'home' ? 'Hero' : id.charAt(0).toUpperCase() + id.slice(1);
+    trackNavigationClick(sectionName);
+
+    // Lock active section changes while scrolling
+    targetSectionRef.current = id;
+
+    // Calculate scroll destination (offset matching Navbar: -150px)
+    const yOffset = -150;
+    const targetY = element.getBoundingClientRect().top + window.scrollY + yOffset;
+
+    if (window.lenis) {
+      window.lenis.scrollTo(targetY, {
+        duration: 0.45,
+        onComplete: () => {
+          setActiveSection(id);
+          targetSectionRef.current = null;
+        }
+      });
+    } else {
+      window.scrollTo({
+        top: Math.max(0, targetY),
+        behavior: 'smooth'
+      });
+      if (manualScrollTimeoutRef.current) clearTimeout(manualScrollTimeoutRef.current);
+      manualScrollTimeoutRef.current = setTimeout(() => {
+        setActiveSection(id);
+        targetSectionRef.current = null;
+      }, 500);
+    }
   }, []);
 
   // 2. Track page views, sections, scroll depth, and session duration after loading transitions complete
@@ -43,24 +89,64 @@ export default function App() {
     // Trigger initial page view
     trackPageView();
 
-    // A. Automatic section discovery and tracking
+    // A. Automatic section discovery, tracking, and active state spying
     const observer = new IntersectionObserver(
       (entries) => {
+        // If we are currently navigating to a target section, lock the observer
+        if (targetSectionRef.current) {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && entry.target.id === targetSectionRef.current) {
+              setActiveSection(targetSectionRef.current);
+              
+              // Track in analytics
+              let name = targetSectionRef.current.charAt(0).toUpperCase() + targetSectionRef.current.slice(1);
+              if (targetSectionRef.current === 'home') name = 'Hero';
+              if (targetSectionRef.current === 'resume') name = 'Resume';
+              trackSectionView(name);
+
+              targetSectionRef.current = null;
+            }
+          });
+          return;
+        }
+
+        // Normal scroll-spy active section detection
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const id = entry.target.id;
-            let name = id.charAt(0).toUpperCase() + id.slice(1);
-            if (id === 'home') name = 'Hero';
-            if (id === 'resume') name = 'Resume';
-            trackSectionView(name);
+          ratiosRef.current[entry.target.id] = entry.intersectionRatio;
+        });
+
+        let highestSectionId = null;
+        let maxRatio = 0;
+
+        Object.entries(ratiosRef.current).forEach(([id, ratio]) => {
+          if (ratio > maxRatio) {
+            maxRatio = ratio;
+            highestSectionId = id;
           }
         });
+
+        // Hysteresis requirement: require significant visibility (ratio > 0.05) before changing sections
+        if (highestSectionId && maxRatio > 0.05 && highestSectionId !== activeSection) {
+          setActiveSection(highestSectionId);
+
+          let name = highestSectionId.charAt(0).toUpperCase() + highestSectionId.slice(1);
+          if (highestSectionId === 'home') name = 'Hero';
+          if (highestSectionId === 'resume') name = 'Resume';
+          trackSectionView(name);
+        }
       },
-      { threshold: 0.2 }
+      { 
+        // Multiple thresholds to get fine-grained ratio updates (especially at low visibility levels)
+        threshold: [0, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+        rootMargin: '-10% 0px -15% 0px'
+      }
     );
 
     const sections = document.querySelectorAll('section[id]');
-    sections.forEach((sec) => observer.observe(sec));
+    sections.forEach((sec) => {
+      observer.observe(sec);
+      ratiosRef.current[sec.id] = 0;
+    });
 
     // B. Scroll depth tracker (only tracks once per threshold)
     const handleScroll = () => {
@@ -78,7 +164,29 @@ export default function App() {
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
 
-    // C. Outbound link click tracker
+    // C. Global click observer to instantly transition active pill for external page scroll triggers (e.g. Hero CTAs)
+    const handleGlobalClick = (e) => {
+      const button = e.target.closest('button, a');
+      if (!button) return;
+
+      let targetId = '';
+      if (button.tagName === 'A' && button.hash) {
+        targetId = button.hash.slice(1);
+      } else if (button.textContent) {
+        const text = button.textContent.toUpperCase();
+        if (text.includes("LET'S CONNECT") || text.includes("CONTACT")) {
+          targetId = 'contact';
+        }
+      }
+
+      const validSections = ['home', 'about', 'skills', 'projects', 'certificates', 'contact'];
+      if (targetId && validSections.includes(targetId)) {
+        handleNavClick(null, targetId);
+      }
+    };
+    window.addEventListener('click', handleGlobalClick, { passive: true });
+
+    // D. Outbound link click tracker
     const handleOutboundClick = (e) => {
       const anchor = e.target.closest('a');
       if (anchor && anchor.href) {
@@ -91,7 +199,7 @@ export default function App() {
     };
     window.addEventListener('click', handleOutboundClick);
 
-    // D. Session duration milestones
+    // E. Session duration milestones
     const timers = [
       setTimeout(() => trackSessionDuration(30), 30000),
       setTimeout(() => trackSessionDuration(60), 60000),
@@ -101,10 +209,12 @@ export default function App() {
     return () => {
       observer.disconnect();
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('click', handleGlobalClick);
       window.removeEventListener('click', handleOutboundClick);
       timers.forEach((t) => clearTimeout(t));
+      if (manualScrollTimeoutRef.current) clearTimeout(manualScrollTimeoutRef.current);
     };
-  }, [isTransitionComplete]);
+  }, [isTransitionComplete, activeSection, handleNavClick]);
 
   useEffect(() => {
     // Initialize Lenis smooth scroll engine (optimized for high refresh rate displays with responsive physics)
@@ -172,7 +282,7 @@ export default function App() {
       {isPortfolioVisible && (
         <div className="relative min-h-screen bg-[#090909] text-white selection:bg-blue-600 selection:text-white font-sans overflow-x-hidden">
           <CustomCursor />
-          <Navbar />
+          <Navbar activeSection={activeSection} handleNavClick={handleNavClick} />
           <main>
             <section id="home">
               <Hero showRobot={true} />
@@ -181,6 +291,7 @@ export default function App() {
             {/* Portfolio Content Sections (Deferred until transition completes to ensure a smooth reveal) */}
             {isTransitionComplete && (
               <>
+                <SectionNavigator activeSection={activeSection} handleNavClick={handleNavClick} />
                 <AboutSection />
                 <Skills />
 
