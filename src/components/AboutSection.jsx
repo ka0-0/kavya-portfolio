@@ -818,7 +818,7 @@ export default function AboutSection() {
                               <span className="text-[7.5px] font-mono font-bold text-cyan-400 bg-cyan-950/40 border border-cyan-500/20 px-1.5 py-0.5 rounded uppercase">Current</span>
                             </div>
                             <div className="text-[8.5px] text-zinc-500 font-mono">2024 – 2028</div>
-                            <div className="text-zinc-400 font-mono text-[9.5px]">Netaji Subhas University of Technology</div>
+                            <div className="text-zinc-400 font-mono text-[9.5px]">Delhi Technological University (DTU)</div>
                           </div>
 
                           {/* Card 2: Class XII */}
