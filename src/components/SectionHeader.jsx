@@ -105,7 +105,7 @@ export default function SectionHeader({ number, title, rightLabel }) {
   return (
     <div
       ref={containerRef}
-      className="relative w-full pt-0 pb-4 mb-12 md:mb-16 overflow-hidden bg-transparent select-none z-20"
+      className="relative w-full pt-0 pb-4 mb-4 md:mb-16 overflow-hidden bg-transparent select-none z-20"
     >
       {/* Top Details bar with Thin Blueprint Divider Line */}
       <div className="max-w-7xl mx-auto px-6 md:px-8 mb-12 md:mb-16">
@@ -122,7 +122,7 @@ export default function SectionHeader({ number, title, rightLabel }) {
       {/* Oversized Kinetic Repeated Text Track (Sandwiched between twin divider lines) */}
       <div className="relative w-full overflow-hidden flex justify-center py-2 border-b border-zinc-800/40 mt-[-8px] sm:mt-[-16px] md:mt-[-24px] lg:mt-[-32px]">
         <div ref={textRef} style={{ willChange: 'transform' }}>
-          <div className="flex whitespace-nowrap marquee-font-style leading-none text-[82px] sm:text-[128px] md:text-[184px] lg:text-[238px]">
+          <div className="flex whitespace-nowrap marquee-font-style leading-none text-[62px] sm:text-[96px] md:text-[184px] lg:text-[238px]">
             {repetitions.map((_, idx) => (
               <div
                 key={idx}

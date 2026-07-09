@@ -11,6 +11,7 @@ import AboutSection from './components/AboutSection';
 import Skills from './components/skills/Skills';
 import SectionHeader from './components/SectionHeader';
 import SpaceBoiScene from './components/SpaceBoiScene';
+import Projects from './components/Projects';
 import Lenis from 'lenis';
 import { useGLTF } from '@react-three/drei';
 
@@ -294,7 +295,7 @@ export default function App() {
       )}
 
       {isPortfolioVisible && (
-        <div className="relative min-h-screen bg-[#090909] text-white selection:bg-blue-600 selection:text-white font-sans overflow-x-hidden">
+        <div className="relative min-h-screen bg-[#090909] text-white selection:bg-blue-600 selection:text-white font-sans overflow-x-clip">
           <CustomCursor />
           <Navbar activeSection={activeSection} handleNavClick={handleNavClick} />
           <main>
@@ -313,17 +314,7 @@ export default function App() {
                 <AboutSection />
                 <Skills />
 
-                <section
-                  id="projects"
-                  className="relative flex flex-col justify-center border-t border-zinc-900 bg-[#09090a] overflow-hidden px-6 pt-6 md:pt-8 pb-48 md:pb-80"
-                >
-                  <SectionHeader
-                    number="03"
-                    title="RECENT PROJECTS"
-                    rightLabel="SYSTEM ARCHITECTURE"
-                  />
-                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.03),transparent_70%)]" />
-                </section>
+                <Projects />
 
                 <section
                   id="certificates"
