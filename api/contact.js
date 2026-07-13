@@ -25,17 +25,17 @@ export default async function handler(req, res) {
 
   // Automatically calculate Date & Time in a readable local structure (IST / Global standard)
   const now = new Date();
-  const dateStr = now.toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  const dateStr = now.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   });
-  const timeStr = now.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit', 
-    second: '2-digit', 
-    timeZoneName: 'short' 
+  const timeStr = now.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZoneName: 'short'
   });
 
   // Plain text fallback
@@ -173,7 +173,7 @@ export default async function handler(req, res) {
     const data = await resend.emails.send({
       // Resend onboarding sandbox requires sending from onboarding@resend.dev unless a custom domain is verified
       from: 'Portfolio Contact <onboarding@resend.dev>',
-      to: 'kav.1609.ya@gmail.com',
+      to: 'captaingaming16r@gmail.com',
       replyTo: email, // Enables pressing 'Reply' in Gmail to respond directly to the visitor
       subject: `Portfolio Contact: ${subject}`,
       text: textContent,
