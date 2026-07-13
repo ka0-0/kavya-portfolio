@@ -322,7 +322,7 @@ export default function App() {
 
                 <section
                   id="contact"
-                  className="relative flex flex-col justify-center border-t border-zinc-900 bg-[#0a0a0c] overflow-hidden px-6 pt-6 md:pt-8 pb-48 md:pb-80"
+                  className="relative flex flex-col justify-center border-t border-zinc-900 bg-[#0a0a0c] overflow-hidden px-6 pt-6 md:pt-8 pb-12 md:pb-16"
                 >
                   <SectionHeader
                     number="05"

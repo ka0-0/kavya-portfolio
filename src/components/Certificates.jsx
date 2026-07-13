@@ -180,6 +180,7 @@ function TiltCard({ image, title, onOpenViewer }) {
             key={image}
             src={image}
             alt={title}
+            loading="lazy"
             onError={() => {
               setHasError(true);
               setIsLoading(false);
@@ -210,7 +211,7 @@ function CertificateViewerImage({ src, alt }) {
       <img
         src={src}
         alt={alt}
-        className="max-w-[780px] max-h-[75vh] w-auto h-auto select-none shadow-2xl"
+        className="max-w-full max-h-[70dvh] sm:max-h-[75vh] w-auto h-auto select-none shadow-2xl"
         style={{
           width: '100%',
           height: '100%',
@@ -308,53 +309,56 @@ function CertificateViewerModal({ selectedCert, onClose }) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 30 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="bg-zinc-900/90 border border-zinc-800/80 w-full max-w-5xl h-[88vh] rounded-[24px] flex flex-col shadow-[0_30px_70px_rgba(0,0,0,0.5)] overflow-hidden"
+            className="bg-zinc-900/90 border border-zinc-800/80 w-full max-w-5xl h-[88dvh] sm:h-[88vh] rounded-[24px] flex flex-col shadow-[0_30px_70px_rgba(0,0,0,0.5)] overflow-hidden"
           >
             {/* Toolbar Header matching Resume Viewer design */}
-            <div className="h-16 border-b border-zinc-800/75 px-6 flex items-center justify-between bg-zinc-950/60 backdrop-blur-[10px] modal-toolbar">
+            <div className="h-16 border-b border-zinc-800/75 px-4 sm:px-6 flex items-center justify-between bg-zinc-950/60 backdrop-blur-[10px] modal-toolbar">
               {/* Left Side: Document Name */}
-              <div className="flex items-center gap-3">
-                <FileText className="w-5 h-5 text-cyan-400" />
-                <span className="font-mono text-xs font-bold uppercase tracking-wider text-zinc-400">
+              <div className="flex items-center gap-2 min-w-0">
+                <FileText className="w-4 h-4 text-cyan-400 shrink-0" />
+                <span className="font-mono text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-400 truncate max-w-[100px] xs:max-w-[180px] sm:max-w-xs">
                   {filename}
                 </span>
               </div>
 
               {/* Right Side: Toolbar Operations */}
-              <div className="flex items-center gap-2 font-sans">
-                {/* Zoom Out */}
-                <button
-                  onClick={() => setZoomScale(prev => Math.max(prev - 0.15, 0.6))}
-                  className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition-colors cursor-pointer"
-                  title="Zoom Out"
-                >
-                  <ZoomOut className="w-4 h-4" />
-                </button>
+              <div className="flex items-center gap-1 sm:gap-2 font-sans shrink-0">
+                {/* Zoom Controls: hidden on mobile */}
+                <div className="hidden sm:flex items-center gap-1 sm:gap-2">
+                  {/* Zoom Out */}
+                  <button
+                    onClick={() => setZoomScale(prev => Math.max(prev - 0.15, 0.6))}
+                    className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition-colors cursor-pointer"
+                    title="Zoom Out"
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </button>
 
-                {/* Current Zoom */}
-                <span className="text-[10px] font-mono text-zinc-500 w-10 text-center uppercase tracking-wide select-none">
-                  {Math.round(zoomScale * 100)}%
-                </span>
+                  {/* Current Zoom */}
+                  <span className="text-[10px] font-mono text-zinc-500 w-10 text-center uppercase tracking-wide select-none">
+                    {Math.round(zoomScale * 100)}%
+                  </span>
 
-                {/* Zoom In */}
-                <button
-                  onClick={() => setZoomScale(prev => Math.min(prev + 0.15, 1.8))}
-                  className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition-colors cursor-pointer"
-                  title="Zoom In"
-                >
-                  <ZoomIn className="w-4 h-4" />
-                </button>
+                  {/* Zoom In */}
+                  <button
+                    onClick={() => setZoomScale(prev => Math.min(prev + 0.15, 1.8))}
+                    className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition-colors cursor-pointer"
+                    title="Zoom In"
+                  >
+                    <ZoomIn className="w-4 h-4" />
+                  </button>
 
-                {/* Reset Zoom */}
-                <button
-                  onClick={() => setZoomScale(1.0)}
-                  className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition-colors mr-2 cursor-pointer"
-                  title="Reset Zoom"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
+                  {/* Reset Zoom */}
+                  <button
+                    onClick={() => setZoomScale(1.0)}
+                    className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition-colors mr-2 cursor-pointer"
+                    title="Reset Zoom"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
 
-                <div className="w-[1px] h-4 bg-zinc-800/80 mx-1" />
+                  <div className="w-[1px] h-4 bg-zinc-800/80 mx-1" />
+                </div>
 
                 {/* Download Button */}
                 <a
@@ -381,7 +385,7 @@ function CertificateViewerModal({ selectedCert, onClose }) {
 
             {/* Document Viewing Area */}
             <div 
-              className="flex-1 overflow-auto bg-zinc-950/70 p-6 md:p-10 flex items-start justify-center modal-scroll-container"
+              className="flex-1 overflow-auto bg-zinc-950/70 p-4 sm:p-6 md:p-10 flex items-start justify-center modal-scroll-container"
               style={{ overscrollBehavior: 'contain' }}
             >
               <div 
@@ -474,6 +478,16 @@ export default function Certificates() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedViewerCert, setSelectedViewerCert] = useState(null);
 
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const listener = (e) => setIsMobileViewport(e.matches);
+    setIsMobileViewport(media.matches);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, []);
+
   const handleOpenViewer = (image, title) => {
     setSelectedViewerCert({ image, title });
   };
@@ -498,8 +512,8 @@ export default function Certificates() {
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
-        setRadius(160); // compact radius for mobile
-        setAngleStep(0.32);
+        setRadius(120); // reduced by 25% on mobile to tighten the cylinder
+        setAngleStep(0.42); // compensated angle step to preserve physical label spacing
       } else if (window.innerWidth < 1024) {
         setRadius(200); // compact radius for tablet
         setAngleStep(0.28);
@@ -652,15 +666,15 @@ export default function Certificates() {
           className="w-full max-w-xl md:max-w-3xl mx-auto mt-6 md:mt-8 flex flex-col items-center pointer-events-none select-none overflow-visible relative z-20"
         >
           {/* Top Row: FOUNDATION   2023 ------- ● ------- 2026   EVOLUTION */}
-          <div className="w-full flex items-center justify-center gap-6 md:gap-10 lg:gap-14 overflow-visible">
+          <div className="w-full flex items-center justify-center gap-2 sm:gap-6 md:gap-10 lg:gap-14 overflow-visible">
             {/* Left Anchor Label: FOUNDATION */}
-            <span className="font-mono text-[12px] md:text-[13px] font-semibold uppercase tracking-[0.4em] text-white/70 drop-shadow-[0_0_8px_rgba(255,255,255,0.15)] shrink-0 select-none">
+            <span className="font-mono text-[9px] min-[380px]:text-[11px] sm:text-[12px] md:text-[13px] font-semibold uppercase tracking-[0.4em] text-white/70 drop-shadow-[0_0_8px_rgba(255,255,255,0.15)] shrink-0 select-none">
               FOUNDATION
             </span>
 
             {/* Inner Timeline: 2023 ------- ● ------- 2026 */}
-            <div className="w-full max-w-xs sm:max-w-sm md:max-w-md flex items-center justify-between gap-4 overflow-visible">
-              <span className="font-mono text-[13px] md:text-sm font-medium text-white/70 tracking-wider shrink-0 leading-none py-1">
+            <div className="w-full max-w-[120px] xs:max-w-[180px] sm:max-w-sm md:max-w-md flex items-center justify-between gap-4 overflow-visible">
+              <span className="font-mono text-[11px] sm:text-[13px] md:text-sm font-medium text-white/70 tracking-wider shrink-0 leading-none py-1">
                 2023
               </span>
 
@@ -672,13 +686,13 @@ export default function Certificates() {
                 />
               </div>
 
-              <span className="font-mono text-[13px] md:text-sm font-medium text-white/70 tracking-wider shrink-0 leading-none py-1">
+              <span className="font-mono text-[11px] sm:text-[13px] md:text-sm font-medium text-white/70 tracking-wider shrink-0 leading-none py-1">
                 2026
               </span>
             </div>
 
             {/* Right Anchor Label: EVOLUTION */}
-            <span className="font-mono text-[12px] md:text-[13px] font-semibold uppercase tracking-[0.4em] text-white/70 drop-shadow-[0_0_8px_rgba(255,255,255,0.15)] shrink-0 select-none">
+            <span className="font-mono text-[9px] min-[380px]:text-[11px] sm:text-[12px] md:text-[13px] font-semibold uppercase tracking-[0.4em] text-white/70 drop-shadow-[0_0_8px_rgba(255,255,255,0.15)] shrink-0 select-none">
               EVOLUTION
             </span>
           </div>
@@ -707,7 +721,7 @@ export default function Certificates() {
             
             {/* Left Column (Subtle compact rotating wheel navigation) */}
             <div 
-              className="md:col-span-5 h-[240px] md:h-[360px] relative flex items-center justify-start select-none"
+              className="col-span-1 md:col-span-5 h-[170px] sm:h-[190px] md:h-[360px] relative flex items-center justify-center md:justify-start select-none"
               style={{ 
                 perspective: "1200px", 
                 transformStyle: "preserve-3d" 
@@ -717,7 +731,7 @@ export default function Certificates() {
                 style={{
                   transformStyle: 'preserve-3d',
                 }}
-                className="relative w-full h-[60px] flex items-center justify-start pl-2 md:pl-6"
+                className="relative w-full h-[60px] flex items-center justify-center md:justify-start pl-0 md:pl-6"
               >
                 {certificatesData.map((cert, i) => (
                   <CylinderItem
@@ -735,8 +749,8 @@ export default function Certificates() {
             </div>
 
             {/* Right Column (Hero certificate preview - shifted downward by 60-80px for generous top breathing room) */}
-            <div className="md:col-span-7 flex flex-col justify-center items-start pt-14 md:pt-16 lg:pt-20">
-              <div className="relative w-full min-h-[440px] sm:min-h-[480px] md:min-h-[480px] lg:min-h-[520px] xl:min-h-[580px]">
+            <div className="col-span-1 md:col-span-7 flex flex-col justify-center items-center md:items-start pt-6 md:pt-16 lg:pt-20">
+              <div className="relative w-full min-h-[420px] max-[374px]:min-h-[390px] xs:min-h-[450px] sm:min-h-[500px] md:min-h-[480px] lg:min-h-[520px] xl:min-h-[580px]">
                 <AnimatePresence mode="popLayout" initial={false}>
                   <motion.div
                     key={activeIndex}
@@ -744,7 +758,7 @@ export default function Certificates() {
                     animate={{ opacity: 1, scale: 1, z: 0 }}
                     exit={{ opacity: 0, scale: 0.97, z: -30 }}
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute inset-0 w-full h-full flex flex-col justify-center items-start"
+                    className="absolute inset-0 w-full h-full flex flex-col justify-center items-center md:items-start"
                     style={{ transformStyle: 'preserve-3d' }}
                   >
                     {/* Ambient Floating Glass Card */}
@@ -753,7 +767,7 @@ export default function Certificates() {
                     </div>
 
                     {/* Detail Text Logs (Increased vertical spacing by ~24px below preview) */}
-                    <div className="w-full text-left mt-14 md:mt-16 lg:mt-20 px-1">
+                    <div className="w-full text-center md:text-left mt-8 md:mt-16 lg:mt-20 px-4 md:px-1">
                       <span className="font-mono text-[9px] tracking-[0.25em] text-cyan-400 font-bold uppercase block">
                         {activeCert.organization}
                       </span>
@@ -763,7 +777,7 @@ export default function Certificates() {
                       <span className="font-mono text-[10px] text-zinc-500 tracking-wider block mt-1">
                         ISSUED: {activeCert.date}
                       </span>
-                      <p className="font-sans text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-xl mt-3">
+                      <p className="font-sans text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-xl mx-auto md:mx-0 mt-3">
                         {activeCert.description}
                       </p>
                     </div>

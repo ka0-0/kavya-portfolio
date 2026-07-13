@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
+import { downloadResume } from '../utils/resume';
 
 // SVG Icons
 const GithubIcon = () => (
@@ -22,6 +23,16 @@ const EmailIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <rect x="2" y="4" width="20" height="16" rx="2" />
     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+  </svg>
+);
+
+const ResumeIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2-2H12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <polyline points="10 9 9 9 8 9" />
   </svg>
 );
 
@@ -111,21 +122,92 @@ export default function ContactSection() {
   const [isSending, setIsSending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // Copy Email states & handler
+  const [copied, setCopied] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState('Click to copy');
+
+  const handleCopy = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const emailStr = 'kav.1609.ya@gmail.com';
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(emailStr);
+        setCopied(true);
+        setCopyFeedback('Copied!');
+        setTimeout(() => {
+          setCopied(false);
+          setCopyFeedback('Click to copy');
+        }, 2000);
+      } else {
+        throw new Error('Clipboard API not available');
+      }
+    } catch (err) {
+      console.warn('Failed to copy using navigator.clipboard:', err);
+      setCopyFeedback('Press Ctrl+C to copy');
+      const tempTextarea = document.createElement('textarea');
+      tempTextarea.value = emailStr;
+      document.body.appendChild(tempTextarea);
+      tempTextarea.select();
+      try {
+        document.execCommand('copy');
+        setCopied(true);
+        setTimeout(() => {
+          setCopied(false);
+          setCopyFeedback('Click to copy');
+        }, 2000);
+      } catch {
+        setTimeout(() => {
+          setCopyFeedback('Click to copy');
+        }, 3000);
+      }
+      document.body.removeChild(tempTextarea);
+    }
+  };
+
+  // Resume download state & handler
+  const [downloaded, setDownloaded] = useState(false);
+
+  const handleDownload = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      downloadResume();
+      setDownloaded(true);
+      setTimeout(() => {
+        setDownloaded(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to download resume:', err);
+    }
+  };
+
   // Focus trap refs
   const modalBoxRef = useRef(null);
   const nameInputRef = useRef(null);
   const closeButtonRef = useRef(null);
   const submitButtonRef = useRef(null);
 
-  // Handle body scroll locking
+  // Handle body scroll locking and Lenis pausing
   useEffect(() => {
     if (isModalOpen) {
       document.body.style.overflow = 'hidden';
+      if (window.lenis) {
+        window.lenis.stop();
+      }
     } else {
       document.body.style.overflow = '';
+      if (window.lenis) {
+        window.lenis.start();
+      }
     }
     return () => {
       document.body.style.overflow = '';
+      if (window.lenis) {
+        window.lenis.start();
+      }
     };
   }, [isModalOpen]);
 
@@ -449,7 +531,7 @@ export default function ContactSection() {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.12 }}
-        className="grid grid-cols-1 lg:grid-cols-10 gap-12 lg:gap-16 items-start z-10 relative"
+        className="grid grid-cols-1 lg:grid-cols-10 gap-8 lg:gap-16 items-start z-10 relative"
       >
         {/* LEFT COLUMN */}
         <div className="lg:col-span-6 flex flex-col items-start text-left space-y-6 md:space-y-8">
@@ -465,7 +547,7 @@ export default function ContactSection() {
               <motion.span
                 custom={0}
                 variants={headlineVariants(0)}
-                className="font-display text-[2.8rem] sm:text-[4rem] md:text-[5.4rem] lg:text-[5.5rem] xl:text-[6.6rem] font-black uppercase text-white block tracking-tight"
+                className="font-display text-[6.8vw] min-[380px]:text-[7.2vw] min-[480px]:text-[2.8rem] sm:text-[4rem] md:text-[5.4rem] lg:text-[5.5rem] xl:text-[6.6rem] font-black uppercase text-white block tracking-tight"
                 style={{ 
                   textShadow: '0 0 24px rgba(6, 182, 212, 0.42)',
                   willChange: 'transform, opacity'
@@ -478,7 +560,7 @@ export default function ContactSection() {
               <motion.span
                 custom={1}
                 variants={headlineVariants(1)}
-                className="font-display text-[2.8rem] sm:text-[4rem] md:text-[5.4rem] lg:text-[5.5rem] xl:text-[6.6rem] font-black uppercase text-white block tracking-tight"
+                className="font-display text-[6.8vw] min-[380px]:text-[7.2vw] min-[480px]:text-[2.8rem] sm:text-[4rem] md:text-[5.4rem] lg:text-[5.5rem] xl:text-[6.6rem] font-black uppercase text-white block tracking-tight"
                 style={{ 
                   textShadow: '0 0 24px rgba(6, 182, 212, 0.42)',
                   willChange: 'transform, opacity'
@@ -491,7 +573,7 @@ export default function ContactSection() {
 
           <motion.p
             variants={paragraphVariants}
-            className="font-sans text-[14px] sm:text-[15px] md:text-[16px] text-zinc-400 leading-relaxed max-w-[560px]"
+            className="font-sans text-[14px] sm:text-[15px] md:text-[16px] text-zinc-400 leading-relaxed max-w-[90%] md:max-w-[560px] px-0"
             style={{ willChange: 'transform, opacity' }}
           >
             Whether it's AI applications, intelligent automation, or premium web experiences, let's create something that's fast, beautiful, and built for the future.
@@ -500,12 +582,12 @@ export default function ContactSection() {
           <motion.div
             variants={buttonVariants}
             style={{ willChange: 'transform, opacity' }}
-            className="w-full sm:w-auto"
+            className="w-full flex justify-start"
           >
             <MagneticButton
               onClick={openModal}
               shouldReduceMotion={shouldReduceMotion}
-              className="group relative inline-flex items-center justify-center sm:justify-between w-full sm:w-[280px] h-[58px] px-8 rounded-full bg-cyan-500/10 hover:bg-cyan-500/15 border border-cyan-500/40 hover:border-cyan-400 backdrop-blur-md transition-colors duration-300 select-none cursor-pointer"
+              className="group relative inline-flex items-center justify-center sm:justify-between w-full max-w-[340px] sm:max-w-none sm:w-[280px] h-[58px] px-8 rounded-full bg-cyan-500/10 hover:bg-cyan-500/15 border border-cyan-500/40 hover:border-cyan-400 backdrop-blur-md transition-colors duration-300 select-none cursor-pointer"
             >
               <div 
                 className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none blur-md"
@@ -543,6 +625,7 @@ export default function ContactSection() {
             <motion.a
               custom={0}
               variants={cardVariants(0)}
+              whileTap={shouldReduceMotion ? {} : { scale: 0.985, y: -1 }}
               href="https://github.com/ka0-0"
               target="_blank"
               rel="noopener noreferrer"
@@ -576,6 +659,7 @@ export default function ContactSection() {
             <motion.a
               custom={1}
               variants={cardVariants(1)}
+              whileTap={shouldReduceMotion ? {} : { scale: 0.985, y: -1 }}
               href="https://www.linkedin.com/in/kavya-makhan-800451370/"
               target="_blank"
               rel="noopener noreferrer"
@@ -605,40 +689,89 @@ export default function ContactSection() {
               </div>
             </motion.a>
 
-            {/* Email */}
-            <motion.a
+            {/* Email (Click to copy) */}
+            <motion.div
               custom={2}
               variants={cardVariants(2)}
-              href="mailto:kav.1609.ya@gmail.com"
-              onClick={(e) => {
-                e.preventDefault();
-                openModal();
-              }}
-              className="group relative rounded-2xl bg-white/[0.02] border border-white/5 p-4 flex flex-col justify-between hover:border-cyan-500/30 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden"
+              whileTap={shouldReduceMotion ? {} : { scale: 0.985, y: -1 }}
+              onClick={handleCopy}
+              className={`group relative rounded-2xl bg-white/[0.02] border p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden ${copied ? 'border-cyan-400/80 shadow-[0_0_20px_rgba(6,182,212,0.15)] bg-cyan-500/[0.02]' : 'border-white/5 hover:border-cyan-500/30'}`}
               style={{ willChange: 'transform, border-color' }}
             >
               <div 
-                className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none blur-md"
+                className={`absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent transition-opacity duration-300 pointer-events-none blur-md ${copied ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                 style={{ willChange: 'opacity' }}
               />
               <div className="relative z-10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-cyan-950/40 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:border-cyan-400/50 group-hover:text-cyan-300 group-hover:shadow-[0_0_12px_rgba(6,182,212,0.35)] transition-all duration-300">
+                  <div className={`w-9 h-9 rounded-full bg-cyan-950/40 border flex items-center justify-center transition-all duration-300 ${copied ? 'border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.5)]' : 'border-cyan-500/20 text-cyan-400 group-hover:border-cyan-400/50 group-hover:text-cyan-300 group-hover:shadow-[0_0_12px_rgba(6,182,212,0.35)]'}`}>
                     <EmailIcon />
                   </div>
                   <div className="flex flex-col">
                     <span className="font-mono text-[9px] tracking-widest text-zinc-500 uppercase font-bold">EMAIL</span>
-                    <h4 className="text-xs sm:text-sm font-sans font-bold text-white group-hover:text-cyan-300 transition-colors duration-300">Direct Inquiries</h4>
+                    <h4 className="text-xs sm:text-sm font-sans font-bold text-white group-hover:text-cyan-300 transition-colors duration-300">kav.1609.ya@gmail.com</h4>
                   </div>
                 </div>
               </div>
               <div className="relative z-10 mt-3 pt-3 border-t border-white/[0.03] flex justify-between items-center text-[11px] sm:text-xs">
-                <span className="font-mono text-zinc-500">Replies &lt; 24 hrs</span>
-                <span className="font-mono text-cyan-400 font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center">
-                  Send Email <span className="ml-1">→</span>
+                <span className={`font-mono transition-colors duration-300 ${copied ? 'text-cyan-400' : 'text-zinc-500'}`}>
+                  {copyFeedback}
+                </span>
+                <span className={`font-mono font-semibold transition-all duration-300 flex items-center ${copied ? 'text-cyan-400' : 'text-cyan-400 group-hover:translate-x-1'}`}>
+                  {copied ? (
+                    <>
+                      Copied <span className="ml-1 text-xs">✓</span>
+                    </>
+                  ) : (
+                    <>
+                      Copy <span className="ml-1">→</span>
+                    </>
+                  )}
                 </span>
               </div>
-            </motion.a>
+            </motion.div>
+
+            {/* Resume (Click to download) */}
+            <motion.div
+              custom={3}
+              variants={cardVariants(3)}
+              whileTap={shouldReduceMotion ? {} : { scale: 0.985, y: -1 }}
+              onClick={handleDownload}
+              className={`group relative rounded-2xl bg-white/[0.02] border p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden ${downloaded ? 'border-cyan-400/80 shadow-[0_0_20px_rgba(6,182,212,0.15)] bg-cyan-500/[0.02]' : 'border-white/5 hover:border-cyan-500/30'}`}
+              style={{ willChange: 'transform, border-color' }}
+            >
+              <div 
+                className={`absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent transition-opacity duration-300 pointer-events-none blur-md ${downloaded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                style={{ willChange: 'opacity' }}
+              />
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-full bg-cyan-950/40 border flex items-center justify-center transition-all duration-300 ${downloaded ? 'border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.5)]' : 'border-cyan-500/20 text-cyan-400 group-hover:border-cyan-400/50 group-hover:text-cyan-300 group-hover:shadow-[0_0_12px_rgba(6,182,212,0.35)]'}`}>
+                    <ResumeIcon />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-mono text-[9px] tracking-widest text-zinc-500 uppercase font-bold">RESUME</span>
+                    <h4 className="text-xs sm:text-sm font-sans font-bold text-white group-hover:text-cyan-300 transition-colors duration-300">Download Resume</h4>
+                  </div>
+                </div>
+              </div>
+              <div className="relative z-10 mt-3 pt-3 border-t border-white/[0.03] flex justify-between items-center text-[11px] sm:text-xs">
+                <span className={`font-mono transition-colors duration-300 ${downloaded ? 'text-cyan-400' : 'text-zinc-500'}`}>
+                  Latest CV (PDF)
+                </span>
+                <span className={`font-mono font-semibold transition-all duration-300 flex items-center ${downloaded ? 'text-cyan-400' : 'text-cyan-400 group-hover:translate-x-1'}`}>
+                  {downloaded ? (
+                    <>
+                      Downloaded <span className="ml-1 text-xs">✓</span>
+                    </>
+                  ) : (
+                    <>
+                      Download <span className="ml-1">→</span>
+                    </>
+                  )}
+                </span>
+              </div>
+            </motion.div>
           </div>
         </motion.div>
       </motion.div>
@@ -649,7 +782,7 @@ export default function ContactSection() {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.15 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 lg:mt-20 z-10 relative"
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 md:mt-16 lg:mt-20 z-10 relative"
       >
         {/* Bottom Card 1: Current Status */}
         <motion.div
@@ -662,11 +795,11 @@ export default function ContactSection() {
             className="absolute inset-0 bg-gradient-to-t from-cyan-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none blur-md"
             style={{ willChange: 'opacity' }}
           />
-          <div className="relative z-10">
+          <div className="relative z-10 flex flex-col items-center md:items-start text-center md:text-left">
             <span className="font-mono text-[10px] tracking-widest text-cyan-400 font-bold mb-4 block select-none">
               CURRENT STATUS
             </span>
-            <ul className="font-sans text-xs sm:text-sm text-zinc-300 space-y-2 select-none">
+            <ul className="font-sans text-xs sm:text-sm text-zinc-300 space-y-2 select-none text-left">
               <li className="flex items-center">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-500/40 inline-block mr-2.5" />
                 Open to AI Projects
@@ -694,11 +827,11 @@ export default function ContactSection() {
             className="absolute inset-0 bg-gradient-to-t from-cyan-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none blur-md"
             style={{ willChange: 'opacity' }}
           />
-          <div className="relative z-10">
+          <div className="relative z-10 flex flex-col items-center md:items-start text-center md:text-left">
             <span className="font-mono text-[10px] tracking-widest text-cyan-400 font-bold mb-4 block select-none">
               LOCATION
             </span>
-            <ul className="font-sans text-xs sm:text-sm text-zinc-300 space-y-2 select-none">
+            <ul className="font-sans text-xs sm:text-sm text-zinc-300 space-y-2 select-none text-left">
               <li className="flex items-center">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-500/40 inline-block mr-2.5" />
                 Delhi, India
@@ -722,11 +855,11 @@ export default function ContactSection() {
             className="absolute inset-0 bg-gradient-to-t from-cyan-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none blur-md"
             style={{ willChange: 'opacity' }}
           />
-          <div className="relative z-10">
+          <div className="relative z-10 flex flex-col items-center md:items-start text-center md:text-left">
             <span className="font-mono text-[10px] tracking-widest text-cyan-400 font-bold mb-4 block select-none">
               WORK STYLE
             </span>
-            <ul className="font-sans text-xs sm:text-sm text-zinc-300 space-y-2 select-none">
+            <ul className="font-sans text-xs sm:text-sm text-zinc-300 space-y-2 select-none text-left">
               <li className="flex items-center">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-500/40 inline-block mr-2.5" />
                 Fast Communication
@@ -759,14 +892,14 @@ export default function ContactSection() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="modal-title"
-              className="fixed inset-0 z-[99999] flex items-center justify-center p-4 md:p-6 bg-[#05070c]/55 backdrop-blur-[18px] overflow-y-auto"
+              className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-[#05070c]/55 backdrop-blur-[18px] overflow-y-auto"
             >
               {/* Modal Body Container */}
               <motion.div
                 ref={modalBoxRef}
                 variants={modalBoxVariants}
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-[700px] rounded-[32px] bg-[#09090B] border border-cyan-500/25 p-6 md:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden max-h-[92vh] overflow-y-auto"
+                className="relative w-full max-w-[700px] rounded-t-[24px] sm:rounded-[32px] bg-[#09090B] border-t border-x sm:border border-cyan-500/25 p-5 sm:p-8 md:p-10 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:pb-8 md:pb-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-y-auto max-h-[88dvh] sm:max-h-[92vh]"
                 style={{ scrollbarWidth: 'thin', willChange: 'transform, opacity' }}
               >
                 {/* Subtle top-center background glow */}
@@ -776,7 +909,7 @@ export default function ContactSection() {
                 <button
                   ref={closeButtonRef}
                   onClick={closeModal}
-                  className="absolute top-6 right-6 w-8 h-8 rounded-full border border-white/5 hover:border-cyan-500/30 flex items-center justify-center text-zinc-400 hover:text-white bg-white/[0.02] cursor-pointer transition-colors duration-300 focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/20"
+                  className="absolute top-5 right-5 sm:top-6 sm:right-6 w-9 h-9 sm:w-8 sm:h-8 rounded-full border border-white/5 hover:border-cyan-500/30 flex items-center justify-center text-zinc-400 hover:text-white bg-white/[0.02] cursor-pointer transition-colors duration-300 focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/20"
                   aria-label="Close modal"
                 >
                   <motion.div 
@@ -853,7 +986,7 @@ export default function ContactSection() {
                             onChange={handleInputChange}
                             placeholder="Your full name"
                             aria-required="true"
-                            className={`h-[60px] rounded-2xl bg-black/45 border ${errors.name ? 'border-red-500/60 focus:border-red-500' : 'border-white/10 focus:border-cyan-500/60'} px-5 font-sans text-sm text-white placeholder:text-zinc-500 focus:outline-none transition-all duration-300 focus:ring-1 focus:ring-cyan-500/20`}
+                            className={`h-[52px] sm:h-[56px] md:h-[60px] rounded-2xl bg-black/45 border ${errors.name ? 'border-red-500/60 focus:border-red-500' : 'border-white/10 focus:border-cyan-500/60'} px-5 font-sans text-sm text-white placeholder:text-zinc-500 focus:outline-none transition-all duration-300 focus:ring-1 focus:ring-cyan-500/20`}
                           />
                           {errors.name && (
                             <span className="font-sans text-[10px] text-red-400 mt-1 select-none">
@@ -874,7 +1007,7 @@ export default function ContactSection() {
                             onChange={handleInputChange}
                             placeholder="your.email@example.com"
                             aria-required="true"
-                            className={`h-[60px] rounded-2xl bg-black/45 border ${errors.email ? 'border-red-500/60 focus:border-red-500' : 'border-white/10 focus:border-cyan-500/60'} px-5 font-sans text-sm text-white placeholder:text-zinc-500 focus:outline-none transition-all duration-300 focus:ring-1 focus:ring-cyan-500/20`}
+                            className={`h-[52px] sm:h-[56px] md:h-[60px] rounded-2xl bg-black/45 border ${errors.email ? 'border-red-500/60 focus:border-red-500' : 'border-white/10 focus:border-cyan-500/60'} px-5 font-sans text-sm text-white placeholder:text-zinc-500 focus:outline-none transition-all duration-300 focus:ring-1 focus:ring-cyan-500/20`}
                           />
                           {errors.email && (
                             <span className="font-sans text-[10px] text-red-400 mt-1 select-none">
@@ -897,7 +1030,7 @@ export default function ContactSection() {
                           onChange={handleInputChange}
                           placeholder="What's this about?"
                           aria-required="true"
-                          className={`h-[60px] rounded-2xl bg-black/45 border ${errors.subject ? 'border-red-500/60 focus:border-red-500' : 'border-white/10 focus:border-cyan-500/60'} px-5 font-sans text-sm text-white placeholder:text-zinc-500 focus:outline-none transition-all duration-300 focus:ring-1 focus:ring-cyan-500/20`}
+                          className={`h-[52px] sm:h-[56px] md:h-[60px] rounded-2xl bg-black/45 border ${errors.subject ? 'border-red-500/60 focus:border-red-500' : 'border-white/10 focus:border-cyan-500/60'} px-5 font-sans text-sm text-white placeholder:text-zinc-500 focus:outline-none transition-all duration-300 focus:ring-1 focus:ring-cyan-500/20`}
                         />
                         {errors.subject && (
                           <span className="font-sans text-[10px] text-red-400 mt-1 select-none">
@@ -918,7 +1051,7 @@ export default function ContactSection() {
                           onChange={handleInputChange}
                           placeholder="Your project details or inquiry message..."
                           aria-required="true"
-                          className={`h-[220px] py-4 rounded-2xl bg-black/45 border ${errors.message ? 'border-red-500/60 focus:border-red-500' : 'border-white/10 focus:border-cyan-500/60'} px-5 font-sans text-sm text-white placeholder:text-zinc-500 focus:outline-none transition-all duration-300 resize-none focus:ring-1 focus:ring-cyan-500/20`}
+                          className={`h-[140px] sm:h-[180px] md:h-[220px] py-4 rounded-2xl bg-black/45 border ${errors.message ? 'border-red-500/60 focus:border-red-500' : 'border-white/10 focus:border-cyan-500/60'} px-5 font-sans text-sm text-white placeholder:text-zinc-500 focus:outline-none transition-all duration-300 resize-none focus:ring-1 focus:ring-cyan-500/20`}
                         />
                         {errors.message && (
                           <span className="font-sans text-[10px] text-red-400 mt-1 select-none">
