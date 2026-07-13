@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     const data = await resend.emails.send({
       // Resend onboarding sandbox requires sending from onboarding@resend.dev unless a custom domain is verified
       from: 'Portfolio Contact <onboarding@resend.dev>',
-      to: 'kav.1609.ya@gmail.com',
+      to: 'captaingaming16r@gmail.com',
       replyTo: email, // Enables pressing 'Reply' in Gmail to respond directly to the visitor
       subject: `Portfolio Contact: ${subject}`,
       text: `New Portfolio Contact\n\nName:\n${name}\n\nEmail:\n${email}\n\nSubject:\n${subject}\n\nMessage:\n${message}`,
