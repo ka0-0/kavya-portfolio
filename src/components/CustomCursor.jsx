@@ -10,12 +10,12 @@ const checkIsDesktop = () => {
 const CustomCursor = memo(function CustomCursor() {
   const glowRef = useRef(null);
   const dotRef = useRef(null);
+  const textRef = useRef(null);
   const isDesktopRef = useRef(checkIsDesktop());
 
   useEffect(() => {
     if (!isDesktopRef.current) return;
 
-    // Positioning coordinates
     let mouseX = -100;
     let mouseY = -100;
     let glowX = -100;
@@ -23,104 +23,177 @@ const CustomCursor = memo(function CustomCursor() {
     let dotX = -100;
     let dotY = -100;
 
-    // Hover states and RAF controls
-    let isHovered = false;
     let rafActive = false;
     let rafId = null;
     let lastMouseMoveTime = performance.now();
 
-    // Size and Scale interpolation values (Slightly increased by ~20% for visibility)
-    let targetGlowSize = 96;
-    let currentGlowSize = 96;
+    // Deterministic state machine source of truth
+    let cursorMode = 'default'; // 'default' | 'hover' | 'view'
+    let leaveTimeout = null;
+    let justEnteredView = false;
 
-    let targetDotSize = 10;
-    let currentDotSize = 10;
+    const applyCursorStyles = (mode) => {
+      cursorMode = mode;
 
-    let targetScale = 1;
-    let currentScale = 1;
+      if (dotRef.current) {
+        const isView = mode === 'view';
+        const isHover = mode === 'hover';
+
+        if (isView) {
+          dotRef.current.style.width = '72px';
+          dotRef.current.style.height = '72px';
+          dotRef.current.style.backgroundColor = 'rgba(8, 51, 68, 0.88)';
+          dotRef.current.style.borderColor = 'rgba(34, 211, 238, 0.85)';
+          dotRef.current.style.boxShadow = '0 0 32px rgba(34, 211, 238, 0.85)';
+          dotRef.current.style.backdropFilter = 'blur(12px)';
+          dotRef.current.style.webkitBackdropFilter = 'blur(12px)';
+          dotRef.current.style.mixBlendMode = 'normal';
+        } else if (isHover) {
+          dotRef.current.style.width = '28px';
+          dotRef.current.style.height = '28px';
+          dotRef.current.style.backgroundColor = 'rgb(255, 255, 255)';
+          dotRef.current.style.borderColor = 'transparent';
+          dotRef.current.style.boxShadow = 'none';
+          dotRef.current.style.backdropFilter = 'none';
+          dotRef.current.style.webkitBackdropFilter = 'none';
+          dotRef.current.style.mixBlendMode = 'difference';
+        } else {
+          dotRef.current.style.width = '10px';
+          dotRef.current.style.height = '10px';
+          dotRef.current.style.backgroundColor = 'rgb(255, 255, 255)';
+          dotRef.current.style.borderColor = 'transparent';
+          dotRef.current.style.boxShadow = 'none';
+          dotRef.current.style.backdropFilter = 'none';
+          dotRef.current.style.webkitBackdropFilter = 'none';
+          dotRef.current.style.mixBlendMode = 'difference';
+        }
+      }
+
+      if (textRef.current) {
+        textRef.current.style.opacity = mode === 'view' ? '1' : '0';
+      }
+
+      if (glowRef.current) {
+        if (mode === 'view') {
+          glowRef.current.style.width = '160px';
+          glowRef.current.style.height = '160px';
+        } else if (mode === 'hover') {
+          glowRef.current.style.width = '144px';
+          glowRef.current.style.height = '144px';
+        } else {
+          glowRef.current.style.width = '96px';
+          glowRef.current.style.height = '96px';
+        }
+      }
+    };
+
+    const handleViewEnter = () => {
+      // Clear any pending transition back to default/hover
+      if (leaveTimeout) {
+        clearTimeout(leaveTimeout);
+        leaveTimeout = null;
+      }
+      
+      // Set flag to bypass interpolation on the first animation frame
+      justEnteredView = true;
+
+      // Snap coordinates instantly to the raw mouse coordinates
+      glowX = mouseX;
+      glowY = mouseY;
+      dotX = mouseX;
+      dotY = mouseY;
+
+      // Force immediate DOM transform updates
+      if (glowRef.current) {
+        glowRef.current.style.transform = `translate3d(${glowX}px, ${glowY}px, 0) translate(-50%, -50%)`;
+      }
+      if (dotRef.current) {
+        dotRef.current.style.transform = `translate3d(${dotX}px, ${dotY}px, 0) translate(-50%, -50%)`;
+      }
+
+      applyCursorStyles('view');
+
+      if (!rafActive) {
+        rafActive = true;
+        render();
+      }
+    };
+
+    const handleViewLeave = () => {
+      if (leaveTimeout) clearTimeout(leaveTimeout);
+
+      // Start the 0ms leave timeout to handle rapid transitions between cards
+      leaveTimeout = setTimeout(() => {
+        leaveTimeout = null;
+
+        // Execute exactly one document.elementFromPoint lookup to find the fallback state
+        const hoveredEl = document.elementFromPoint(mouseX, mouseY);
+        const isInteractive = hoveredEl && hoveredEl.closest && hoveredEl.closest('button, a, input, [data-interactive="true"]');
+        applyCursorStyles(isInteractive ? 'hover' : 'default');
+      }, 0);
+    };
 
     const render = () => {
       const now = performance.now();
       const timeSinceLastMove = now - lastMouseMoveTime;
 
-      // Set targets depending on hover status
-      targetGlowSize = isHovered ? 144 : 96;
-      targetDotSize = isHovered ? 28 : 10;
-      targetScale = isHovered ? 1.2 : 1;
-
-      // 1. Adaptive Smoothing: If the physical mouse has stopped moving for > 24ms,
-      // snap immediately to targets to prevent drifting, overshooting, or micro-movements.
-      if (timeSinceLastMove > 24) {
+      if (justEnteredView) {
+        // Skip interpolation for the first frame after entering VIEW
         glowX = mouseX;
         glowY = mouseY;
         dotX = mouseX;
         dotY = mouseY;
-        currentGlowSize = targetGlowSize;
-        currentDotSize = targetDotSize;
-        currentScale = targetScale;
+        justEnteredView = false;
+      } else if (timeSinceLastMove > 24) {
+        glowX = mouseX;
+        glowY = mouseY;
+        dotX = mouseX;
+        dotY = mouseY;
+      } else if (cursorMode === 'view') {
+        // High-speed responsiveness inside certificate to avoid trailing cursor latency
+        glowX += (mouseX - glowX) * 0.50;
+        glowY += (mouseY - glowY) * 0.50;
+        dotX += (mouseX - dotX) * 0.85;
+        dotY += (mouseY - dotY) * 0.85;
       } else {
-        // Smoothly interpolate coordinates and dimensions while moving
-        glowX += (mouseX - glowX) * 0.15;
-        glowY += (mouseY - glowY) * 0.15;
-
-        dotX += (mouseX - dotX) * 0.40;
-        dotY += (mouseY - dotY) * 0.40;
-
-        currentGlowSize += (targetGlowSize - currentGlowSize) * 0.15;
-        currentDotSize += (targetDotSize - currentDotSize) * 0.20;
-        currentScale += (targetScale - currentScale) * 0.15;
+        glowX += (mouseX - glowX) * 0.25;
+        glowY += (mouseY - glowY) * 0.25;
+        dotX += (mouseX - dotX) * 0.50;
+        dotY += (mouseY - dotY) * 0.50;
       }
 
-      const glowOffset = currentGlowSize / 2;
-      const dotOffset = currentDotSize / 2;
-
-      // 2. Update DOM using translate3d and GPU-accelerated properties
       if (glowRef.current) {
-        glowRef.current.style.transform = `translate3d(${glowX - glowOffset}px, ${glowY - glowOffset}px, 0) scale(${currentScale})`;
+        glowRef.current.style.transform = `translate3d(${glowX}px, ${glowY}px, 0) translate(-50%, -50%)`;
       }
 
       if (dotRef.current) {
-        dotRef.current.style.width = `${currentDotSize}px`;
-        dotRef.current.style.height = `${currentDotSize}px`;
-        dotRef.current.style.transform = `translate3d(${dotX - dotOffset}px, ${dotY - dotOffset}px, 0)`;
+        dotRef.current.style.transform = `translate3d(${dotX}px, ${dotY}px, 0) translate(-50%, -50%)`;
       }
 
-      // 3. Evaluate if the animation has fully settled to stop calculation overhead
       const glowDist = Math.hypot(mouseX - glowX, mouseY - glowY);
       const dotDist = Math.hypot(mouseX - dotX, mouseY - dotY);
-      const glowSizeDist = Math.abs(targetGlowSize - currentGlowSize);
-      const dotSizeDist = Math.abs(targetDotSize - currentDotSize);
 
-      if (glowDist < 0.08 && dotDist < 0.08 && glowSizeDist < 0.08 && dotSizeDist < 0.08) {
-        // Snap directly to target coordinates to sleep cleanly
+      if (glowDist < 0.08 && dotDist < 0.08) {
         glowX = mouseX;
         glowY = mouseY;
         dotX = mouseX;
         dotY = mouseY;
-        currentGlowSize = targetGlowSize;
-        currentDotSize = targetDotSize;
-        currentScale = targetScale;
-
-        const finalGlowOffset = currentGlowSize / 2;
-        const finalDotOffset = currentDotSize / 2;
 
         if (glowRef.current) {
-          glowRef.current.style.transform = `translate3d(${glowX - finalGlowOffset}px, ${glowY - finalGlowOffset}px, 0) scale(${currentScale})`;
+          glowRef.current.style.transform = `translate3d(${glowX}px, ${glowY}px, 0) translate(-50%, -50%)`;
         }
         if (dotRef.current) {
-          dotRef.current.style.width = `${currentDotSize}px`;
-          dotRef.current.style.height = `${currentDotSize}px`;
-          dotRef.current.style.transform = `translate3d(${dotX - finalDotOffset}px, ${dotY - finalDotOffset}px, 0)`;
+          dotRef.current.style.transform = `translate3d(${dotX}px, ${dotY}px, 0) translate(-50%, -50%)`;
         }
 
         rafActive = false;
-        return; // Auto-sleep
+        return;
       }
 
       rafId = requestAnimationFrame(render);
     };
 
-    // Global event handlers using event delegation to completely bypass mousemove DOM traversal overhead
+    // mousemove ONLY updates coordinates. No hover checks!
     const handleMouseMove = (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
@@ -132,22 +205,21 @@ const CustomCursor = memo(function CustomCursor() {
       }
     };
 
-    const handleMouseOver = (e) => {
-      const target = e.target;
-      if (!target) return;
+    const handlePointerOver = (e) => {
+      // Locking state: Ignore interactive hover calculations if in "view" mode
+      // or if we are inside a transition timeout (leaveTimeout is active)
+      if (cursorMode === 'view' || leaveTimeout) return;
 
-      // Event delegation handles state changes only when crossing boundaries
-      const interactive = target.closest('button, a, input, [data-interactive="true"]');
-      isHovered = !!interactive;
-
-      if (!rafActive) {
-        rafActive = true;
-        render();
-      }
+      const isInteractive = e.target && e.target.closest && e.target.closest('button, a, input, [data-interactive="true"]');
+      applyCursorStyles(isInteractive ? 'hover' : 'default');
     };
 
     const handleMouseLeaveDoc = () => {
-      isHovered = false;
+      if (leaveTimeout) {
+        clearTimeout(leaveTimeout);
+        leaveTimeout = null;
+      }
+      applyCursorStyles('default');
       mouseX = -100;
       mouseY = -100;
 
@@ -158,38 +230,79 @@ const CustomCursor = memo(function CustomCursor() {
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    window.addEventListener('mouseover', handleMouseOver, { passive: true });
+    window.addEventListener('pointerover', handlePointerOver, { passive: true });
     document.addEventListener('mouseleave', handleMouseLeaveDoc, { passive: true });
 
-    // Initial positioning kickstart
+    window.addEventListener('view-cursor-enter', handleViewEnter);
+    window.addEventListener('view-cursor-leave', handleViewLeave);
+
     rafActive = true;
     render();
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseover', handleMouseOver);
+      window.removeEventListener('pointerover', handlePointerOver);
       document.removeEventListener('mouseleave', handleMouseLeaveDoc);
+
+      window.removeEventListener('view-cursor-enter', handleViewEnter);
+      window.removeEventListener('view-cursor-leave', handleViewLeave);
+
+      if (leaveTimeout) clearTimeout(leaveTimeout);
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
 
   if (!isDesktopRef.current) return null;
 
+  const cubicBezierEase = 'cubic-bezier(0.22, 1, 0.36, 1)';
+  const transitionFast = `width 0.14s ${cubicBezierEase}, height 0.14s ${cubicBezierEase}, background-color 0.14s ${cubicBezierEase}, border-color 0.14s ${cubicBezierEase}, box-shadow 0.14s ${cubicBezierEase}, backdrop-filter 0.14s ${cubicBezierEase}, -webkit-backdrop-filter 0.14s ${cubicBezierEase}`;
+
   return (
     <>
-      {/* Blurred Ambient Radial Glow Ring - Direct RAF Transform */}
+      {/* Blurred Ambient Radial Glow Ring - Persistent DOM */}
       <div
         ref={glowRef}
-        className="pointer-events-none fixed top-0 left-0 z-[999998] hidden md:block rounded-full bg-gradient-to-r from-blue-500/25 via-cyan-400/20 to-blue-600/15 blur-xl w-[96px] h-[96px] will-change-transform"
-        style={{ transform: 'translate3d(-100px, -100px, 0)' }}
+        className="pointer-events-none fixed top-0 left-0 z-[999998] hidden md:block rounded-full bg-gradient-to-r from-blue-500/25 via-cyan-400/20 to-blue-600/15 blur-xl will-change-transform"
+        style={{
+          transform: 'translate3d(-100px, -100px, 0) translate(-50%, -50%)',
+          width: '96px',
+          height: '96px',
+          transition: `width 0.14s ${cubicBezierEase}, height 0.14s ${cubicBezierEase}`,
+          transitionDelay: '0ms',
+          animationDelay: '0ms',
+          pointerEvents: 'none'
+        }}
       />
 
-      {/* Solid Small Pointer Dot - Direct RAF Transform */}
+      {/* Single Global Pointer Dot - Morphing into VIEW Capsule */}
       <div
         ref={dotRef}
-        className="pointer-events-none fixed top-0 left-0 z-[999999] hidden md:block rounded-full bg-white mix-blend-difference will-change-transform"
-        style={{ transform: 'translate3d(-100px, -100px, 0)', width: '10px', height: '10px' }}
-      />
+        className="pointer-events-none fixed top-0 left-0 z-[999999] hidden md:flex items-center justify-center rounded-full will-change-transform border border-transparent select-none overflow-hidden"
+        style={{
+          transform: 'translate3d(-100px, -100px, 0) translate(-50%, -50%)',
+          width: '10px',
+          height: '10px',
+          backgroundColor: 'rgb(255, 255, 255)',
+          mixBlendMode: 'difference',
+          transition: transitionFast,
+          transitionDelay: '0ms',
+          animationDelay: '0ms',
+          pointerEvents: 'none'
+        }}
+      >
+        <span
+          ref={textRef}
+          className="font-mono text-[11px] font-black text-cyan-300 tracking-[0.25em] drop-shadow-[0_0_8px_rgba(34,211,238,0.9)] opacity-0 pointer-events-none select-none pl-0.5"
+          style={{
+            transition: `opacity 0.14s ${cubicBezierEase}`,
+            transitionDelay: '0ms',
+            animationDelay: '0ms',
+            pointerEvents: 'none'
+          }}
+        >
+          VIEW
+        </span>
+      </div>
     </>
   );
 });

@@ -241,7 +241,7 @@ const OrbitIcon = React.memo(function OrbitIcon({ skill, index, total, radius, r
         rotate: negRotation,
         zIndex: isHovered ? 30 : 10,
       }}
-      className="w-[68px] h-[68px] [--icon-half-size:34px] origin-center pointer-events-auto flex items-center justify-center"
+      className="w-[62px] h-[62px] [--icon-half-size:31px] origin-center pointer-events-auto flex items-center justify-center"
     >
       <motion.div
         animate={{
@@ -254,7 +254,7 @@ const OrbitIcon = React.memo(function OrbitIcon({ skill, index, total, radius, r
           borderColor: isHovered ? skill.color : 'rgba(255, 255, 255, 0.08)',
           color: isHovered ? skill.color : '#a1a1aa',
         }}
-        className="w-[42px] h-[42px] md:w-[46px] md:h-[46px] lg:w-[50px] lg:h-[50px] rounded-full bg-[#070709]/95 border backdrop-blur-md flex items-center justify-center cursor-pointer transition-colors duration-300"
+        className="w-[38px] h-[38px] md:w-[42px] md:h-[42px] lg:w-[46px] lg:h-[46px] rounded-full bg-[#070709]/95 border backdrop-blur-md flex items-center justify-center cursor-pointer transition-colors duration-300"
       >
         <div className="w-[50%] h-[50%] flex items-center justify-center">
           <skill.icon className="w-full h-full object-contain" />
@@ -422,7 +422,7 @@ export default function Skills() {
 
   const isMobile = windowWidth < 768;
   const isTablet = windowWidth >= 768 && windowWidth < 1024;
-  const radius = isMobile ? 120 : isTablet ? 180 : 235;
+  const radius = isMobile ? 110 : isTablet ? 165 : 216;
 
   // 3D Perspective Tilt on mouse move
   const tiltX = useMotionValue(0);
@@ -601,7 +601,7 @@ export default function Skills() {
   return (
     <section
       id="skills"
-      className="relative min-h-screen bg-[#09090c] text-white flex flex-col pt-24 pb-12 overflow-hidden select-none skills-section"
+      className="relative min-h-screen bg-[#09090c] text-white flex flex-col pt-14 pb-8 overflow-hidden select-none skills-section"
       style={{
         contain: 'layout paint style',
       }}
@@ -613,9 +613,9 @@ export default function Skills() {
       />
 
       {/* Balanced layout: centered flex container with visual placeholder and right-aligned skills panel */}
-      <div className="mx-auto w-full max-w-7xl px-6 z-10 relative flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16 my-auto lg:-translate-x-6">
+      <div className="mx-auto w-full max-w-7xl px-6 z-10 relative flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12 my-auto lg:-translate-x-6">
         {/* Left Side: Interactive 3D Skill Orbit */}
-        <div className="flex-1 flex items-center justify-center w-full min-h-[360px] md:min-h-[500px] lg:min-h-[580px] relative">
+        <div className="flex-1 flex items-center justify-center w-full min-h-[330px] md:min-h-[460px] lg:min-h-[530px] relative">
           <motion.div
             onMouseMove={handleOrbitMouseMove}
             onMouseLeave={handleOrbitMouseLeave}
@@ -625,11 +625,11 @@ export default function Skills() {
               transformStyle: "preserve-3d",
               perspective: 1000,
             }}
-            className="relative flex items-center justify-center w-[300px] h-[300px] md:w-[440px] md:h-[440px] lg:w-[560px] lg:h-[560px] mx-auto select-none"
+            className="relative flex items-center justify-center w-[276px] h-[276px] md:w-[405px] md:h-[405px] lg:w-[515px] lg:h-[515px] mx-auto select-none"
           >
             {/* Center Panel (Fixed, does not rotate but tilts) */}
             <div 
-              className="absolute w-[150px] h-[150px] md:w-[190px] md:h-[190px] lg:w-[230px] lg:h-[230px] rounded-full bg-[#070709]/95 border border-white/5 backdrop-blur-xl flex items-center justify-center z-20 transition-all duration-500 ease-out overflow-hidden"
+              className="absolute w-[138px] h-[138px] md:w-[175px] md:h-[175px] lg:w-[212px] lg:h-[212px] rounded-full bg-[#070709]/95 border border-white/5 backdrop-blur-xl flex items-center justify-center z-20 transition-all duration-500 ease-out overflow-hidden"
               style={{
                 transform: 'translateZ(35px)',
                 boxShadow: `0 0 45px ${activeSkill.color}15, inset 0 0 25px ${activeSkill.color}05`,
@@ -654,21 +654,21 @@ export default function Skills() {
                   className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 md:p-6 w-full h-full select-none"
                 >
                   <div 
-                    className="w-8 h-8 md:w-9 md:h-9 lg:w-11 lg:h-11 flex items-center justify-center mb-2 transition-colors duration-300"
+                    className="w-7 h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center mb-1.5 transition-colors duration-300"
                     style={{ color: activeSkill.color }}
                   >
                     <activeSkill.icon className="w-full h-full" />
                   </div>
                   
-                  <h4 className="font-sans font-bold text-[11px] md:text-xs lg:text-sm uppercase tracking-wider text-white">
+                  <h4 className="font-sans font-bold text-[10px] md:text-[11px] lg:text-xs uppercase tracking-wider text-white">
                     {activeSkill.name}
                   </h4>
                   
-                  <span className="font-mono text-[7.5px] md:text-[8.5px] lg:text-[9.5px] text-zinc-500 uppercase tracking-widest mt-0.5 mb-1.5">
+                  <span className="font-mono text-[7px] md:text-[8px] lg:text-[9px] text-zinc-500 uppercase tracking-widest mt-0.5 mb-1">
                     {activeSkill.category}
                   </span>
                   
-                  <p className="font-sans text-[9px] md:text-[9.5px] lg:text-xs text-zinc-400 leading-normal max-w-[120px] md:max-w-[150px] lg:max-w-[190px]">
+                  <p className="font-sans text-[8.5px] md:text-[9px] lg:text-[11px] text-zinc-400 leading-normal max-w-[120px] md:max-w-[150px] lg:max-w-[190px]">
                     {activeSkill.description}
                   </p>
                 </motion.div>
@@ -763,7 +763,7 @@ export default function Skills() {
               <motion.div
                 key={cat.id}
                 variants={quadrantVariants}
-                className={`p-6 md:p-8 flex flex-col justify-start min-h-[210px] md:min-h-[240px] relative group/quadrant ${borderClass}`}
+                className={`py-5 px-6 md:py-6 md:px-7 flex flex-col justify-start min-h-[190px] md:min-h-[220px] relative group/quadrant ${borderClass}`}
               >
                 {/* Category Header */}
                 <motion.div variants={titleVariants} className="flex items-center gap-2 mb-4">

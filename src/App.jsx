@@ -12,6 +12,7 @@ import Skills from './components/skills/Skills';
 import SectionHeader from './components/SectionHeader';
 import SpaceBoiScene from './components/SpaceBoiScene';
 import Projects from './components/Projects';
+import Certificates from './components/Certificates';
 import Lenis from 'lenis';
 import { useGLTF } from '@react-three/drei';
 
@@ -316,17 +317,7 @@ export default function App() {
 
                 <Projects />
 
-                <section
-                  id="certificates"
-                  className="relative flex flex-col justify-center border-t border-zinc-900 bg-[#09090a] overflow-hidden px-6 pt-6 md:pt-8 pb-48 md:pb-80"
-                >
-                  <SectionHeader
-                    number="04"
-                    title="RECENT CERTIFICATES"
-                    rightLabel="CREDENTIAL LOGS"
-                  />
-                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.03),transparent_70%)]" />
-                </section>
+                <Certificates />
 
                 <section
                   id="contact"
