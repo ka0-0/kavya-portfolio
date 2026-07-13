@@ -13,6 +13,7 @@ import SectionHeader from './components/SectionHeader';
 import SpaceBoiScene from './components/SpaceBoiScene';
 import Projects from './components/Projects';
 import Certificates from './components/Certificates';
+import ContactSection from './components/ContactSection';
 import Lenis from 'lenis';
 import { useGLTF } from '@react-three/drei';
 
@@ -328,6 +329,7 @@ export default function App() {
                     title="LET'S TALK"
                     rightLabel="COMMUNICATION NODE"
                   />
+                  <ContactSection />
                   <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(236,72,153,0.03),transparent_70%)]" />
                 </section>
 

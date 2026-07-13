@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SectionHeader from './SectionHeader';
 
@@ -32,11 +32,77 @@ const metricsData = [
   { label: "Certificates Earned", value: 10, suffix: "" }
 ];
 
+const tabsList = [
+  { id: 'education', label: 'EDUCATION' },
+  { id: 'interests', label: 'INTERESTS' },
+  { id: 'goals', label: 'GOALS' },
+  { id: 'mission', label: 'MISSION' }
+];
+
+const educationSubjects = ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+
+const interestsData = [
+  {
+    title: "AI & Large Language Models",
+    desc: "Exploring LLMs, AI agents, automation, and intelligent systems."
+  },
+  {
+    title: "Creative Frontend",
+    desc: "Building immersive interfaces using React, GSAP, Framer Motion and Three.js."
+  },
+  {
+    title: "Mechanical Design",
+    desc: "Interested in CAD, manufacturing, automation and intelligent machines."
+  }
+];
+
+const goalsData = [
+  "Become an AI Engineer.",
+  "Build world-class AI products.",
+  "Create memorable interactive user experiences.",
+  "Bridge Mechanical Engineering with Artificial Intelligence.",
+  "Contribute to impactful real-world technology."
+];
+
+const missionData = [
+  "Build intelligent software that solves real engineering problems.",
+  "Continuously learn emerging AI technologies.",
+  "Design experiences that combine performance with beautiful interaction.",
+  "Create products people genuinely enjoy using."
+];
+
+const staticViewport = { once: true };
+const staticTimeCardStyle = { willChange: 'transform, opacity' };
+
+const staticTimeSectionInitial = { opacity: 0, y: 30, scale: 0.98 };
+const staticTimeSectionWhileInView = { opacity: 1, y: 0, scale: 1 };
+const staticTimeSectionViewport = { once: true, amount: 0.25 };
+const staticTimeSectionTransition = { type: 'spring', stiffness: 100, damping: 20 };
+const staticTimeSectionStyle = { willChange: 'transform, opacity' };
+
+const staticDashboardViewport = { once: true, amount: 0.25 };
+const staticDashboardStyle = { willChange: 'transform, opacity' };
+const staticCardStyle = { willChange: 'transform, opacity' };
+
+const timeCardVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: (idx) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 120,
+      damping: 18,
+      delay: idx * 0.05
+    }
+  })
+};
+
 
 // ==========================================
 // 1. Lightweight CountUp Animation Component
 // ==========================================
-function CountUp({ end, duration = 1500, trigger = false }) {
+const CountUp = React.memo(function CountUp({ end, duration = 1500, trigger = false }) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -71,18 +137,33 @@ function CountUp({ end, duration = 1500, trigger = false }) {
   }, [end, duration, trigger]);
 
   return <span>{count}</span>;
-}
+});
 
 // ==========================================
 // 1.5. Isolated Terminal Content Component (Prevents AboutSection parent re-renders during typewriter ticks)
 // ==========================================
-function TerminalContent({ bootCompleteTerminal }) {
+const TerminalContent = React.memo(function TerminalContent({ bootCompleteTerminal }) {
   const [completedLines, setCompletedLines] = useState([]);
   const [activeLineText, setActiveLineText] = useState('');
   const [activeLineIdx, setActiveLineIdx] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    if (!bootCompleteTerminal) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!bootCompleteTerminal || !isVisible) return;
 
     let timer;
     const activeLine = terminalData[activeLineIdx];
@@ -112,7 +193,7 @@ function TerminalContent({ bootCompleteTerminal }) {
     }
 
     return () => clearTimeout(timer);
-  }, [bootCompleteTerminal, activeLineIdx, activeLineText]);
+  }, [bootCompleteTerminal, activeLineIdx, activeLineText, isVisible]);
 
   // Helper rendering terminal lines
   const renderTerminalLine = (idx, isCurrent = false) => {
@@ -123,7 +204,7 @@ function TerminalContent({ bootCompleteTerminal }) {
       return (
         <div key={idx} className="text-zinc-500 font-bold">
           {isCurrent ? activeLineText : item.label}
-          {isCurrent && <span className="terminal-cursor-block inline-block w-1.5 h-3.5 bg-cyan-400 ml-1 align-middle" />}
+          {isCurrent && <span className={`terminal-cursor-block inline-block w-1.5 h-3.5 bg-cyan-400 ml-1 align-middle ${isVisible ? '' : 'map-animation-paused'}`} />}
         </div>
       );
     }
@@ -154,13 +235,13 @@ function TerminalContent({ bootCompleteTerminal }) {
             {dispValue}
           </span>
         )}
-        {isCurrent && <span className="terminal-cursor-block inline-block w-1.5 h-3.5 bg-cyan-400 ml-1 align-middle" />}
+        {isCurrent && <span className={`terminal-cursor-block inline-block w-1.5 h-3.5 bg-cyan-400 ml-1 align-middle ${isVisible ? '' : 'map-animation-paused'}`} />}
       </div>
     );
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-between font-mono text-[10.5px]">
+    <div ref={containerRef} className="w-full h-full flex flex-col justify-between font-mono text-[10.5px]">
       <div className="p-3 bg-zinc-950/45 border border-zinc-900/60 rounded flex-1 flex flex-col justify-start min-h-[380px] space-y-1.5 overflow-hidden pr-1 scrollbar-thin scrollbar-thumb-zinc-800">
         {completedLines.map(idx => renderTerminalLine(idx))}
         {completedLines.length < terminalData.length && renderTerminalLine(activeLineIdx, true)}
@@ -171,14 +252,29 @@ function TerminalContent({ bootCompleteTerminal }) {
       </div>
     </div>
   );
-}
+});
 
 // ==========================================
 // 1.8. Isolated Interactive Map Component (Prevents AboutSection parent re-renders during map hover)
 // ==========================================
-function InteractiveMapContent({ bootCompleteMap }) {
+const InteractiveMapContent = React.memo(function InteractiveMapContent({ bootCompleteMap }) {
   const [isHovered, setIsHovered] = useState(false);
   const hoverTimeoutRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+    return () => observer.disconnect();
+  }, []);
 
   const handleMouseEnter = () => {
     if (hoverTimeoutRef.current) {
@@ -203,12 +299,13 @@ function InteractiveMapContent({ bootCompleteMap }) {
   }, []);
 
   return (
-    <div className="relative w-full h-full min-h-[220px] flex items-center justify-center overflow-visible rounded-lg bg-zinc-950/10 border border-zinc-900/40">
+    <div ref={containerRef} className="relative w-full h-full min-h-[220px] flex items-center justify-center overflow-visible rounded-lg bg-zinc-950/10 border border-zinc-900/40">
       {/* World Map Background Image Container to clip scaled image */}
       <div className="absolute inset-0 overflow-hidden rounded-lg pointer-events-none">
         <motion.img 
           src="/world_map.jpg" 
           alt="World Map" 
+          loading="lazy"
           initial={{ opacity: 0 }}
           animate={bootCompleteMap ? { opacity: 0.55 } : {}}
           transition={{ duration: 1.0, ease: 'easeOut' }}
@@ -240,11 +337,11 @@ function InteractiveMapContent({ bootCompleteMap }) {
           {/* Blue node container */}
           <div className="map-node-container relative flex items-center justify-center">
             {/* Concentric expanding pulse rings */}
-            <div className="map-node-ring absolute rounded-full border border-cyan-400/40 bg-cyan-400/5 pointer-events-none w-10 h-10" />
-            <div className="map-node-ring absolute rounded-full border border-cyan-400/20 bg-transparent pointer-events-none w-10 h-10" style={{ animationDelay: '1.1s' }} />
+            <div className={`map-node-ring absolute rounded-full border border-cyan-400/40 bg-cyan-400/5 pointer-events-none w-10 h-10 ${isVisible ? '' : 'map-animation-paused'}`} />
+            <div className={`map-node-ring absolute rounded-full border border-cyan-400/20 bg-transparent pointer-events-none w-10 h-10 ${isVisible ? '' : 'map-animation-paused'}`} style={{ animationDelay: '1.1s' }} />
             
             {/* Center dot */}
-            <div className={`map-node-dot w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] ${isHovered ? 'map-node-dot-paused' : ''}`} />
+            <div className={`map-node-dot w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] ${isHovered || !isVisible ? 'map-node-dot-paused' : ''}`} />
           </div>
         </div>
 
@@ -289,7 +386,7 @@ function InteractiveMapContent({ bootCompleteMap }) {
       </div>
     </div>
   );
-}
+});
 
 // ==========================================
 // 2. Framer Motion Unified Variants
@@ -327,20 +424,28 @@ const cardVariants = {
 // ==========================================
 // 3. Cyber HUD Card (Hover tilt & radial light, transform split)
 // ==========================================
-function CyberCard({
+const CyberCard = React.memo(function CyberCard({
   children,
   title = '',
   nodeCode = '',
   isBootComplete = false
 }) {
   const cardRef = useRef(null);
+  const rectRef = useRef(null);
 
   const handleMouseMove = (e) => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const card = cardRef.current;
     if (!card) return;
-    const rect = card.getBoundingClientRect();
+    
+    // Cached rect to avoid forced synchronous layout
+    let rect = rectRef.current;
+    if (!rect) {
+      rect = card.getBoundingClientRect();
+      rectRef.current = rect;
+    }
+
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
@@ -359,6 +464,7 @@ function CyberCard({
     const card = cardRef.current;
     if (card) {
       card.style.setProperty('--hover-opacity', '1');
+      rectRef.current = card.getBoundingClientRect(); // Measure once on enter
     }
   };
 
@@ -367,6 +473,7 @@ function CyberCard({
     if (card) {
       card.style.setProperty('--hover-opacity', '0');
       card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0)';
+      rectRef.current = null; // Clear cache on leave
     }
   };
 
@@ -379,10 +486,10 @@ function CyberCard({
       onMouseLeave={handleMouseLeave}
       onFocus={handleMouseEnter}
       onBlur={handleMouseLeave}
-      className="relative rounded-xl overflow-hidden bg-[#0c0c0e]/85 border border-zinc-800/35 hover:border-cyan-500/30 focus-visible:border-cyan-400 focus-visible:ring-1 focus-visible:ring-cyan-400/50 outline-none backdrop-blur-md select-none group shadow-[0_4px_30px_rgba(0,0,0,0.85)] w-full h-full flex flex-col justify-between"
+      className="relative rounded-xl overflow-hidden bg-[#0c0c0e]/85 border border-zinc-800/35 hover:border-cyan-500/30 focus-visible:border-cyan-400 focus-visible:ring-1 focus-visible:ring-cyan-400/50 outline-none backdrop-blur-md select-none group shadow-[0_4px_30px_rgba(0,0,0,0.85)] w-full h-full flex flex-col justify-between cyber-card-container"
       style={{
         transformStyle: 'preserve-3d',
-        willChange: 'transform',
+        willChange: 'transform, opacity',
         transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease',
       }}
     >
@@ -418,7 +525,7 @@ function CyberCard({
       </div>
     </div>
   );
-}
+});
 
 // ==========================================
 // 4. Futuristic Proximity Node Network Map
@@ -428,7 +535,7 @@ function CyberCard({
 // ==========================================
 // 5. Main Component: Redesigned About Section
 // ==========================================
-export default function AboutSection() {
+const AboutSection = React.memo(function AboutSection() {
   const sectionRef = useRef(null);
 
   // Time on Earth Refs
@@ -440,9 +547,11 @@ export default function AboutSection() {
   const secondsRef = useRef(null);
   const msRef = useRef(null);
 
-  // High-performance time-on-earth tick loop with direct DOM updates (60fps lock)
+  // High-performance time-on-earth tick loop with direct DOM updates (60fps lock, only when visible)
   useEffect(() => {
     const birthDate = new Date(2006, 8, 16, 0, 0, 0, 0); // Sept 16, 2006
+    let frameId;
+    let isVisible = false;
 
     const updateTimer = () => {
       const now = new Date();
@@ -474,15 +583,35 @@ export default function AboutSection() {
       if (msRef.current) msRef.current.textContent = String(milliseconds).padStart(3, '0');
     };
 
-    let frameId;
     const tick = () => {
+      if (!isVisible) return;
       updateTimer();
       frameId = requestAnimationFrame(tick);
     };
 
-    frameId = requestAnimationFrame(tick);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const wasVisible = isVisible;
+        isVisible = entry.isIntersecting;
+        if (isVisible && !wasVisible) {
+          // Restart loop
+          cancelAnimationFrame(frameId);
+          frameId = requestAnimationFrame(tick);
+        } else if (!isVisible) {
+          cancelAnimationFrame(frameId);
+        }
+      },
+      { threshold: 0 }
+    );
 
-    return () => cancelAnimationFrame(frameId);
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frameId);
+    };
   }, []);
 
   // Keep track of which card completed its Framer Motion spring reveal
@@ -494,11 +623,384 @@ export default function AboutSection() {
     metrics: false,
   });
 
-  const handleRevealComplete = (cardKey) => {
-    setBootComplete(p => ({ ...p, [cardKey]: true }));
-  };
+  const handleRevealCompleteProfile = useCallback((def) => {
+    if (def === 'visible') setBootComplete(p => p.profile ? p : { ...p, profile: true });
+  }, []);
+
+  const handleRevealCompleteMap = useCallback((def) => {
+    if (def === 'visible') setBootComplete(p => p.map ? p : { ...p, map: true });
+  }, []);
+
+  const handleRevealCompleteTerminal = useCallback((def) => {
+    if (def === 'visible') setBootComplete(p => p.terminal ? p : { ...p, terminal: true });
+  }, []);
+
+  const handleRevealCompleteSkills = useCallback((def) => {
+    if (def === 'visible') setBootComplete(p => p.skills ? p : { ...p, skills: true });
+  }, []);
+
+  const handleRevealCompleteMetrics = useCallback((def) => {
+    if (def === 'visible') setBootComplete(p => p.metrics ? p : { ...p, metrics: true });
+  }, []);
 
   const [activeTab, setActiveTab] = useState('education');
+
+  const handleTabClick = useCallback((id) => {
+    setActiveTab(id);
+  }, []);
+
+  const handleTabKeyDown = useCallback((e, id) => {
+    const tabIds = ['education', 'interests', 'goals', 'mission'];
+    const currentIndex = tabIds.indexOf(id);
+    let nextIndex;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      nextIndex = (currentIndex + 1) % tabIds.length;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      nextIndex = (currentIndex - 1 + tabIds.length) % tabIds.length;
+    } else if (e.key === 'Home') {
+      nextIndex = 0;
+    } else if (e.key === 'End') {
+      nextIndex = tabIds.length - 1;
+    } else {
+      return;
+    }
+    e.preventDefault();
+    setActiveTab(tabIds[nextIndex]);
+    const btn = e.currentTarget.parentNode?.children[nextIndex];
+    if (btn) btn.focus();
+  }, []);
+
+  const profileCardContent = useMemo(() => (
+    <div className="flex flex-col md:flex-row gap-6 items-start h-full justify-between w-full">
+      <div className="flex-1 space-y-4">
+        <div className="space-y-0.5">
+          <div className="text-zinc-500 font-mono text-[8px] tracking-widest uppercase">NODE REGISTERED ID</div>
+          <h2 className="text-xl sm:text-2xl font-black tracking-wide text-white font-sans uppercase">KAVYA MAKHAN</h2>
+          <div className="text-cyan-400 font-mono text-xs tracking-wider font-semibold">AI ENGINEER & MECHANICAL ENGINEER</div>
+        </div>
+
+        <p className="text-zinc-400 text-xs leading-relaxed max-w-xl font-sans">
+          I operate at the convergence of Artificial Intelligence and Mechanical Engineering. My core focus centers on mapping cognitive learning models directly onto hardware dynamics—constructing intelligent neural control loops, architecting computer vision networks, and engineering autonomous kinetic machinery.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-zinc-800/40 text-xs font-sans">
+          <div>
+            <span className="block text-zinc-500 font-mono text-[8px] tracking-wider uppercase mb-0.5">CURRENT FOCUS</span>
+            <span className="text-zinc-300 font-semibold">Autonomous Controllers & Embedded AI</span>
+          </div>
+          <div>
+            <span className="block text-zinc-500 font-mono text-[8px] tracking-wider uppercase mb-0.5">CORE PHILOSOPHY</span>
+            <span className="text-zinc-300 font-semibold">Embodying virtual intelligence in hardware</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Column/Card: Futuristic Android Avatar Container */}
+      <div className="flex flex-col items-center justify-center p-2.5 border border-zinc-800/40 rounded-lg bg-zinc-950/20 w-full md:w-[190px] h-[200px] sm:h-[240px] md:h-auto self-stretch relative overflow-hidden">
+        {/* Subtle tech background grid texture */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.03),transparent_70%)] pointer-events-none" />
+        {/* Static Image Wrapper */}
+        <div className="w-full h-full flex items-center justify-center p-1.5">
+          <img
+            src="/profile_pic.png"
+            alt="Futuristic Android AI Identity"
+            loading="lazy"
+            className="w-full h-full object-contain select-none pointer-events-none filter drop-shadow-[0_0_8px_rgba(6,182,212,0.45)] drop-shadow-[0_12px_24px_rgba(59,130,246,0.25)]"
+            style={{
+              maxHeight: '94%',
+              maxWidth: '94%',
+              transform: 'scale(1.18) translateY(8.5px)',
+              transformOrigin: 'center center'
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  ), []);
+
+  const mapCardContent = useMemo(() => (
+    <InteractiveMapContent bootCompleteMap={bootComplete.map} />
+  ), [bootComplete.map]);
+
+  const terminalCardContent = useMemo(() => (
+    <TerminalContent bootCompleteTerminal={bootComplete.terminal} />
+  ), [bootComplete.terminal]);
+
+  const tabContent = useMemo(() => {
+    switch (activeTab) {
+      case 'education':
+        return (
+          <div className="space-y-6 font-sans text-xs pt-1">
+            {/* Card 1: B.Tech */}
+            <div className="border-l-2 border-cyan-500/40 pl-3.5 py-0.5 space-y-1 relative">
+              <div className="absolute w-2 h-2 rounded-full bg-cyan-400 -left-[5px] top-1.5 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+              <div className="flex justify-between items-baseline">
+                <h4 className="text-white font-bold text-[10.5px] uppercase tracking-wide">B.Tech Mechanical Engineering</h4>
+                <span className="text-[7.5px] font-mono font-bold text-cyan-400 bg-cyan-950/40 border border-cyan-500/20 px-1.5 py-0.5 rounded uppercase">Current</span>
+              </div>
+              <div className="text-[8.5px] text-zinc-500 font-mono">2024 – 2028</div>
+              <div className="text-zinc-400 font-mono text-[9.5px]">Delhi Technological University (DTU)</div>
+            </div>
+
+            {/* Card 2: Class XII */}
+            <div className="border-l-2 border-zinc-800 pl-3.5 py-0.5 space-y-1 relative">
+              <div className="absolute w-2 h-2 rounded-full bg-zinc-700 -left-[5px] top-1.5" />
+              <div className="flex justify-between items-baseline">
+                <h4 className="text-zinc-300 font-bold text-[10.5px] uppercase tracking-wide">Higher Secondary (Class XII)</h4>
+                <span className="text-[8px] font-mono text-zinc-500 bg-zinc-950/20 border border-zinc-900 px-1.5 py-0.5 rounded">2024</span>
+              </div>
+              <div className="text-[9.5px] text-zinc-400 font-mono">Vivekanand International School</div>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {educationSubjects.map((sub, i) => (
+                  <span key={i} className="text-[8px] font-mono text-zinc-500 bg-zinc-900/40 px-1.5 py-0.5 rounded border border-zinc-900">
+                    {sub}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Card 3: Class X */}
+            <div className="border-l-2 border-zinc-800 pl-3.5 py-0.5 space-y-1 relative">
+              <div className="absolute w-2 h-2 rounded-full bg-zinc-700 -left-[5px] top-1.5" />
+              <div className="flex justify-between items-baseline">
+                <h4 className="text-zinc-300 font-bold text-[10.5px] uppercase tracking-wide">Secondary (Class X)</h4>
+                <span className="text-[8px] font-mono text-zinc-500 bg-zinc-950/20 border border-zinc-900 px-1.5 py-0.5 rounded">2022</span>
+              </div>
+              <div className="text-[9.5px] text-zinc-400 font-mono">Vivekanand International School</div>
+              <p className="text-zinc-500 text-[9.5px] leading-relaxed">
+                Strong academic foundation in Mathematics and Science.
+              </p>
+            </div>
+          </div>
+        );
+      case 'interests':
+        return (
+          <div className="space-y-4 font-sans text-xs pt-1">
+            {interestsData.map((interest, i) => (
+              <div key={i} className="p-4 rounded-lg border border-zinc-900 bg-zinc-950/40 hover:border-cyan-500/20 transition-colors duration-300">
+                <h4 className="text-white font-bold text-[10px] uppercase tracking-wide flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.8)]" />
+                  {interest.title}
+                </h4>
+                <p className="text-zinc-400 text-[9.5px] mt-1 leading-relaxed">
+                  {interest.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        );
+      case 'goals':
+        return (
+          <div className="space-y-5 font-sans text-xs pt-1">
+            {goalsData.map((goal, i) => (
+              <div key={i} className="flex items-start gap-2.5">
+                <span className="text-cyan-400 font-bold text-[9px] select-none pt-0.5">▶</span>
+                <span className="text-zinc-300 leading-relaxed text-[11px] font-mono">{goal}</span>
+              </div>
+            ))}
+          </div>
+        );
+      case 'mission':
+        return (
+          <div className="space-y-5 font-sans text-xs pt-1">
+            {missionData.map((mission, i) => (
+              <div key={i} className="flex items-start gap-2.5">
+                <span className="text-cyan-500/60 font-bold text-[9px] select-none pt-0.5">⚡</span>
+                <span className="text-zinc-300 leading-relaxed text-[11px] font-mono">{mission}</span>
+              </div>
+            ))}
+          </div>
+        );
+      default:
+        return null;
+    }
+  }, [activeTab]);
+
+  const metricsCardContent = useMemo(() => (
+    <div className="w-full h-full flex flex-col justify-between">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-y-6 md:gap-x-4 flex-1 items-center py-4">
+        {metricsData.map((m, idx) => (
+          <div
+            key={idx}
+            className="p-3.5 sm:p-5 border border-zinc-900/60 rounded bg-zinc-950/20 flex flex-col justify-between min-h-[150px] sm:min-h-[155px] hover:border-cyan-500/20 transition-colors duration-300"
+          >
+            <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-wider leading-tight">{m.label}</span>
+            <div className="text-2xl font-black text-white font-sans mt-1">
+              <CountUp end={m.value} trigger={bootComplete.metrics} />
+              <span className="text-cyan-400 ml-0.5 font-mono">{m.suffix}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-between items-center text-[8px] font-mono text-zinc-500 pt-2 uppercase border-t border-zinc-900/60 mt-1">
+        <span>STAT_GRID: ONLINE</span>
+        <span>TELEMETRY: NOMINAL</span>
+      </div>
+    </div>
+  ), [bootComplete.metrics]);
+
+  const timeOnEarthCardContent = useMemo(() => (
+    <div className="w-full h-full flex flex-col justify-between text-left">
+      <div className="flex flex-col gap-6">
+        <div className="space-y-0.5">
+          <h3 className="text-base sm:text-lg font-black tracking-wide text-white uppercase flex items-center gap-2">
+            <span>⌛ TIME ON EARTH</span>
+          </h3>
+          <p className="text-zinc-500 font-mono text-[10px] tracking-wider">
+            Present on this planet since September 16, 2006
+          </p>
+        </div>
+
+        {/* Counter Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 w-full">
+          {[
+            { label: 'YEARS', ref: yearsRef },
+            { label: 'MONTHS', ref: monthsRef },
+            { label: 'DAYS', ref: daysRef },
+            { label: 'HOURS', ref: hoursRef },
+            { label: 'MINUTES', ref: minutesRef },
+            { label: 'SECONDS', ref: secondsRef },
+            { label: 'MILLISECONDS', ref: msRef, isMs: true },
+          ].map((item, idx) => (
+            <motion.div
+              key={item.label}
+              custom={idx}
+              variants={timeCardVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={staticViewport}
+              style={staticTimeCardStyle}
+              className="p-4 border border-zinc-900/60 rounded-lg bg-zinc-950/20 flex flex-col items-center justify-center min-h-[90px] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] select-none"
+            >
+              <span
+                ref={item.ref}
+                className={`font-sans font-black text-white ${item.isMs ? 'text-2xl min-w-[3.2rem]' : 'text-3xl min-w-[2.2rem]'} text-center tracking-tight`}
+              >
+                00
+              </span>
+              <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-wider mt-1.5">{item.label}</span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center text-[8px] font-mono text-zinc-500 pt-2 uppercase border-t border-zinc-900/60 mt-6">
+        <span>SYSTEM_TIME: RUNNING</span>
+        <span>LIFE_CLOCK: ACTIVE</span>
+      </div>
+    </div>
+  ), []);
+
+  const sectionHeaderComponent = useMemo(() => (
+    <SectionHeader
+      number="01"
+      title="ABOUT ME"
+      rightLabel="ENGINEERING PROFILE"
+    />
+  ), []);
+
+  const staticBackground = useMemo(() => (
+    <>
+      <div className="absolute inset-0 blueprint-grid opacity-[0.8] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-blue-900/5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-cyan-950/5 blur-[120px] pointer-events-none" />
+    </>
+  ), []);
+
+  const staticStyleTag = useMemo(() => (
+    <style>{`
+      @keyframes cursorBlink {
+        0%, 100% { opacity: 0.1; }
+        50% { opacity: 1; }
+      }
+
+      .terminal-cursor-block {
+        animation: cursorBlink 1s infinite;
+      }
+
+      .blueprint-grid {
+        background-image: 
+          linear-gradient(rgba(6, 182, 212, 0.02) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(6, 182, 212, 0.02) 1px, transparent 1px);
+        background-size: 44px 44px;
+      }
+
+      .skill-bar-progress {
+        box-shadow: 0 0 10px rgba(6, 182, 212, 0.45);
+      }
+
+      /* Cyber Location Card Node Styles */
+      @keyframes nodePulse {
+        0%, 100% {
+          transform: scale(0.95);
+          opacity: 0.95;
+        }
+        50% {
+          transform: scale(1.15);
+          opacity: 1;
+        }
+      }
+
+      @keyframes ringExpand {
+        0% {
+          transform: scale(0.3);
+          opacity: 0.85;
+        }
+        100% {
+          transform: scale(2.2);
+          opacity: 0;
+        }
+      }
+
+      .map-node-dot {
+        animation: nodePulse 2.2s ease-in-out infinite;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, background-color 0.3s ease;
+      }
+
+      .map-node-ring {
+        width: 40px;
+        height: 40px;
+        animation: ringExpand 2.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+      }
+
+      .map-node-container:hover .map-node-dot {
+        transform: scale(1.4) !important;
+        box-shadow: 0 0 24px rgba(6, 182, 212, 1) !important;
+        background-color: #00f2fe;
+      }
+
+      .map-node-container:hover .map-node-ring {
+        animation-duration: 1.8s;
+      }
+
+      /* Keyboard focus visible rings */
+      *:focus-visible {
+        outline: none;
+      }
+
+      /* prefers-reduced-motion media query standards */
+      @media (prefers-reduced-motion: reduce) {
+        .terminal-cursor-block,
+        .map-node-dot,
+        .map-node-ring {
+          animation: none !important;
+          transition: none !important;
+        }
+        .skill-bar-progress {
+          transition: none !important;
+        }
+      }
+
+      /* CSS Paint isolation container */
+      .cyber-card-container {
+        contain: paint;
+      }
+
+      .map-animation-paused {
+        animation-play-state: paused !important;
+      }
+    `}</style>
+  ), []);
 
   return (
     <section
@@ -506,104 +1008,9 @@ export default function AboutSection() {
       id="about"
       className="relative w-full bg-[#0a0a0c] text-white flex flex-col justify-center px-3 md:px-6 pt-6 md:pt-8 pb-10 md:pb-12 overflow-hidden select-none border-t border-t-zinc-900/60"
     >
-      {/* Background Blueprint Grid details - Completely static */}
-      <div className="absolute inset-0 blueprint-grid opacity-[0.8] pointer-events-none" />
-
-      {/* Ambient Radial background glows - Static */}
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-blue-900/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-cyan-950/5 blur-[120px] pointer-events-none" />
-
-      {/* Scoped CSS Style Tag for blinking cursor and pulse ring only */}
-      <style>{`
-        @keyframes cursorBlink {
-          0%, 100% { opacity: 0.1; }
-          50% { opacity: 1; }
-        }
-
-        .terminal-cursor-block {
-          animation: cursorBlink 1s infinite;
-        }
-
-        .blueprint-grid {
-          background-image: 
-            linear-gradient(rgba(6, 182, 212, 0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(6, 182, 212, 0.02) 1px, transparent 1px);
-          background-size: 44px 44px;
-        }
-
-        .skill-bar-progress {
-          box-shadow: 0 0 10px rgba(6, 182, 212, 0.45);
-        }
-
-        /* Cyber Location Card Node Styles */
-        @keyframes nodePulse {
-          0%, 100% {
-            transform: scale(0.95);
-            opacity: 0.95;
-          }
-          50% {
-            transform: scale(1.15);
-            opacity: 1;
-          }
-        }
-
-        @keyframes ringExpand {
-          0% {
-            transform: scale(0.3);
-            opacity: 0.85;
-          }
-          100% {
-            transform: scale(2.2);
-            opacity: 0;
-          }
-        }
-
-        .map-node-dot {
-          animation: nodePulse 2.2s ease-in-out infinite;
-          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, background-color 0.3s ease;
-        }
-
-        .map-node-ring {
-          width: 40px;
-          height: 40px;
-          animation: ringExpand 2.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
-        }
-
-        .map-node-container:hover .map-node-dot {
-          transform: scale(1.4) !important;
-          box-shadow: 0 0 24px rgba(6, 182, 212, 1) !important;
-          background-color: #00f2fe;
-        }
-
-        .map-node-container:hover .map-node-ring {
-          animation-duration: 1.8s;
-        }
-
-        /* Keyboard focus visible rings */
-        *:focus-visible {
-          outline: none;
-        }
-
-        /* prefers-reduced-motion media query standards */
-        @media (prefers-reduced-motion: reduce) {
-          .terminal-cursor-block,
-          .map-node-dot,
-          .map-node-ring {
-            animation: none !important;
-            transition: none !important;
-          }
-          .skill-bar-progress {
-            transition: none !important;
-          }
-        }
-      `}</style>
-
-      {/* Standard Section Header */}
-      <SectionHeader
-        number="01"
-        title="ABOUT ME"
-        rightLabel="ENGINEERING PROFILE"
-      />
+      {staticStyleTag}
+      {staticBackground}
+      {sectionHeaderComponent}
 
       {/* Main OS status panel bar */}
       <div className="max-w-7xl mx-auto w-full px-3 md:px-8 mb-8 font-mono text-[9px] flex flex-wrap justify-between items-center gap-4 border-b border-zinc-900 pb-4 text-zinc-500 z-10">
@@ -623,16 +1030,17 @@ export default function AboutSection() {
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, amount: 0.25 }}
+        viewport={staticDashboardViewport}
+        style={staticDashboardStyle}
         className="max-w-7xl mx-auto w-full px-3 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6 z-10"
       >
-
         {/* ROW 1: Card 1 (Profile Info) & Card 2 (Network Map) */}
 
         {/* Card 1: Identity Profile (Span 8) */}
         <motion.div
           variants={cardVariants}
-          onAnimationComplete={(def) => def === 'visible' && handleRevealComplete('profile')}
+          onAnimationComplete={handleRevealCompleteProfile}
+          style={staticCardStyle}
           className="col-span-12 lg:col-span-8"
         >
           <CyberCard
@@ -640,57 +1048,15 @@ export default function AboutSection() {
             nodeCode="SECURE_NODE_01"
             isBootComplete={bootComplete.profile}
           >
-            <div className="flex flex-col md:flex-row gap-6 items-start h-full justify-between w-full">
-              <div className="flex-1 space-y-4">
-                <div className="space-y-0.5">
-                  <div className="text-zinc-500 font-mono text-[8px] tracking-widest uppercase">NODE REGISTERED ID</div>
-                  <h2 className="text-xl sm:text-2xl font-black tracking-wide text-white font-sans uppercase">KAVYA MAKHAN</h2>
-                  <div className="text-cyan-400 font-mono text-xs tracking-wider font-semibold">AI ENGINEER & MECHANICAL ENGINEER</div>
-                </div>
-
-                <p className="text-zinc-400 text-xs leading-relaxed max-w-xl font-sans">
-                  I operate at the convergence of Artificial Intelligence and Mechanical Engineering. My core focus centers on mapping cognitive learning models directly onto hardware dynamics—constructing intelligent neural control loops, architecting computer vision networks, and engineering autonomous kinetic machinery.
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-zinc-800/40 text-xs font-sans">
-                  <div>
-                    <span className="block text-zinc-500 font-mono text-[8px] tracking-wider uppercase mb-0.5">CURRENT FOCUS</span>
-                    <span className="text-zinc-300 font-semibold">Autonomous Controllers & Embedded AI</span>
-                  </div>
-                  <div>
-                    <span className="block text-zinc-500 font-mono text-[8px] tracking-wider uppercase mb-0.5">CORE PHILOSOPHY</span>
-                    <span className="text-zinc-300 font-semibold">Embodying virtual intelligence in hardware</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Column/Card: Futuristic Android Avatar Container */}
-              <div className="flex flex-col items-center justify-center p-2.5 border border-zinc-800/40 rounded-lg bg-zinc-950/20 w-full md:w-[190px] h-[200px] sm:h-[240px] md:h-auto self-stretch relative overflow-hidden">
-                {/* Subtle tech background grid texture */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.03),transparent_70%)] pointer-events-none" />
-                {/* Static Image Wrapper */}
-                <div className="w-full h-full flex items-center justify-center p-1.5">
-                  <img
-                    src="/profile_pic.png"
-                    alt="Futuristic Android AI Identity"
-                    className="w-full h-full object-contain select-none pointer-events-none filter drop-shadow-[0_0_8px_rgba(6,182,212,0.45)] drop-shadow-[0_12px_24px_rgba(59,130,246,0.25)]"
-                    style={{
-                      maxHeight: '94%',
-                      maxWidth: '94%',
-                      transform: 'scale(1.18) translateY(8.5px)',
-                      transformOrigin: 'center center'
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
+            {profileCardContent}
           </CyberCard>
         </motion.div>
 
         {/* Card 2: Interactive Network Map (Span 4) */}
         <motion.div
           variants={cardVariants}
-          onAnimationComplete={(def) => def === 'visible' && handleRevealComplete('map')}
+          onAnimationComplete={handleRevealCompleteMap}
+          style={staticCardStyle}
           className="col-span-12 lg:col-span-4"
         >
           <CyberCard
@@ -698,7 +1064,7 @@ export default function AboutSection() {
             nodeCode="SECURE_NODE_02"
             isBootComplete={bootComplete.map}
           >
-            <InteractiveMapContent bootCompleteMap={bootComplete.map} />
+            {mapCardContent}
           </CyberCard>
         </motion.div>
 
@@ -707,7 +1073,8 @@ export default function AboutSection() {
         {/* Card 3: AI Telemetry Terminal (Span 4) */}
         <motion.div
           variants={cardVariants}
-          onAnimationComplete={(def) => def === 'visible' && handleRevealComplete('terminal')}
+          onAnimationComplete={handleRevealCompleteTerminal}
+          style={staticCardStyle}
           className="col-span-12 md:col-span-6 lg:col-span-4 h-[530px] flex flex-col"
         >
           <CyberCard
@@ -715,14 +1082,15 @@ export default function AboutSection() {
             nodeCode="SECURE_NODE_03"
             isBootComplete={bootComplete.terminal}
           >
-            <TerminalContent bootCompleteTerminal={bootComplete.terminal} />
+            {terminalCardContent}
           </CyberCard>
         </motion.div>
 
         {/* Card 4: Skill Spectrum (Span 4) */}
         <motion.div
           variants={cardVariants}
-          onAnimationComplete={(def) => def === 'visible' && handleRevealComplete('skills')}
+          onAnimationComplete={handleRevealCompleteSkills}
+          style={staticCardStyle}
           className="col-span-12 md:col-span-6 lg:col-span-4 h-[530px] flex flex-col"
         >
           <CyberCard
@@ -737,12 +1105,7 @@ export default function AboutSection() {
                 role="tablist"
                 aria-label="Cognitive spectrum sections"
               >
-                {[
-                  { id: 'education', label: 'EDUCATION' },
-                  { id: 'interests', label: 'INTERESTS' },
-                  { id: 'goals', label: 'GOALS' },
-                  { id: 'mission', label: 'MISSION' }
-                ].map((tab) => {
+                {tabsList.map((tab) => {
                   const isActive = activeTab === tab.id;
                   return (
                     <button
@@ -750,28 +1113,8 @@ export default function AboutSection() {
                       role="tab"
                       aria-selected={isActive}
                       tabIndex={isActive ? 0 : -1}
-                      onClick={() => setActiveTab(tab.id)}
-                      onKeyDown={(e) => {
-                        const tabsList = ['education', 'interests', 'goals', 'mission'];
-                        const currentIndex = tabsList.indexOf(activeTab);
-                        let nextIndex;
-                        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-                          nextIndex = (currentIndex + 1) % tabsList.length;
-                        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-                          nextIndex = (currentIndex - 1 + tabsList.length) % tabsList.length;
-                        } else if (e.key === 'Home') {
-                          nextIndex = 0;
-                        } else if (e.key === 'End') {
-                          nextIndex = tabsList.length - 1;
-                        } else {
-                          return;
-                        }
-                        e.preventDefault();
-                        setActiveTab(tabsList[nextIndex]);
-                        // Focus the target button
-                        const btn = e.currentTarget.parentNode?.children[nextIndex];
-                        if (btn) btn.focus();
-                      }}
+                      onClick={() => handleTabClick(tab.id)}
+                      onKeyDown={(e) => handleTabKeyDown(e, tab.id)}
                       className={`relative px-2.5 py-1 text-[9px] font-mono font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer rounded-md border ${isActive
                           ? 'text-white border-cyan-500/30 bg-cyan-950/20'
                           : 'text-zinc-500 border-transparent hover:text-zinc-300'
@@ -806,114 +1149,10 @@ export default function AboutSection() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.22, ease: 'easeOut' }}
-                      className="h-[395px] overflow-y-auto text-left font-sans pr-1 scrollbar-thin scrollbar-thumb-zinc-800"
+                      style={staticCardStyle}
+                      className="h-[395px] overflow-hidden text-left font-sans pr-1 scrollbar-thin scrollbar-thumb-zinc-800"
                     >
-                      {activeTab === 'education' && (
-                        <div className="space-y-6 font-sans text-xs pt-1">
-                          {/* Card 1: B.Tech */}
-                          <div className="border-l-2 border-cyan-500/40 pl-3.5 py-0.5 space-y-1 relative">
-                            <div className="absolute w-2 h-2 rounded-full bg-cyan-400 -left-[5px] top-1.5 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
-                            <div className="flex justify-between items-baseline">
-                              <h4 className="text-white font-bold text-[10.5px] uppercase tracking-wide">B.Tech Mechanical Engineering</h4>
-                              <span className="text-[7.5px] font-mono font-bold text-cyan-400 bg-cyan-950/40 border border-cyan-500/20 px-1.5 py-0.5 rounded uppercase">Current</span>
-                            </div>
-                            <div className="text-[8.5px] text-zinc-500 font-mono">2024 – 2028</div>
-                            <div className="text-zinc-400 font-mono text-[9.5px]">Delhi Technological University (DTU)</div>
-                          </div>
-
-                          {/* Card 2: Class XII */}
-                          <div className="border-l-2 border-zinc-800 pl-3.5 py-0.5 space-y-1 relative">
-                            <div className="absolute w-2 h-2 rounded-full bg-zinc-700 -left-[5px] top-1.5" />
-                            <div className="flex justify-between items-baseline">
-                              <h4 className="text-zinc-300 font-bold text-[10.5px] uppercase tracking-wide">Higher Secondary (Class XII)</h4>
-                              <span className="text-[8px] font-mono text-zinc-500 bg-zinc-950/20 border border-zinc-900 px-1.5 py-0.5 rounded">2024</span>
-                            </div>
-                            <div className="text-[9.5px] text-zinc-400 font-mono">Vivekanand International School</div>
-                            <div className="flex flex-wrap gap-1.5 pt-1">
-                              {['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].map((sub, i) => (
-                                <span key={i} className="text-[8px] font-mono text-zinc-500 bg-zinc-900/40 px-1.5 py-0.5 rounded border border-zinc-900">
-                                  {sub}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Card 3: Class X */}
-                          <div className="border-l-2 border-zinc-800 pl-3.5 py-0.5 space-y-1 relative">
-                            <div className="absolute w-2 h-2 rounded-full bg-zinc-700 -left-[5px] top-1.5" />
-                            <div className="flex justify-between items-baseline">
-                              <h4 className="text-zinc-300 font-bold text-[10.5px] uppercase tracking-wide">Secondary (Class X)</h4>
-                              <span className="text-[8px] font-mono text-zinc-500 bg-zinc-950/20 border border-zinc-900 px-1.5 py-0.5 rounded">2022</span>
-                            </div>
-                            <div className="text-[9.5px] text-zinc-400 font-mono">Vivekanand International School</div>
-                            <p className="text-zinc-500 text-[9.5px] leading-relaxed">
-                              Strong academic foundation in Mathematics and Science.
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {activeTab === 'interests' && (
-                        <div className="space-y-4 font-sans text-xs pt-1">
-                          {[
-                            {
-                              title: "AI & Large Language Models",
-                              desc: "Exploring LLMs, AI agents, automation, and intelligent systems."
-                            },
-                            {
-                              title: "Creative Frontend",
-                              desc: "Building immersive interfaces using React, GSAP, Framer Motion and Three.js."
-                            },
-                            {
-                              title: "Mechanical Design",
-                              desc: "Interested in CAD, manufacturing, automation and intelligent machines."
-                            }
-                          ].map((interest, i) => (
-                            <div key={i} className="p-4 rounded-lg border border-zinc-900 bg-zinc-950/40 hover:border-cyan-500/20 transition-colors duration-300">
-                              <h4 className="text-white font-bold text-[10px] uppercase tracking-wide flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.8)]" />
-                                {interest.title}
-                              </h4>
-                              <p className="text-zinc-400 text-[9.5px] mt-1 leading-relaxed">
-                                {interest.desc}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {activeTab === 'goals' && (
-                        <div className="space-y-5 font-sans text-xs pt-1">
-                          {[
-                            "Become an AI Engineer.",
-                            "Build world-class AI products.",
-                            "Create memorable interactive user experiences.",
-                            "Bridge Mechanical Engineering with Artificial Intelligence.",
-                            "Contribute to impactful real-world technology."
-                          ].map((goal, i) => (
-                            <div key={i} className="flex items-start gap-2.5">
-                              <span className="text-cyan-400 font-bold text-[9px] select-none pt-0.5">▶</span>
-                              <span className="text-zinc-300 leading-relaxed text-[11px] font-mono">{goal}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {activeTab === 'mission' && (
-                        <div className="space-y-5 font-sans text-xs pt-1">
-                          {[
-                            "Build intelligent software that solves real engineering problems.",
-                            "Continuously learn emerging AI technologies.",
-                            "Design experiences that combine performance with beautiful interaction.",
-                            "Create products people genuinely enjoy using."
-                          ].map((mission, i) => (
-                            <div key={i} className="flex items-start gap-2.5">
-                              <span className="text-cyan-500/60 font-bold text-[9px] select-none pt-0.5">⚡</span>
-                              <span className="text-zinc-300 leading-relaxed text-[11px] font-mono">{mission}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      {tabContent}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -931,7 +1170,8 @@ export default function AboutSection() {
         {/* Card 5: Engineering Metrics (Span 4) */}
         <motion.div
           variants={cardVariants}
-          onAnimationComplete={(def) => def === 'visible' && handleRevealComplete('metrics')}
+          onAnimationComplete={handleRevealCompleteMetrics}
+          style={staticCardStyle}
           className="col-span-12 lg:col-span-4 h-[530px] flex flex-col"
         >
           <CyberCard
@@ -939,37 +1179,18 @@ export default function AboutSection() {
             nodeCode="SECURE_NODE_05"
             isBootComplete={bootComplete.metrics}
           >
-            <div className="w-full h-full flex flex-col justify-between">
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-y-6 md:gap-x-4 flex-1 items-center py-4">
-                {metricsData.map((m, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3.5 sm:p-5 border border-zinc-900/60 rounded bg-zinc-950/20 flex flex-col justify-between min-h-[150px] sm:min-h-[155px] hover:border-cyan-500/20 transition-colors duration-300"
-                  >
-                    <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-wider leading-tight">{m.label}</span>
-                    <div className="text-2xl font-black text-white font-sans mt-1">
-                      <CountUp end={m.value} trigger={bootComplete.metrics} />
-                      <span className="text-cyan-400 ml-0.5 font-mono">{m.suffix}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-between items-center text-[8px] font-mono text-zinc-500 pt-2 uppercase border-t border-zinc-900/60 mt-1">
-                <span>STAT_GRID: ONLINE</span>
-                <span>TELEMETRY: NOMINAL</span>
-              </div>
-            </div>
+            {metricsCardContent}
           </CyberCard>
         </motion.div>
-
       </motion.div>
 
       {/* TIME ON EARTH Live Telemetry Counter */}
       <motion.div
-        initial={{ opacity: 0, y: 30, scale: 0.98 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        viewport={{ once: true, amount: 0.25 }}
-        transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+        initial={staticTimeSectionInitial}
+        whileInView={staticTimeSectionWhileInView}
+        viewport={staticTimeSectionViewport}
+        transition={staticTimeSectionTransition}
+        style={staticTimeSectionStyle}
         className="max-w-7xl mx-auto w-full px-3 md:px-8 mt-8 z-10"
       >
         <CyberCard
@@ -977,62 +1198,11 @@ export default function AboutSection() {
           nodeCode="SECURE_NODE_06"
           isBootComplete={true}
         >
-          {/* Content area */}
-          <div className="w-full h-full flex flex-col justify-between text-left">
-            <div className="flex flex-col gap-6">
-              <div className="space-y-0.5">
-                <h3 className="text-base sm:text-lg font-black tracking-wide text-white uppercase flex items-center gap-2">
-                  <span>⌛ TIME ON EARTH</span>
-                </h3>
-                <p className="text-zinc-500 font-mono text-[10px] tracking-wider">
-                  Present on this planet since September 16, 2006
-                </p>
-              </div>
-
-              {/* Counter Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 w-full">
-                {[
-                  { label: 'YEARS', ref: yearsRef },
-                  { label: 'MONTHS', ref: monthsRef },
-                  { label: 'DAYS', ref: daysRef },
-                  { label: 'HOURS', ref: hoursRef },
-                  { label: 'MINUTES', ref: minutesRef },
-                  { label: 'SECONDS', ref: secondsRef },
-                  { label: 'MILLISECONDS', ref: msRef, isMs: true },
-                ].map((item, idx) => (
-                  <motion.div
-                    key={item.label}
-                    initial={{ opacity: 0, y: 15 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{
-                      type: 'spring',
-                      stiffness: 120,
-                      damping: 18,
-                      delay: idx * 0.05
-                    }}
-                    className="p-4 border border-zinc-900/60 rounded-lg bg-zinc-950/20 flex flex-col items-center justify-center min-h-[90px] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] select-none"
-                  >
-                    <span
-                      ref={item.ref}
-                      className={`font-sans font-black text-white ${item.isMs ? 'text-2xl min-w-[3.2rem]' : 'text-3xl min-w-[2.2rem]'} text-center tracking-tight`}
-                    >
-                      00
-                    </span>
-                    <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-wider mt-1.5">{item.label}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            {/* Footer status info */}
-            <div className="flex justify-between items-center text-[8px] font-mono text-zinc-500 pt-2 uppercase border-t border-zinc-900/60 mt-6">
-              <span>SYSTEM_TIME: RUNNING</span>
-              <span>LIFE_CLOCK: ACTIVE</span>
-            </div>
-          </div>
+          {timeOnEarthCardContent}
         </CyberCard>
       </motion.div>
     </section>
   );
-}
+});
+
+export default AboutSection;
