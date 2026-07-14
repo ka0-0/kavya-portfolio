@@ -205,7 +205,7 @@ export default function LoadingScreen({ onStartTransition, onComplete }) {
 
           {/* Loading Pill Capsule */}
           <div
-            className="relative p-[1.5px] rounded-full animate-neon-border shadow-[0_12px_35px_-8px_rgba(37,99,235,0.4),_0_0_20px_rgba(6,182,212,0.3)] flex items-center justify-center overflow-hidden z-[10]"
+            className="relative p-[1.5px] rounded-full animate-neon-border shadow-[0_12px_35px_-8px_rgba(37,99,235,0.4),_0_0_20px_rgba(var(--accent-rgb),0.3)] flex items-center justify-center overflow-hidden z-[10]"
             style={{
               width: pillExpanded
                 ? typeof window !== 'undefined' && window.innerWidth < 640

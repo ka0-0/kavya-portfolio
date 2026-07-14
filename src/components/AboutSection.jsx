@@ -230,7 +230,7 @@ const TerminalContent = React.memo(function TerminalContent({ bootCompleteTermin
         <span className="text-cyan-500/80">{dispLabel}</span>
         {dispValue && (
           <span className={item.isStatus
-            ? "text-cyan-400 font-bold shadow-[0_0_8px_rgba(6,182,212,0.4)] px-1.5 py-0.5 rounded bg-cyan-950/40 border border-cyan-500/20 text-[10px] tracking-wider ml-1"
+            ? "text-cyan-400 font-bold shadow-[0_0_8px_rgba(var(--accent-rgb),0.4)] px-1.5 py-0.5 rounded bg-cyan-950/40 border border-[rgba(var(--accent-rgb),0.2)] text-[10px] tracking-wider ml-1"
             : "text-white ml-1 font-sans"}>
             {dispValue}
           </span>
@@ -242,11 +242,11 @@ const TerminalContent = React.memo(function TerminalContent({ bootCompleteTermin
 
   return (
     <div ref={containerRef} className="w-full h-full flex flex-col justify-between font-mono text-[10.5px]">
-      <div className="p-3 bg-zinc-950/45 border border-zinc-900/60 rounded flex-1 flex flex-col justify-start min-h-[380px] space-y-1.5 overflow-hidden pr-1 scrollbar-thin scrollbar-thumb-zinc-800">
+      <div className="p-3 bg-zinc-950/45 border border-[var(--border-color)]/60 rounded flex-1 flex flex-col justify-start min-h-[380px] space-y-1.5 overflow-hidden pr-1 scrollbar-thin scrollbar-thumb-zinc-800">
         {completedLines.map(idx => renderTerminalLine(idx))}
         {completedLines.length < terminalData.length && renderTerminalLine(activeLineIdx, true)}
       </div>
-      <div className="flex justify-between items-center text-[8px] text-zinc-500 pt-2 uppercase border-t border-zinc-900/60 mt-1">
+      <div className="flex justify-between items-center text-[8px] text-zinc-500 pt-2 uppercase border-t border-[var(--border-color)]/60 mt-1">
         <span>STREAM: ACTIVE_TTY</span>
         <span>TTY: RES_OK</span>
       </div>
@@ -299,7 +299,7 @@ const InteractiveMapContent = React.memo(function InteractiveMapContent({ bootCo
   }, []);
 
   return (
-    <div ref={containerRef} className="relative w-full h-full min-h-[220px] flex items-center justify-center overflow-visible rounded-lg bg-zinc-950/10 border border-zinc-900/40">
+    <div ref={containerRef} className="relative w-full h-full min-h-[220px] flex items-center justify-center overflow-visible rounded-lg bg-zinc-950/10 border border-[var(--border-color)]/40">
       {/* World Map Background Image Container to clip scaled image */}
       <div className="absolute inset-0 overflow-hidden rounded-lg pointer-events-none">
         <motion.img 
@@ -337,11 +337,11 @@ const InteractiveMapContent = React.memo(function InteractiveMapContent({ bootCo
           {/* Blue node container */}
           <div className="map-node-container relative flex items-center justify-center">
             {/* Concentric expanding pulse rings */}
-            <div className={`map-node-ring absolute rounded-full border border-cyan-400/40 bg-cyan-400/5 pointer-events-none w-10 h-10 ${isVisible ? '' : 'map-animation-paused'}`} />
-            <div className={`map-node-ring absolute rounded-full border border-cyan-400/20 bg-transparent pointer-events-none w-10 h-10 ${isVisible ? '' : 'map-animation-paused'}`} style={{ animationDelay: '1.1s' }} />
+            <div className={`map-node-ring absolute rounded-full border border-[rgba(var(--accent-rgb),0.4)] bg-cyan-400/5 pointer-events-none w-10 h-10 ${isVisible ? '' : 'map-animation-paused'}`} />
+            <div className={`map-node-ring absolute rounded-full border border-[rgba(var(--accent-rgb),0.2)] bg-transparent pointer-events-none w-10 h-10 ${isVisible ? '' : 'map-animation-paused'}`} style={{ animationDelay: '1.1s' }} />
             
             {/* Center dot */}
-            <div className={`map-node-dot w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] ${isHovered || !isVisible ? 'map-node-dot-paused' : ''}`} />
+            <div className={`map-node-dot w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(var(--accent-rgb),0.8)] ${isHovered || !isVisible ? 'map-node-dot-paused' : ''}`} />
           </div>
         </div>
 
@@ -355,14 +355,14 @@ const InteractiveMapContent = React.memo(function InteractiveMapContent({ bootCo
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
-              className="absolute bottom-[28px] left-1/2 p-4 w-[215px] rounded-[20px] bg-[#0c0c0e]/95 border border-cyan-500/30 backdrop-blur-md font-sans text-left z-40 cursor-default select-text"
+              className="absolute bottom-[28px] left-1/2 p-4 w-[215px] rounded-[20px] bg-[var(--card-bg-alt)]/95 border border-[rgba(var(--accent-rgb),0.3)] backdrop-blur-md font-sans text-left z-40 cursor-default select-text"
               style={{
-                boxShadow: '0 0 20px rgba(6, 182, 212, 0.2), 0 4px 30px rgba(0,0,0,0.85)',
+                boxShadow: '0 0 20px rgba(var(--accent-rgb),0.2), 0 4px 30px rgba(0,0,0,0.85)',
                 transformOrigin: 'bottom center',
               }}
             >
               {/* Connector stem / pointer */}
-              <div className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0c0c0e] border-r border-b border-cyan-500/30 rotate-45 z-[-1]" />
+              <div className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 w-2 h-2 bg-[var(--card-bg-alt)] border-r border-b border-[rgba(var(--accent-rgb),0.3)] rotate-45 z-[-1]" />
 
               <div className="flex flex-col gap-1.5">
                 {/* DELHI, INDIA */}
@@ -486,7 +486,7 @@ const CyberCard = React.memo(function CyberCard({
       onMouseLeave={handleMouseLeave}
       onFocus={handleMouseEnter}
       onBlur={handleMouseLeave}
-      className="relative rounded-xl overflow-hidden bg-[#0c0c0e]/85 border border-zinc-800/35 hover:border-cyan-500/30 focus-visible:border-cyan-400 focus-visible:ring-1 focus-visible:ring-cyan-400/50 outline-none backdrop-blur-md select-none group shadow-[0_4px_30px_rgba(0,0,0,0.85)] w-full h-full flex flex-col justify-between cyber-card-container"
+      className="relative rounded-xl overflow-hidden bg-[var(--card-bg-alt)]/85 border border-[var(--border-color)] hover:border-[rgba(var(--accent-rgb),0.3)] focus-visible:border-cyan-400 focus-visible:ring-1 focus-visible:ring-cyan-400/50 outline-none backdrop-blur-md select-none group shadow-[0_4px_30px_rgba(0,0,0,0.85)] w-full h-full flex flex-col justify-between cyber-card-container"
       style={{
         transformStyle: 'preserve-3d',
         willChange: 'transform, opacity',
@@ -494,10 +494,10 @@ const CyberCard = React.memo(function CyberCard({
       }}
     >
       {/* Corner brackets */}
-      <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-cyan-500/30 group-hover:border-cyan-400/80 focus-visible:border-cyan-400/80 transition-colors duration-300 pointer-events-none z-10" />
-      <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-cyan-500/30 group-hover:border-cyan-400/80 focus-visible:border-cyan-400/80 transition-colors duration-300 pointer-events-none z-10" />
-      <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-cyan-500/30 group-hover:border-cyan-400/80 focus-visible:border-cyan-400/80 transition-colors duration-300 pointer-events-none z-10" />
-      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-cyan-500/30 group-hover:border-cyan-400/80 focus-visible:border-cyan-400/80 transition-colors duration-300 pointer-events-none z-10" />
+      <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-[rgba(var(--accent-rgb),0.3)] group-hover:border-cyan-400/80 focus-visible:border-cyan-400/80 transition-colors duration-300 pointer-events-none z-10" />
+      <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-[rgba(var(--accent-rgb),0.3)] group-hover:border-cyan-400/80 focus-visible:border-cyan-400/80 transition-colors duration-300 pointer-events-none z-10" />
+      <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-[rgba(var(--accent-rgb),0.3)] group-hover:border-cyan-400/80 focus-visible:border-cyan-400/80 transition-colors duration-300 pointer-events-none z-10" />
+      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-[rgba(var(--accent-rgb),0.3)] group-hover:border-cyan-400/80 focus-visible:border-cyan-400/80 transition-colors duration-300 pointer-events-none z-10" />
 
       {/* Fine grid pattern overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.004)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.004)_1px,transparent_1px)] bg-[size:16px_16px] opacity-40 pointer-events-none" />
@@ -698,7 +698,7 @@ const AboutSection = React.memo(function AboutSection() {
       {/* Column/Card: Futuristic Android Avatar Container */}
       <div className="flex flex-col items-center justify-center p-2.5 border border-zinc-800/40 rounded-lg bg-zinc-950/20 w-full md:w-[190px] h-[200px] sm:h-[240px] md:h-auto self-stretch relative overflow-hidden">
         {/* Subtle tech background grid texture */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.03),transparent_70%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--accent-rgb),0.03),transparent_70%)] pointer-events-none" />
         {/* Static Image Wrapper */}
         <div className="w-full h-full flex items-center justify-center p-1.5">
           <img
@@ -732,11 +732,11 @@ const AboutSection = React.memo(function AboutSection() {
         return (
           <div className="space-y-6 font-sans text-xs pt-1">
             {/* Card 1: B.Tech */}
-            <div className="border-l-2 border-cyan-500/40 pl-3.5 py-0.5 space-y-1 relative">
-              <div className="absolute w-2 h-2 rounded-full bg-cyan-400 -left-[5px] top-1.5 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+            <div className="border-l-2 border-[rgba(var(--accent-rgb),0.4)] pl-3.5 py-0.5 space-y-1 relative">
+              <div className="absolute w-2 h-2 rounded-full bg-cyan-400 -left-[5px] top-1.5 shadow-[0_0_8px_rgba(var(--accent-rgb),0.8)]" />
               <div className="flex justify-between items-baseline">
                 <h4 className="text-white font-bold text-[10.5px] uppercase tracking-wide">B.Tech Mechanical Engineering</h4>
-                <span className="text-[7.5px] font-mono font-bold text-cyan-400 bg-cyan-950/40 border border-cyan-500/20 px-1.5 py-0.5 rounded uppercase">Current</span>
+                <span className="text-[7.5px] font-mono font-bold text-cyan-400 bg-cyan-950/40 border border-[rgba(var(--accent-rgb),0.2)] px-1.5 py-0.5 rounded uppercase">Current</span>
               </div>
               <div className="text-[8.5px] text-zinc-500 font-mono">2024 – 2028</div>
               <div className="text-zinc-400 font-mono text-[9.5px]">Delhi Technological University (DTU)</div>
@@ -747,12 +747,12 @@ const AboutSection = React.memo(function AboutSection() {
               <div className="absolute w-2 h-2 rounded-full bg-zinc-700 -left-[5px] top-1.5" />
               <div className="flex justify-between items-baseline">
                 <h4 className="text-zinc-300 font-bold text-[10.5px] uppercase tracking-wide">Higher Secondary (Class XII)</h4>
-                <span className="text-[8px] font-mono text-zinc-500 bg-zinc-950/20 border border-zinc-900 px-1.5 py-0.5 rounded">2024</span>
+                <span className="text-[8px] font-mono text-zinc-500 bg-zinc-950/20 border border-[var(--border-color)] px-1.5 py-0.5 rounded">2024</span>
               </div>
               <div className="text-[9.5px] text-zinc-400 font-mono">Vivekanand International School</div>
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {educationSubjects.map((sub, i) => (
-                  <span key={i} className="text-[8px] font-mono text-zinc-500 bg-zinc-900/40 px-1.5 py-0.5 rounded border border-zinc-900">
+                  <span key={i} className="text-[8px] font-mono text-zinc-500 bg-zinc-900/40 px-1.5 py-0.5 rounded border border-[var(--border-color)]">
                     {sub}
                   </span>
                 ))}
@@ -764,7 +764,7 @@ const AboutSection = React.memo(function AboutSection() {
               <div className="absolute w-2 h-2 rounded-full bg-zinc-700 -left-[5px] top-1.5" />
               <div className="flex justify-between items-baseline">
                 <h4 className="text-zinc-300 font-bold text-[10.5px] uppercase tracking-wide">Secondary (Class X)</h4>
-                <span className="text-[8px] font-mono text-zinc-500 bg-zinc-950/20 border border-zinc-900 px-1.5 py-0.5 rounded">2022</span>
+                <span className="text-[8px] font-mono text-zinc-500 bg-zinc-950/20 border border-[var(--border-color)] px-1.5 py-0.5 rounded">2022</span>
               </div>
               <div className="text-[9.5px] text-zinc-400 font-mono">Vivekanand International School</div>
               <p className="text-zinc-500 text-[9.5px] leading-relaxed">
@@ -777,9 +777,9 @@ const AboutSection = React.memo(function AboutSection() {
         return (
           <div className="space-y-4 font-sans text-xs pt-1">
             {interestsData.map((interest, i) => (
-              <div key={i} className="p-4 rounded-lg border border-zinc-900 bg-zinc-950/40 hover:border-cyan-500/20 transition-colors duration-300">
+              <div key={i} className="p-4 rounded-lg border border-[var(--border-color)] bg-zinc-950/40 hover:border-[rgba(var(--accent-rgb),0.2)] transition-colors duration-300">
                 <h4 className="text-white font-bold text-[10px] uppercase tracking-wide flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.8)]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(var(--accent-rgb),0.8)]" />
                   {interest.title}
                 </h4>
                 <p className="text-zinc-400 text-[9.5px] mt-1 leading-relaxed">
@@ -822,7 +822,7 @@ const AboutSection = React.memo(function AboutSection() {
         {metricsData.map((m, idx) => (
           <div
             key={idx}
-            className="p-3.5 sm:p-5 border border-zinc-900/60 rounded bg-zinc-950/20 flex flex-col justify-between min-h-[150px] sm:min-h-[155px] hover:border-cyan-500/20 transition-colors duration-300"
+            className="p-3.5 sm:p-5 border border-[var(--border-color)]/60 rounded bg-zinc-950/20 flex flex-col justify-between min-h-[150px] sm:min-h-[155px] hover:border-[rgba(var(--accent-rgb),0.2)] transition-colors duration-300"
           >
             <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-wider leading-tight">{m.label}</span>
             <div className="text-2xl font-black text-white font-sans mt-1">
@@ -832,7 +832,7 @@ const AboutSection = React.memo(function AboutSection() {
           </div>
         ))}
       </div>
-      <div className="flex justify-between items-center text-[8px] font-mono text-zinc-500 pt-2 uppercase border-t border-zinc-900/60 mt-1">
+      <div className="flex justify-between items-center text-[8px] font-mono text-zinc-500 pt-2 uppercase border-t border-[var(--border-color)]/60 mt-1">
         <span>STAT_GRID: ONLINE</span>
         <span>TELEMETRY: NOMINAL</span>
       </div>
@@ -870,7 +870,7 @@ const AboutSection = React.memo(function AboutSection() {
               whileInView="visible"
               viewport={staticViewport}
               style={staticTimeCardStyle}
-              className="p-4 border border-zinc-900/60 rounded-lg bg-zinc-950/20 flex flex-col items-center justify-center min-h-[90px] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] select-none"
+              className="p-4 border border-[var(--border-color)]/60 rounded-lg bg-zinc-950/20 flex flex-col items-center justify-center min-h-[90px] transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(var(--accent-rgb),0.3)] hover:shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)] select-none"
             >
               <span
                 ref={item.ref}
@@ -884,7 +884,7 @@ const AboutSection = React.memo(function AboutSection() {
         </div>
       </div>
 
-      <div className="flex justify-between items-center text-[8px] font-mono text-zinc-500 pt-2 uppercase border-t border-zinc-900/60 mt-6">
+      <div className="flex justify-between items-center text-[8px] font-mono text-zinc-500 pt-2 uppercase border-t border-[var(--border-color)]/60 mt-6">
         <span>SYSTEM_TIME: RUNNING</span>
         <span>LIFE_CLOCK: ACTIVE</span>
       </div>
@@ -1006,16 +1006,16 @@ const AboutSection = React.memo(function AboutSection() {
     <section
       ref={sectionRef}
       id="about"
-      className="relative w-full bg-[#0a0a0c] text-white flex flex-col justify-center px-3 md:px-6 pt-6 md:pt-8 pb-10 md:pb-12 overflow-hidden select-none border-t border-t-zinc-900/60"
+      className="relative w-full bg-[var(--card-bg)] text-white flex flex-col justify-center px-3 md:px-6 pt-6 md:pt-8 pb-10 md:pb-12 overflow-hidden select-none border-t border-t-zinc-900/60"
     >
       {staticStyleTag}
       {staticBackground}
       {sectionHeaderComponent}
 
       {/* Main OS status panel bar */}
-      <div className="max-w-7xl mx-auto w-full px-3 md:px-8 mb-8 font-mono text-[9px] flex flex-wrap justify-between items-center gap-4 border-b border-zinc-900 pb-4 text-zinc-500 z-10">
+      <div className="max-w-7xl mx-auto w-full px-3 md:px-8 mb-8 font-mono text-[9px] flex flex-wrap justify-between items-center gap-4 border-b border-[var(--border-color)] pb-4 text-zinc-500 z-10">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
+          <span className="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(var(--accent-rgb),0.6)]" />
           <span>PORTFOLIO OS ENGINE: OPERATIONAL</span>
         </div>
         <div className="flex items-center gap-6">
@@ -1101,7 +1101,7 @@ const AboutSection = React.memo(function AboutSection() {
             <div className="w-full h-full flex flex-col justify-between relative">
               {/* Tab Header List */}
               <div
-                className="flex flex-wrap border-b border-zinc-900/60 pb-2 mb-5 gap-1 sm:gap-1.5 relative z-10"
+                className="flex flex-wrap border-b border-[var(--border-color)]/60 pb-2 mb-5 gap-1 sm:gap-1.5 relative z-10"
                 role="tablist"
                 aria-label="Cognitive spectrum sections"
               >
@@ -1116,19 +1116,19 @@ const AboutSection = React.memo(function AboutSection() {
                       onClick={() => handleTabClick(tab.id)}
                       onKeyDown={(e) => handleTabKeyDown(e, tab.id)}
                       className={`relative px-2.5 py-1 text-[9px] font-mono font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer rounded-md border ${isActive
-                          ? 'text-white border-cyan-500/30 bg-cyan-950/20'
+                          ? 'text-white border-[rgba(var(--accent-rgb),0.3)] bg-cyan-950/20'
                           : 'text-zinc-500 border-transparent hover:text-zinc-300'
                         }`}
                       style={{
                         outline: 'none',
-                        boxShadow: isActive ? '0 0 8px rgba(6, 182, 212, 0.15)' : 'none',
+                        boxShadow: isActive ? '0 0 8px rgba(var(--accent-rgb),0.15)' : 'none',
                       }}
                     >
                       {/* Animated pill background */}
                       {isActive && (
                         <motion.div
                           layoutId="activeTabPill"
-                          className="absolute inset-0 border border-cyan-500/40 rounded-md bg-cyan-950/40 shadow-[0_0_10px_rgba(6,182,212,0.25)] z-[-1]"
+                          className="absolute inset-0 border border-[rgba(var(--accent-rgb),0.4)] rounded-md bg-cyan-950/40 shadow-[0_0_10px_rgba(var(--accent-rgb),0.25)] z-[-1]"
                           transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                         />
                       )}
@@ -1159,7 +1159,7 @@ const AboutSection = React.memo(function AboutSection() {
               </div>
 
               {/* Card Footer status info */}
-              <div className="flex justify-between items-center text-[8px] font-mono text-zinc-500 pt-2 uppercase border-t border-zinc-900/60 mt-1">
+              <div className="flex justify-between items-center text-[8px] font-mono text-zinc-500 pt-2 uppercase border-t border-[var(--border-color)]/60 mt-1">
                 <span>SPECTRUM: ACTIVE_TAB</span>
                 <span className="text-cyan-500/70 font-semibold">{activeTab}</span>
               </div>

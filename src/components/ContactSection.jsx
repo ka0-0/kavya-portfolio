@@ -587,7 +587,7 @@ export default function ContactSection() {
             <MagneticButton
               onClick={openModal}
               shouldReduceMotion={shouldReduceMotion}
-              className="group relative inline-flex items-center justify-center sm:justify-between w-full max-w-[340px] sm:max-w-none sm:w-[280px] h-[58px] px-8 rounded-full bg-cyan-500/10 hover:bg-cyan-500/15 border border-cyan-500/40 hover:border-cyan-400 backdrop-blur-md transition-colors duration-300 select-none cursor-pointer"
+              className="group relative inline-flex items-center justify-center sm:justify-between w-full max-w-[340px] sm:max-w-none sm:w-[280px] h-[58px] px-8 rounded-full bg-cyan-500/10 hover:bg-cyan-500/15 border border-[rgba(var(--accent-rgb),0.4)] hover:border-cyan-400 backdrop-blur-md transition-colors duration-300 select-none cursor-pointer"
             >
               <div 
                 className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none blur-md"
@@ -608,13 +608,13 @@ export default function ContactSection() {
           rightPanelVariants
           variants={rightPanelVariants}
           style={{ willChange: 'transform, opacity' }}
-          className="lg:col-span-4 relative rounded-3xl overflow-hidden bg-[#0a0a0c]/60 border border-white/5 backdrop-blur-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full p-6 md:p-8 flex flex-col justify-start"
+          className="lg:col-span-4 relative rounded-3xl overflow-hidden bg-[var(--card-bg)]/60 border border-[var(--border-color)] backdrop-blur-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full p-6 md:p-8 flex flex-col justify-start"
         >
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(6,182,212,0.03),transparent_60%)] pointer-events-none" />
-          <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-cyan-500/20 pointer-events-none" />
-          <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-cyan-500/20 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-cyan-500/20 pointer-events-none" />
-          <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-cyan-500/20 pointer-events-none" />
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(var(--accent-rgb),0.03),transparent_60%)] pointer-events-none" />
+          <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-[rgba(var(--accent-rgb),0.2)] pointer-events-none" />
+          <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-[rgba(var(--accent-rgb),0.2)] pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-[rgba(var(--accent-rgb),0.2)] pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-[rgba(var(--accent-rgb),0.2)] pointer-events-none" />
 
           <span className="font-mono text-[10px] sm:text-xs font-bold tracking-[0.25em] text-zinc-500 uppercase select-none mb-6 block">
             CONNECT
@@ -629,7 +629,7 @@ export default function ContactSection() {
               href="https://github.com/ka0-0"
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative rounded-2xl bg-white/[0.02] border border-white/5 p-4 flex flex-col justify-between hover:border-cyan-500/30 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden"
+              className="group relative rounded-2xl bg-white/[0.02] border border-[var(--border-color)] p-4 flex flex-col justify-between hover:border-[rgba(var(--accent-rgb),0.3)] transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden"
               style={{ willChange: 'transform, border-color' }}
             >
               <div 
@@ -638,7 +638,7 @@ export default function ContactSection() {
               />
               <div className="relative z-10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-cyan-950/40 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:border-cyan-400/50 group-hover:text-cyan-300 group-hover:shadow-[0_0_12px_rgba(6,182,212,0.35)] transition-all duration-300">
+                  <div className="w-9 h-9 rounded-full bg-cyan-950/40 border border-[rgba(var(--accent-rgb),0.2)] flex items-center justify-center text-cyan-400 group-hover:border-cyan-400/50 group-hover:text-cyan-300 group-hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.35)] transition-all duration-300">
                     <GithubIcon />
                   </div>
                   <div className="flex flex-col">
@@ -663,7 +663,7 @@ export default function ContactSection() {
               href="https://www.linkedin.com/in/kavya-makhan-800451370/"
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative rounded-2xl bg-white/[0.02] border border-white/5 p-4 flex flex-col justify-between hover:border-cyan-500/30 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden"
+              className="group relative rounded-2xl bg-white/[0.02] border border-[var(--border-color)] p-4 flex flex-col justify-between hover:border-[rgba(var(--accent-rgb),0.3)] transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden"
               style={{ willChange: 'transform, border-color' }}
             >
               <div 
@@ -672,7 +672,7 @@ export default function ContactSection() {
               />
               <div className="relative z-10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-cyan-950/40 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:border-cyan-400/50 group-hover:text-cyan-300 group-hover:shadow-[0_0_12px_rgba(6,182,212,0.35)] transition-all duration-300">
+                  <div className="w-9 h-9 rounded-full bg-cyan-950/40 border border-[rgba(var(--accent-rgb),0.2)] flex items-center justify-center text-cyan-400 group-hover:border-cyan-400/50 group-hover:text-cyan-300 group-hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.35)] transition-all duration-300">
                     <LinkedinIcon />
                   </div>
                   <div className="flex flex-col">
@@ -695,7 +695,7 @@ export default function ContactSection() {
               variants={cardVariants(2)}
               whileTap={shouldReduceMotion ? {} : { scale: 0.985, y: -1 }}
               onClick={handleCopy}
-              className={`group relative rounded-2xl bg-white/[0.02] border p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden ${copied ? 'border-cyan-400/80 shadow-[0_0_20px_rgba(6,182,212,0.15)] bg-cyan-500/[0.02]' : 'border-white/5 hover:border-cyan-500/30'}`}
+              className={`group relative rounded-2xl bg-white/[0.02] border p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden ${copied ? 'border-cyan-400/80 shadow-[0_0_20px_rgba(var(--accent-rgb),0.15)] bg-cyan-500/[0.02]' : 'border-[var(--border-color)] hover:border-[rgba(var(--accent-rgb),0.3)]'}`}
               style={{ willChange: 'transform, border-color' }}
             >
               <div 
@@ -704,7 +704,7 @@ export default function ContactSection() {
               />
               <div className="relative z-10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-full bg-cyan-950/40 border flex items-center justify-center transition-all duration-300 ${copied ? 'border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.5)]' : 'border-cyan-500/20 text-cyan-400 group-hover:border-cyan-400/50 group-hover:text-cyan-300 group-hover:shadow-[0_0_12px_rgba(6,182,212,0.35)]'}`}>
+                  <div className={`w-9 h-9 rounded-full bg-cyan-950/40 border flex items-center justify-center transition-all duration-300 ${copied ? 'border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.5)]' : 'border-[rgba(var(--accent-rgb),0.2)] text-cyan-400 group-hover:border-cyan-400/50 group-hover:text-cyan-300 group-hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.35)]'}`}>
                     <EmailIcon />
                   </div>
                   <div className="flex flex-col">
@@ -737,7 +737,7 @@ export default function ContactSection() {
               variants={cardVariants(3)}
               whileTap={shouldReduceMotion ? {} : { scale: 0.985, y: -1 }}
               onClick={handleDownload}
-              className={`group relative rounded-2xl bg-white/[0.02] border p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden ${downloaded ? 'border-cyan-400/80 shadow-[0_0_20px_rgba(6,182,212,0.15)] bg-cyan-500/[0.02]' : 'border-white/5 hover:border-cyan-500/30'}`}
+              className={`group relative rounded-2xl bg-white/[0.02] border p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden ${downloaded ? 'border-cyan-400/80 shadow-[0_0_20px_rgba(var(--accent-rgb),0.15)] bg-cyan-500/[0.02]' : 'border-[var(--border-color)] hover:border-[rgba(var(--accent-rgb),0.3)]'}`}
               style={{ willChange: 'transform, border-color' }}
             >
               <div 
@@ -746,7 +746,7 @@ export default function ContactSection() {
               />
               <div className="relative z-10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-full bg-cyan-950/40 border flex items-center justify-center transition-all duration-300 ${downloaded ? 'border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.5)]' : 'border-cyan-500/20 text-cyan-400 group-hover:border-cyan-400/50 group-hover:text-cyan-300 group-hover:shadow-[0_0_12px_rgba(6,182,212,0.35)]'}`}>
+                  <div className={`w-9 h-9 rounded-full bg-cyan-950/40 border flex items-center justify-center transition-all duration-300 ${downloaded ? 'border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.5)]' : 'border-[rgba(var(--accent-rgb),0.2)] text-cyan-400 group-hover:border-cyan-400/50 group-hover:text-cyan-300 group-hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.35)]'}`}>
                     <ResumeIcon />
                   </div>
                   <div className="flex flex-col">
@@ -788,7 +788,7 @@ export default function ContactSection() {
         <motion.div
           custom={0}
           variants={bottomCardVariants(0)}
-          className="group relative rounded-2xl bg-[#0a0a0c]/40 border border-white/5 backdrop-blur-xl p-6 flex flex-col justify-between hover:border-cyan-500/20 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+          className="group relative rounded-2xl bg-[var(--card-bg)]/40 border border-[var(--border-color)] backdrop-blur-xl p-6 flex flex-col justify-between hover:border-[rgba(var(--accent-rgb),0.2)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
           style={{ willChange: 'transform, border-color' }}
         >
           <div 
@@ -820,7 +820,7 @@ export default function ContactSection() {
         <motion.div
           custom={1}
           variants={bottomCardVariants(1)}
-          className="group relative rounded-2xl bg-[#0a0a0c]/40 border border-white/5 backdrop-blur-xl p-6 flex flex-col justify-between hover:border-cyan-500/20 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+          className="group relative rounded-2xl bg-[var(--card-bg)]/40 border border-[var(--border-color)] backdrop-blur-xl p-6 flex flex-col justify-between hover:border-[rgba(var(--accent-rgb),0.2)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
           style={{ willChange: 'transform, border-color' }}
         >
           <div 
@@ -848,7 +848,7 @@ export default function ContactSection() {
         <motion.div
           custom={2}
           variants={bottomCardVariants(2)}
-          className="group relative rounded-2xl bg-[#0a0a0c]/40 border border-white/5 backdrop-blur-xl p-6 flex flex-col justify-between hover:border-cyan-500/20 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+          className="group relative rounded-2xl bg-[var(--card-bg)]/40 border border-[var(--border-color)] backdrop-blur-xl p-6 flex flex-col justify-between hover:border-[rgba(var(--accent-rgb),0.2)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
           style={{ willChange: 'transform, border-color' }}
         >
           <div 
@@ -892,24 +892,24 @@ export default function ContactSection() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="modal-title"
-              className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-[#05070c]/55 backdrop-blur-[18px] overflow-y-auto"
+              className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-[var(--bg-dark)]/55 backdrop-blur-[18px] overflow-y-auto"
             >
               {/* Modal Body Container */}
               <motion.div
                 ref={modalBoxRef}
                 variants={modalBoxVariants}
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-[700px] rounded-t-[24px] sm:rounded-[32px] bg-[#09090B] border-t border-x sm:border border-cyan-500/25 p-5 sm:p-8 md:p-10 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:pb-8 md:pb-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-y-auto max-h-[88dvh] sm:max-h-[92vh]"
+                className="relative w-full max-w-[700px] rounded-t-[24px] sm:rounded-[32px] bg-[var(--card-bg)] border-t border-x sm:border border-[rgba(var(--accent-rgb),0.25)] p-5 sm:p-8 md:p-10 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:pb-8 md:pb-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-y-auto max-h-[88dvh] sm:max-h-[92vh]"
                 style={{ scrollbarWidth: 'thin', willChange: 'transform, opacity' }}
               >
                 {/* Subtle top-center background glow */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-[rgba(var(--accent-rgb),0.1)] rounded-full blur-3xl pointer-events-none" />
 
                 {/* Close Button */}
                 <button
                   ref={closeButtonRef}
                   onClick={closeModal}
-                  className="absolute top-5 right-5 sm:top-6 sm:right-6 w-9 h-9 sm:w-8 sm:h-8 rounded-full border border-white/5 hover:border-cyan-500/30 flex items-center justify-center text-zinc-400 hover:text-white bg-white/[0.02] cursor-pointer transition-colors duration-300 focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/20"
+                  className="absolute top-5 right-5 sm:top-6 sm:right-6 w-9 h-9 sm:w-8 sm:h-8 rounded-full border border-[var(--border-color)] hover:border-[rgba(var(--accent-rgb),0.3)] flex items-center justify-center text-zinc-400 hover:text-[var(--text-main)] bg-white/[0.02] cursor-pointer transition-colors duration-300 focus:outline-none focus:border-[var(--accent-color)] focus:ring-1 focus:ring-[rgba(var(--accent-rgb),0.2)]"
                   aria-label="Close modal"
                 >
                   <motion.div 
@@ -935,7 +935,7 @@ export default function ContactSection() {
                           ? { duration: 0.2 } 
                           : { type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }
                       }
-                      className="w-16 h-16 rounded-full bg-cyan-950/50 border border-cyan-400/40 flex items-center justify-center text-cyan-455 mb-6 shadow-[0_0_24px_rgba(6,182,212,0.2)]"
+                      className="w-16 h-16 rounded-full bg-cyan-950/50 border border-[rgba(var(--accent-rgb),0.4)] flex items-center justify-center text-cyan-455 mb-6 shadow-[0_0_24px_rgba(var(--accent-rgb),0.2)]"
                     >
                       <svg className="w-8 h-8 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -951,7 +951,7 @@ export default function ContactSection() {
 
                     <button
                       onClick={closeModal}
-                      className="w-full sm:w-[180px] h-[48px] rounded-full bg-cyan-950/30 hover:bg-cyan-950/40 border border-cyan-500/40 hover:border-cyan-400 text-white font-mono text-xs font-bold uppercase tracking-wider transition-colors duration-300 cursor-pointer focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/20"
+                      className="w-full sm:w-[180px] h-[48px] rounded-full bg-cyan-950/30 hover:bg-cyan-950/40 border border-[rgba(var(--accent-rgb),0.4)] hover:border-cyan-400 text-white font-mono text-xs font-bold uppercase tracking-wider transition-colors duration-300 cursor-pointer focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/20"
                       aria-label="Close modal"
                     >
                       Close
@@ -1072,7 +1072,7 @@ export default function ContactSection() {
                           ref={submitButtonRef}
                           type="submit"
                           disabled={isSending}
-                          className="group relative w-full sm:w-auto min-w-[200px] h-[54px] px-8 rounded-full bg-cyan-950/20 hover:bg-cyan-950/30 border border-cyan-500/40 hover:border-cyan-400 text-white font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center cursor-pointer transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed select-none focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/20"
+                          className="group relative w-full sm:w-auto min-w-[200px] h-[54px] px-8 rounded-full bg-cyan-950/20 hover:bg-cyan-950/30 border border-[rgba(var(--accent-rgb),0.4)] hover:border-cyan-400 text-white font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center cursor-pointer transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed select-none focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/20"
                           aria-label="Submit message"
                         >
                           <div 

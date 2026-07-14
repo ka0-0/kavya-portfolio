@@ -2,13 +2,24 @@ import React, { Suspense, useRef, useEffect, useState, useMemo, memo } from 'rea
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, useAnimations, Environment } from '@react-three/drei';
 import * as THREE from 'three';
+import { useTheme } from './ThemeContext';
 
+const faceColors = {
+  blue: { start: '#93c5fd', end: '#60a5fa' },
+  monochrome: { start: '#f3f4f6', end: '#9ca3af' },
+  pink: { start: '#fbcfe8', end: '#f472b6' },
+  purple: { start: '#e9d5ff', end: '#c084fc' },
+  orange: { start: '#fed7aa', end: '#fdba74' },
+  red: { start: '#fecaca', end: '#fca5a5' },
+  green: { start: '#a7f3d0', end: '#86efac' }
+};
 
-const drawFace = (ctx, eyeScaleY = 1.0) => {
-  // Light Cyber Blue Screen Background
+const drawFace = (ctx, eyeScaleY = 1.0, theme = 'blue') => {
+  // Light Cyber Screen Background matching theme
+  const colors = faceColors[theme] || faceColors.blue;
   const bgGradient = ctx.createLinearGradient(0, 0, 0, 512);
-  bgGradient.addColorStop(0, '#93c5fd');
-  bgGradient.addColorStop(1, '#60a5fa');
+  bgGradient.addColorStop(0, colors.start);
+  bgGradient.addColorStop(1, colors.end);
   ctx.fillStyle = bgGradient;
   ctx.fillRect(0, 0, 512, 512);
 
@@ -43,13 +54,17 @@ const drawFace = (ctx, eyeScaleY = 1.0) => {
   ctx.fill();
 };
 
-const Robot = memo(function Robot({ onLoad, onReady, isReady, responsiveScale, mouseRef }) {
+const Robot = memo(function Robot({ onLoad, onReady, isReady, responsiveScale, mouseRef, theme }) {
   const { scene, animations } = useGLTF('/models/small_robot.glb');
   const groupRef = useRef();
 
   const faceCtxRef = useRef(null);
   const faceTextureRef = useRef(null);
   const lastBlinkRef = useRef(1.0);
+  const lastThemeRef = useRef(theme);
+
+  const bodyMaterialRef = useRef(null);
+  const ringMaterialRef = useRef(null);
 
   // Setup animations if present in small_robot.glb
   const { actions } = useAnimations(animations, groupRef);
@@ -79,7 +94,7 @@ const Robot = memo(function Robot({ onLoad, onReady, isReady, responsiveScale, m
     faceCanvas.height = 512;
     const ctx = faceCanvas.getContext('2d');
 
-    drawFace(ctx, 1.0);
+    drawFace(ctx, 1.0, theme);
 
     const faceTexture = new THREE.CanvasTexture(faceCanvas);
     faceTexture.flipY = false;
@@ -132,19 +147,27 @@ const Robot = memo(function Robot({ onLoad, onReady, isReady, responsiveScale, m
         }
 
         if (child.material) {
-          const mat = child.material;
+          // Clone material to avoid sharing state between separate model meshes
+          const mat = child.material.clone();
+          child.material = mat;
 
           mat.envMapIntensity = 1.2;
 
-          // A. BODY & RING MATERIAL (explainer_Body_Mat): Tint pale body texture to rich Royal Blue while preserving neon white border glow
+          // A. BODY & RING MATERIAL (explainer_Body_Mat): Tint body texture dynamically while preserving glow
           if (mName.includes('body') || cName.includes('body') || cName.includes('ring')) {
-            mat.color = new THREE.Color('#2563eb'); // Rich Royal Cyber Blue for body surface
-            mat.emissive = new THREE.Color('#ffffff'); // Neon white/cyan glowing borders around face, ears & bottom ring
+            mat.color = new THREE.Color('#2563eb'); // Default initial
+            mat.emissive = new THREE.Color('#ffffff'); // Neon white/cyan glowing borders
             mat.emissiveIntensity = 2.2;
             mat.roughness = 0.3;
             mat.metalness = 0.2;
+
+            if (cName.includes('ring')) {
+              ringMaterialRef.current = mat;
+            } else {
+              bodyMaterialRef.current = mat;
+            }
           }
-          // B. FACE SCREEN DISPLAY: Apply custom face texture with TWO BLACK OVAL EYES and clear GLB maps
+          // B. FACE SCREEN DISPLAY: Apply custom face texture with TWO BLACK OVAL EYES
           else if (mName.includes('face') || cName.includes('face')) {
             mat.map = faceTexture;
             mat.emissiveMap = faceTexture;
@@ -170,7 +193,7 @@ const Robot = memo(function Robot({ onLoad, onReady, isReady, responsiveScale, m
   }, [scene, onLoad]);
 
   const frameCountRef = useRef(0);
-  // Smooth floating, breathing, blinking & full-viewport mouse tracking loop
+  // Smooth floating, breathing, blinking, theme transitions & mouse tracking loop
   useFrame((state, delta) => {
     if (frameCountRef.current >= 3) {
       if (onReady) onReady();
@@ -180,7 +203,29 @@ const Robot = memo(function Robot({ onLoad, onReady, isReady, responsiveScale, m
 
     const t = state.clock.getElapsedTime();
 
-    // 1. Dynamic Double Eye Blinking Loop (Blink-Blink double blink turn)
+    // 1. Theme transition interpolation for material colors (250-350ms lerp timing)
+    const themeColors = {
+      blue: { body: '#2563eb', ring: '#1e3a8a' },
+      monochrome: { body: '#6b7280', ring: '#1f2937' },
+      pink: { body: '#ec4899', ring: '#be185d' },
+      purple: { body: '#8b5cf6', ring: '#4c1d95' },
+      orange: { body: '#f97316', ring: '#7c2d12' },
+      red: { body: '#ef4444', ring: '#7f1d1d' },
+      green: { body: '#22c55e', ring: '#14532d' }
+    };
+
+    const targetShades = themeColors[theme] || themeColors.blue;
+    // Smooth lerp color over ~300ms (damp factor around 8-9 converges in ~300ms)
+    const lerpFactor = Math.min(1, delta * 8.5);
+
+    if (bodyMaterialRef.current) {
+      bodyMaterialRef.current.color.lerp(new THREE.Color(targetShades.body), lerpFactor);
+    }
+    if (ringMaterialRef.current) {
+      ringMaterialRef.current.color.lerp(new THREE.Color(targetShades.ring), lerpFactor);
+    }
+
+    // 2. Dynamic Double Eye Blinking Loop and dynamic theme face screen redraw
     if (faceCtxRef.current && faceTextureRef.current) {
       const blinkCycle = t % 2.8;
       let eyeScaleY = 1.0;
@@ -198,24 +243,28 @@ const Robot = memo(function Robot({ onLoad, onReady, isReady, responsiveScale, m
         eyeScaleY = Math.min(1.0, (blinkCycle - 0.24) / 0.06);
       }
 
-      if (blinkCycle < 0.35 || lastBlinkRef.current !== eyeScaleY) {
+      const themeChanged = lastThemeRef.current !== theme;
+      if (blinkCycle < 0.35 || lastBlinkRef.current !== eyeScaleY || themeChanged) {
         lastBlinkRef.current = eyeScaleY;
-        drawFace(faceCtxRef.current, eyeScaleY);
+        if (themeChanged) {
+          lastThemeRef.current = theme;
+        }
+        drawFace(faceCtxRef.current, eyeScaleY, theme);
         faceTextureRef.current.needsUpdate = true;
       }
     }
 
-    // 1. Slow idle float oscillation (Y-axis)
+    // 3. Slow idle float oscillation (Y-axis)
     const floatY = Math.sin(t * 1.4) * 0.05;
     groupRef.current.position.y = floatY;
 
-    // 2. Gentle breathing scale movement
+    // 4. Gentle breathing scale movement
     const breathScale = 1.0 + Math.sin(t * 1.8) * 0.006;
     groupRef.current.scale.setScalar(responsiveScale * breathScale);
 
-    // 3. Full Viewport Mouse Tracking & Rotation Limits (±20° Horiz, ±10° Vert)
-    const MAX_ROT_Y = (20 * Math.PI) / 180; // ±20 degrees
-    const MAX_ROT_X = (10 * Math.PI) / 180; // ±10 degrees
+    // 5. Full Viewport Mouse Tracking & Rotation Limits (±20° Horiz, ±10° Vert)
+    const MAX_ROT_Y = (20 * Math.PI) / 180;
+    const MAX_ROT_X = (10 * Math.PI) / 180;
 
     const now = Date.now();
     const isIdle = !mouseRef.current.hasMoved || (now - mouseRef.current.lastMove > 2000);
@@ -231,9 +280,9 @@ const Robot = memo(function Robot({ onLoad, onReady, isReady, responsiveScale, m
 
     if (Math.abs(currentRotY - targetRotY) > 0.001 || Math.abs(currentRotX - targetRotX) > 0.001) {
       // Smooth lerp damping (no instant snapping)
-      const lerpFactor = Math.min(1, delta * 4.5);
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(currentRotY, targetRotY, lerpFactor);
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(currentRotX, targetRotX, lerpFactor);
+      const lerpFactorRot = Math.min(1, delta * 4.5);
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(currentRotY, targetRotY, lerpFactorRot);
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(currentRotX, targetRotX, lerpFactorRot);
     } else {
       groupRef.current.rotation.y = targetRotY;
       groupRef.current.rotation.x = targetRotX;
@@ -248,6 +297,7 @@ const Robot = memo(function Robot({ onLoad, onReady, isReady, responsiveScale, m
 });
 
 export default function RobotModel({ onLoad }) {
+  const { theme } = useTheme();
   const containerRef = useRef(null);
   const [scale, setScale] = useState(1.0);
   const [isInView, setIsInView] = useState(true);
@@ -360,13 +410,29 @@ export default function RobotModel({ onLoad }) {
         {/* Studio Lighting Setup */}
         <ambientLight intensity={0.6} color="#ffffff" />
         <directionalLight position={[3, 5, 4]} intensity={1.6} color="#ffffff" />
-        <directionalLight position={[5, 4, 2]} intensity={2.8} color="#00d2ff" />
+        <directionalLight position={[5, 4, 2]} intensity={2.8} color={
+          theme === 'blue' ? '#00d2ff' :
+          theme === 'monochrome' ? '#ffffff' :
+          theme === 'pink' ? '#ec4899' :
+          theme === 'purple' ? '#a855f7' :
+          theme === 'orange' ? '#f97316' :
+          theme === 'red' ? '#ef4444' :
+          theme === 'green' ? '#22c55e' : '#00d2ff'
+        } />
         <directionalLight position={[-5, 3, 2]} intensity={2.0} color="#a855f7" />
         <directionalLight position={[0, 6, 0]} intensity={1.0} color="#ffffff" />
-        <pointLight position={[0, -1, 1.5]} intensity={1.5} color="#00d2ff" />
+        <pointLight position={[0, -1, 1.5]} intensity={1.5} color={
+          theme === 'blue' ? '#00d2ff' :
+          theme === 'monochrome' ? '#ffffff' :
+          theme === 'pink' ? '#ec4899' :
+          theme === 'purple' ? '#a855f7' :
+          theme === 'orange' ? '#f97316' :
+          theme === 'red' ? '#ef4444' :
+          theme === 'green' ? '#22c55e' : '#00d2ff'
+        } />
 
         <Suspense fallback={null}>
-          <Robot onLoad={null} onReady={() => setIsReady(true)} isReady={isReady} responsiveScale={scale} mouseRef={mouseRef} />
+          <Robot onLoad={null} onReady={() => setIsReady(true)} isReady={isReady} responsiveScale={scale} mouseRef={mouseRef} theme={theme} />
         </Suspense>
       </Canvas>
     </div>

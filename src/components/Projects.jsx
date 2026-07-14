@@ -77,14 +77,14 @@ function VisitButton({ url }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group relative inline-flex items-center justify-between w-[190px] h-[48px] pl-5 pr-2 rounded-full bg-gradient-to-r from-blue-950/80 via-zinc-900/90 to-cyan-950/80 border border-cyan-500/40 hover:border-cyan-400/80 backdrop-blur-md shadow-[0_0_15px_rgba(37,99,235,0.2)] hover:shadow-[0_0_25px_rgba(6,182,212,0.45)] hover:-translate-y-0.5 transition-all duration-300 select-none cursor-pointer overflow-hidden z-10 animate-pulse hover:animate-none"
+      className="group relative inline-flex items-center justify-between w-[190px] h-[48px] pl-5 pr-2 rounded-full bg-gradient-to-r from-blue-950/80 via-zinc-900/90 to-cyan-950/80 border border-[rgba(var(--accent-rgb),0.4)] hover:border-cyan-400/80 backdrop-blur-md shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)] hover:shadow-[0_0_25px_rgba(6,182,212,0.45)] hover:-translate-y-0.5 transition-all duration-300 select-none cursor-pointer overflow-hidden z-10 animate-pulse hover:animate-none"
       data-interactive="true"
     >
       <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600/10 via-cyan-500/15 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       <span className="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-white group-hover:text-cyan-300 transition-colors duration-300 z-10">
         VISIT WEBSITE
       </span>
-      <div className="relative w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/30 border border-cyan-400/40 group-hover:border-cyan-300 group-hover:bg-cyan-400 group-hover:shadow-[0_0_12px_rgba(6,182,212,0.8)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 z-10">
+      <div className="relative w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/30 border border-[rgba(var(--accent-rgb),0.4)] group-hover:border-cyan-300 group-hover:bg-cyan-400 group-hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.8)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 z-10">
         <svg className="w-3 h-3 text-cyan-300 group-hover:text-black transition-all duration-300 transform group-hover:rotate-[15deg]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
         </svg>
@@ -119,12 +119,12 @@ function BrowserMockup({ project }) {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(6,182,212,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(6,182,212,0.02)_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30 pointer-events-none" />
 
       {/* Floating Browser Mockup Window */}
-      <div className="relative w-full aspect-[16/10] bg-[#0c0c0f] border border-zinc-800/60 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_30px_rgba(6,182,212,0.03)] hover:shadow-[0_30px_60px_rgba(0,0,0,0.6),0_0_40px_rgba(6,182,212,0.15)] transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] flex flex-col group overflow-hidden select-none animate-float-mockup cursor-default">
+      <div className="relative w-full aspect-[16/10] bg-[var(--card-bg-alt)] border border-[var(--border-color)] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_30px_rgba(var(--accent-rgb),0.03)] hover:shadow-[0_30px_60px_rgba(0,0,0,0.6),0_0_40px_rgba(var(--accent-rgb),0.15)] transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] flex flex-col group overflow-hidden select-none animate-float-mockup cursor-default">
         {/* Soft animated diagonal reflection overlay */}
         <div className="absolute inset-y-0 -left-[100%] w-1/2 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent pointer-events-none z-30 animate-glass-sheen" />
 
         {/* 1. macOS Browser Top Bar */}
-        <div className="h-10 md:h-11 bg-[#09090b] border-b border-zinc-800/80 px-4 flex items-center justify-between flex-none relative z-20 select-none">
+        <div className="h-10 md:h-11 bg-[var(--bg-dark)] border-b border-[var(--border-color)] px-4 flex items-center justify-between flex-none relative z-20 select-none">
           {/* Traffic lights */}
           <div className="flex items-center gap-1.5 md:gap-2">
             <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-[#ff5f56]/90" />
@@ -191,7 +191,7 @@ export default function Projects() {
     <section 
       ref={sectionRef} 
       id="projects" 
-      className="relative bg-[#09090a] w-full select-none pb-0"
+      className="relative bg-[var(--bg-dark)] w-full select-none pb-0"
     >
       {/* Style block for floating and glass reflection animations */}
       <style>{`
@@ -226,7 +226,7 @@ export default function Projects() {
       {/* Changing to "relative" allows the header to naturally scroll up and pass *behind* the sticky stack */}
       <div 
         ref={headerRef}
-        className="relative w-full z-5 bg-[#09090a] pt-6 pb-2 px-8 lg:px-16"
+        className="relative w-full z-5 bg-[var(--bg-dark)] pt-6 pb-2 px-8 lg:px-16"
       >
         <SectionHeader
           number="03"
@@ -241,7 +241,7 @@ export default function Projects() {
           <div
             key={project.id}
             ref={addToCardRefs}
-            className="sticky top-[120px] w-[94vw] h-[80vh] bg-[#0f0f12] border border-cyan-500/20 rounded-3xl shadow-[0_0_50px_rgba(6,182,212,0.15)] overflow-hidden flex flex-col justify-between mx-auto"
+            className="sticky top-[120px] w-[94vw] h-[80vh] bg-[var(--card-bg-alt)] border border-[rgba(var(--accent-rgb),0.2)] rounded-3xl shadow-[0_0_50px_rgba(var(--accent-rgb),0.15)] overflow-hidden flex flex-col justify-between mx-auto"
             style={{
               zIndex: idx + 10,
               marginBottom: '40vh', // Critical: Apply exact same margin-bottom to ALL cards (including last card)
@@ -277,7 +277,7 @@ export default function Projects() {
                   {/* Tech Badges */}
                   <div className="flex flex-wrap gap-2 pt-1">
                     {project.technologies.map((t, idx) => (
-                      <span key={idx} className="font-mono text-[9px] md:text-[10px] text-cyan-400/80 bg-cyan-950/20 border border-cyan-500/10 px-2 py-0.5 rounded uppercase">
+                      <span key={idx} className="font-mono text-[9px] md:text-[10px] text-cyan-400/80 bg-cyan-950/20 border border-[rgba(var(--accent-rgb),0.1)] px-2 py-0.5 rounded uppercase">
                         {t}
                       </span>
                     ))}
@@ -309,8 +309,8 @@ export default function Projects() {
         <div className="absolute bottom-8 inset-x-0 flex flex-col items-center justify-center text-center px-6 select-none pointer-events-none">
           <div className="flex flex-col items-center gap-4 pointer-events-auto">
             {/* Small Glowing Status Indicator */}
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/20 border border-cyan-500/30 backdrop-blur-md">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/20 border border-[rgba(var(--accent-rgb),0.3)] backdrop-blur-md">
+              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(var(--accent-rgb),0.8)]" />
               <span className="font-mono text-[9px] tracking-[0.25em] text-cyan-400 font-bold uppercase">SYSTEM STATUS</span>
             </div>
 

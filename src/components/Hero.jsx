@@ -39,10 +39,10 @@ function Hero({ showRobot }) {
   return (
     <section
       ref={heroRef}
-      className="relative min-h-screen flex flex-col justify-between pt-[110px] md:pt-24 pb-12 px-6 md:px-12 lg:px-20 bg-[#090909] text-white overflow-hidden select-none z-[1] isolate"
+      className="relative min-h-screen flex flex-col justify-between pt-[110px] md:pt-24 pb-12 px-6 md:px-12 lg:px-20 bg-[var(--bg-dark)] text-[var(--text-main)] overflow-hidden select-none z-[1] isolate transition-colors duration-300"
     >
       {/* Background Ambient Radial Glow */}
-      <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(30,58,138,0.1)_0%,transparent_70%)] rounded-full pointer-events-none z-0" />
+      <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.1)_0%,transparent_70%)] rounded-full pointer-events-none z-0" />
 
       {/* Main 2-Column Hero Grid (Text 45% | Hero 3D Model 55%) */}
       <div className="w-full max-w-7xl mx-auto my-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-12 lg:gap-8 items-center z-[5] relative py-8">
@@ -152,21 +152,21 @@ function Hero({ showRobot }) {
           <div className="pt-2">
             <button
               onClick={() => scrollToSection('contact')}
-              className="group relative inline-flex items-center justify-between w-[235px] h-[58px] pl-6 pr-2 rounded-full bg-gradient-to-r from-blue-950/80 via-zinc-900/90 to-cyan-950/80 border border-cyan-500/40 hover:border-cyan-400/80 backdrop-blur-xl shadow-[0_0_25px_rgba(37,99,235,0.3)] hover:shadow-[0_0_40px_rgba(6,182,212,0.55)] hover:-translate-y-1 transition-all duration-300 ease-out select-none cursor-pointer overflow-hidden"
+              className="group relative inline-flex items-center justify-between w-[235px] h-[58px] pl-6 pr-2 rounded-full bg-gradient-to-r from-[rgba(var(--accent-rgb),0.12)] via-[var(--card-bg-alt)]/90 to-[rgba(var(--accent-rgb),0.08)] border border-[rgba(var(--accent-rgb),0.4)] hover:border-[rgba(var(--accent-rgb),0.8)] backdrop-blur-xl shadow-[0_0_calc(var(--glow-opacity)*25px)_rgba(var(--accent-rgb),calc(var(--glow-opacity)*0.3))] hover:shadow-[0_0_calc(var(--glow-opacity)*40px)_rgba(var(--accent-rgb),calc(var(--glow-opacity)*0.55))] hover:-translate-y-1 transition-all duration-300 ease-out select-none cursor-pointer overflow-hidden"
               data-interactive="true"
             >
               {/* Subtle Animated Ambient Neon Glow Overlay */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600/10 via-cyan-500/15 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[rgba(var(--accent-rgb),0.1)] via-[rgba(var(--accent-rgb),0.15)] to-[rgba(var(--accent-rgb),0.1)] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
               {/* Left Side Text */}
-              <span className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-white group-hover:text-cyan-300 transition-colors duration-300 z-10">
+              <span className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-main)] group-hover:text-[var(--accent-light)] transition-colors duration-300 z-10">
                 LET'S CONNECT
               </span>
 
               {/* Right Side Circular Action Button Container */}
-              <div className="relative w-11 h-11 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/30 border border-cyan-400/40 group-hover:border-cyan-300 group-hover:bg-cyan-400 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.8)] backdrop-blur-md flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:translate-x-0.5 z-10">
+              <div className="relative w-11 h-11 rounded-full bg-gradient-to-br from-[rgba(var(--accent-rgb),0.2)] to-[rgba(var(--accent-rgb),0.3)] border border-[rgba(var(--accent-rgb),0.4)] group-hover:border-[var(--accent-light)] group-hover:bg-[var(--accent-color)] group-hover:shadow-[0_0_calc(var(--glow-opacity)*20px)_rgba(var(--accent-rgb),var(--glow-opacity))] backdrop-blur-md flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:translate-x-0.5 z-10">
                 <svg
-                  className="w-4 h-4 text-cyan-300 group-hover:text-black transition-all duration-300 transform group-hover:rotate-[15deg] group-hover:translate-x-0.5"
+                  className="w-4 h-4 text-[var(--accent-light)] group-hover:text-[var(--bg-dark)] transition-all duration-300 transform group-hover:rotate-[15deg] group-hover:translate-x-0.5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -182,10 +182,10 @@ function Hero({ showRobot }) {
         {/* RIGHT SIDE: Hero 3D Avatar (small_robot.glb) (55% width -> 7 cols on lg, shifted 48px right) */}
         <div className="lg:col-span-7 relative flex items-center justify-center min-h-[340px] md:min-h-[500px] sm:min-h-[600px] lg:min-h-[700px] w-full lg:translate-x-12 -translate-y-4 md:translate-y-0">
           {/* Subtle Electric Blue Ambient Radial Glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180px] h-[180px] md:w-[350px] md:h-[350px] sm:w-[520px] sm:h-[520px] bg-[radial-gradient(circle,rgba(6,182,212,0.08)_0%,transparent_70%)] md:bg-[radial-gradient(circle,rgba(6,182,212,0.18)_0%,rgba(37,99,235,0.09)_50%,transparent_70%)] pointer-events-none z-0" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180px] h-[180px] md:w-[350px] md:h-[350px] sm:w-[520px] sm:h-[520px] bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.08)_0%,transparent_70%)] md:bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.18)_0%,rgba(var(--accent-rgb),0.09)_50%,transparent_70%)] pointer-events-none z-0" />
 
           {/* Glowing Circular Platform Pedestal Beneath Model */}
-          <div className="absolute bottom-[72px] md:bottom-28 sm:bottom-36 left-1/2 -translate-x-1/2 w-[150px] md:w-[300px] sm:w-[440px] h-[30px] md:h-[65px] sm:h-[95px] rounded-[100%] bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.18)_0%,transparent_80%)] md:bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.35)_0%,rgba(37,99,235,0.2)_50%,transparent_80%)] border border-cyan-500/10 md:border-cyan-400/30 blur-[1px] md:blur-[2px] shadow-[0_0_15px_rgba(6,182,212,0.15)] md:shadow-[0_0_50px_rgba(6,182,212,0.4)] pointer-events-none animate-pulse z-0" />
+          <div className="absolute bottom-[72px] md:bottom-28 sm:bottom-36 left-1/2 -translate-x-1/2 w-[150px] md:w-[300px] sm:w-[440px] h-[30px] md:h-[65px] sm:h-[95px] rounded-[100%] bg-[radial-gradient(ellipse_at_center,rgba(var(--accent-rgb),0.18)_0%,transparent_80%)] md:bg-[radial-gradient(ellipse_at_center,rgba(var(--accent-rgb),0.35)_0%,rgba(var(--accent-rgb),0.2)_50%,transparent_80%)] border border-[rgba(var(--accent-rgb),0.1)] md:border-[rgba(var(--accent-rgb),0.3)] blur-[1px] md:blur-[2px] shadow-[0_0_calc(var(--glow-opacity)*15px)_rgba(var(--accent-rgb),calc(var(--glow-opacity)*0.15))] md:shadow-[0_0_calc(var(--glow-opacity)*50px)_rgba(var(--accent-rgb),calc(var(--glow-opacity)*0.4))] pointer-events-none animate-pulse z-0" />
 
           {/* Render ONLY the NEW Hero GLB Avatar (/models/small_robot.glb) */}
           <div className="relative z-10 w-full h-full flex items-center justify-center">

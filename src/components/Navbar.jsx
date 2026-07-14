@@ -297,15 +297,15 @@ function Navbar({ activeSection, handleNavClick }) {
                   transition: { type: 'spring', stiffness: 300, damping: 20 }
                 }
               }}
-              className={`relative w-[58px] h-[58px] rounded-full bg-[#090909]/95 border-[1.5px] backdrop-blur-md flex items-center justify-center transition-all duration-300 cursor-pointer overflow-hidden group flex-shrink-0 ${
+              className={`relative w-[58px] h-[58px] rounded-full bg-[var(--bg-dark)]/95 border-[1.5px] backdrop-blur-md flex items-center justify-center transition-all duration-300 cursor-pointer overflow-hidden group flex-shrink-0 ${
                 clickedLogo === 'emblem'
-                  ? 'border-cyan-400 shadow-[0_0_30px_rgba(6,182,212,0.8),_inset_0_1.5px_1.5px_rgba(255,255,255,0.2)]'
-                  : 'border-blue-500/80 shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.15),_0_8px_20px_rgba(0,0,0,0.4),_0_0_12px_rgba(59,130,246,0.2)] hover:border-blue-400 hover:shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.2),_0_8px_20px_rgba(0,0,0,0.5),_0_0_20px_rgba(6,182,212,0.4)]'
+                  ? 'border-[var(--accent-color)] shadow-[0_0_30px_rgba(var(--accent-rgb),0.8),_inset_0_1.5px_1.5px_rgba(255,255,255,0.2)]'
+                  : 'border-[rgba(var(--accent-rgb),0.8)] shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.15),_0_8px_20px_rgba(0,0,0,0.4),_0_0_12px_rgba(var(--accent-rgb),0.2)] hover:border-[var(--accent-light)] hover:shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.2),_0_8px_20px_rgba(0,0,0,0.5),_0_0_20px_rgba(var(--accent-rgb),0.4)]'
               }`}
               style={{ willChange: 'transform' }}
             >
               {/* Subtle purple/cyan gradient glow around edge */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500/10 to-cyan-500/10 opacity-30 group-hover:opacity-75 transition-opacity duration-300 pointer-events-none" />
+              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[rgba(var(--accent-rgb),0.05)] to-[rgba(var(--accent-rgb),0.1)] opacity-30 group-hover:opacity-75 transition-opacity duration-300 pointer-events-none" />
 
               {/* Small top inner highlight */}
               <div className="absolute top-[1px] left-1/2 -translate-x-1/2 w-[80%] h-[1px] bg-white/20 pointer-events-none" />
@@ -318,7 +318,7 @@ function Navbar({ activeSection, handleNavClick }) {
                   rest: { rotate: 0, transition: { type: 'spring', stiffness: 200, damping: 15 } }
                 }}
                 initial="rest"
-                className="w-[62%] h-[62%] object-contain mix-blend-screen select-none pointer-events-none filter drop-shadow-[0_0_6px_rgba(6,182,212,0.7)]"
+                className="w-[62%] h-[62%] object-contain mix-blend-screen select-none pointer-events-none filter drop-shadow-[0_0_6px_var(--accent-color)]"
               />
             </motion.div>
 
@@ -332,7 +332,7 @@ function Navbar({ activeSection, handleNavClick }) {
             >
               <div
                 className={`relative p-[1.5px] rounded-full animate-neon-border w-[125px] h-[58px] transition-all duration-500 ease-in-out shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.85),_inset_0_-1px_1px_rgba(0,0,0,0.03),_0_12px_30px_-10px_rgba(0,0,0,0.25)] ${
-                  clickedLogo === 'kavya' ? 'shadow-[0_0_30px_rgba(6,182,212,0.8)] border-cyan-400' : ''
+                  clickedLogo === 'kavya' ? 'shadow-[0_0_calc(var(--glow-opacity)*30px)_rgba(var(--accent-rgb),calc(var(--glow-opacity)*0.8))] border-[var(--accent-color)]' : ''
                 }`}
               >
                 <div className="absolute inset-0 rounded-full animate-neon-border blur-[8px] opacity-15 pointer-events-none" />
@@ -666,7 +666,7 @@ function Navbar({ activeSection, handleNavClick }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 30 }}
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-              className="bg-zinc-900/90 border border-zinc-800/80 w-full max-w-5xl h-[88vh] rounded-[24px] flex flex-col shadow-[0_30px_70px_rgba(0,0,0,0.5)] overflow-hidden"
+              className="bg-zinc-900/90 border border-[var(--border-color)] w-full max-w-5xl h-[88vh] rounded-[24px] flex flex-col shadow-[0_30px_70px_rgba(0,0,0,0.5)] overflow-hidden"
             >
               {/* Toolbar Header (Hides in window printing) */}
               <div className="h-16 border-b border-zinc-800/75 px-6 flex items-center justify-between bg-zinc-950/60 backdrop-blur-[10px] modal-toolbar">
@@ -769,7 +769,7 @@ function Navbar({ activeSection, handleNavClick }) {
                     
                     <div>
                       {/* CV Header details */}
-                      <div className="border-b-2 border-zinc-900 pb-5 mb-8">
+                      <div className="border-b-2 border-[var(--border-color)] pb-5 mb-8">
                         <h1 className="text-4xl font-display font-black tracking-tight text-zinc-900 leading-none">
                           KAVYA MAKHAN
                         </h1>

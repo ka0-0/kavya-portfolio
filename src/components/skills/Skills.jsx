@@ -92,8 +92,8 @@ function SkillPill({ name, category, registerPill, unregisterPill, prefersReduce
         };
       default:
         return {
-          borderGlow: 'hover:border-cyan-500/30 hover:shadow-[0_0_12px_rgba(6,182,212,0.15)]',
-          draggingGlow: 'shadow-[0_0_20px_rgba(6,182,212,0.4)] border-cyan-400/40',
+          borderGlow: 'hover:border-[rgba(var(--accent-rgb),0.3)] hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.15)]',
+          draggingGlow: 'shadow-[0_0_20px_rgba(var(--accent-rgb),0.4)] border-[rgba(var(--accent-rgb),0.4)]',
           textColor: 'hover:text-cyan-300'
         };
     }
@@ -170,7 +170,7 @@ function SkillPill({ name, category, registerPill, unregisterPill, prefersReduce
                       transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] }
                     }
               }
-              className={`px-4 py-2 text-xs md:text-sm text-zinc-400 bg-[#0c0c0e]/50 border border-white/5 rounded-full backdrop-blur-md transition-all duration-300 font-sans-body ease-out ${
+              className={`px-4 py-2 text-xs md:text-sm text-zinc-400 bg-[var(--card-bg-alt)]/50 border border-[var(--border-color)] rounded-full backdrop-blur-md transition-all duration-300 font-sans-body ease-out ${
                 isDraggingState
                   ? theme.draggingGlow
                   : `${theme.borderGlow} ${theme.textColor}`
@@ -254,7 +254,7 @@ const OrbitIcon = React.memo(function OrbitIcon({ skill, index, total, radius, r
           borderColor: isHovered ? skill.color : 'rgba(255, 255, 255, 0.08)',
           color: isHovered ? skill.color : '#a1a1aa',
         }}
-        className="w-[38px] h-[38px] md:w-[42px] md:h-[42px] lg:w-[46px] lg:h-[46px] rounded-full bg-[#070709]/95 border backdrop-blur-md flex items-center justify-center cursor-pointer transition-colors duration-300"
+        className="w-[38px] h-[38px] md:w-[42px] md:h-[42px] lg:w-[46px] lg:h-[46px] rounded-full bg-[var(--card-bg-alt)]/95 border backdrop-blur-md flex items-center justify-center cursor-pointer transition-colors duration-300"
       >
         <div className="w-[50%] h-[50%] flex items-center justify-center">
           <skill.icon className="w-full h-full object-contain" />
@@ -601,7 +601,7 @@ export default function Skills() {
   return (
     <section
       id="skills"
-      className="relative min-h-screen bg-[#09090c] text-white flex flex-col pt-14 pb-8 overflow-hidden select-none skills-section"
+      className="relative min-h-screen bg-[var(--bg-dark)] text-white flex flex-col pt-14 pb-8 overflow-hidden select-none skills-section"
       style={{
         contain: 'layout paint style',
       }}
@@ -629,7 +629,7 @@ export default function Skills() {
           >
             {/* Center Panel (Fixed, does not rotate but tilts) */}
             <div 
-              className="absolute w-[138px] h-[138px] md:w-[175px] md:h-[175px] lg:w-[212px] lg:h-[212px] rounded-full bg-[#070709]/95 border border-white/5 backdrop-blur-xl flex items-center justify-center z-20 transition-all duration-500 ease-out overflow-hidden"
+              className="absolute w-[138px] h-[138px] md:w-[175px] md:h-[175px] lg:w-[212px] lg:h-[212px] rounded-full bg-[var(--card-bg-alt)]/95 border border-[var(--border-color)] backdrop-blur-xl flex items-center justify-center z-20 transition-all duration-500 ease-out overflow-hidden"
               style={{
                 transform: 'translateZ(35px)',
                 boxShadow: `0 0 45px ${activeSkill.color}15, inset 0 0 25px ${activeSkill.color}05`,
@@ -700,10 +700,10 @@ export default function Skills() {
               className="absolute w-full h-full rounded-full flex items-center justify-center pointer-events-none"
             >
               {/* Outer glowing ring */}
-              <div className="absolute w-[86%] h-[86%] rounded-full border border-white/5 shadow-[0_0_50px_rgba(255,255,255,0.01)]" />
+              <div className="absolute w-[86%] h-[86%] rounded-full border border-[var(--border-color)] shadow-[0_0_50px_rgba(255,255,255,0.01)]" />
               
               {/* Inner dashed ring */}
-              <div className="absolute w-[60%] h-[60%] rounded-full border border-dashed border-white/5 opacity-40" />
+              <div className="absolute w-[60%] h-[60%] rounded-full border border-dashed border-[var(--border-color)] opacity-40" />
               
               {/* Render Orbit Icons */}
               {orbitSkills.map((skill, index) => (
@@ -736,7 +736,7 @@ export default function Skills() {
           onMouseMove={handleMouseMove}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
-          className="relative rounded-3xl overflow-hidden bg-[#0a0a0c]/60 border border-white/5 backdrop-blur-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full lg:max-w-[560px] xl:max-w-[600px] grid grid-cols-1 md:grid-cols-2 shrink-0 self-center"
+          className="relative rounded-3xl overflow-hidden bg-[var(--card-bg)]/60 border border-[var(--border-color)] backdrop-blur-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full lg:max-w-[560px] xl:max-w-[600px] grid grid-cols-1 md:grid-cols-2 shrink-0 self-center"
         >
           {/* Subtle background glow mapping */}
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.04),transparent_60%)] pointer-events-none" />
@@ -754,9 +754,9 @@ export default function Skills() {
           {categories.map((cat, idx) => {
             // Soft inner borders for perfectly equal quadrants
             let borderClass = '';
-            if (idx === 0) borderClass = 'border-b md:border-r border-white/5';
-            else if (idx === 1) borderClass = 'border-b border-white/5';
-            else if (idx === 2) borderClass = 'border-b md:border-b-0 md:border-r border-white/5';
+            if (idx === 0) borderClass = 'border-b md:border-r border-[var(--border-color)]';
+            else if (idx === 1) borderClass = 'border-b border-[var(--border-color)]';
+            else if (idx === 2) borderClass = 'border-b md:border-b-0 md:border-r border-[var(--border-color)]';
             else if (idx === 3) borderClass = '';
 
             return (

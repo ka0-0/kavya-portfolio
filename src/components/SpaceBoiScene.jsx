@@ -98,6 +98,7 @@ function SpaceBoiScene() {
   const [isInView, setIsInView] = useState(false);
   const [modelRadius, setModelRadius] = useState(0);
   const [downloadState, setDownloadState] = useState('idle');
+  const [animate, setAnimate] = useState(false);
 
   const handleDownload = (e) => {
     e.preventDefault();
@@ -109,6 +110,20 @@ function SpaceBoiScene() {
       setDownloadState('completed');
       setTimeout(() => setDownloadState('idle'), 1500);
     }, 600);
+  };
+
+  const handleBackToTop = (e) => {
+    e.preventDefault();
+    if (window.lenis) {
+      window.lenis.scrollTo('#home', {
+        duration: 1.5,
+      });
+    } else {
+      const heroSection = document.getElementById('home');
+      if (heroSection) {
+        heroSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
   };
 
   // Viewport Intersection Observer to freeze Canvas rendering when out of view
@@ -125,6 +140,12 @@ function SpaceBoiScene() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    if (isInView) {
+      setAnimate(true);
+    }
+  }, [isInView]);
+
   const glSettings = useMemo(
     () => ({
       alpha: true,
@@ -138,12 +159,12 @@ function SpaceBoiScene() {
   return (
     <section
       id="resume"
-      className="relative w-full bg-[#000000] flex flex-col items-center justify-center pt-20 md:pt-28 pb-0 overflow-hidden z-10 select-none"
+      className="relative w-full bg-[var(--bg-dark)] flex flex-col items-center justify-center pt-20 md:pt-28 pb-0 overflow-hidden z-10 select-none transition-colors duration-300"
     >
       {/* Background Ambient Blue Radial Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(37,99,235,0.20)_0%,rgba(29,78,216,0.05)_50%,transparent_75%)] pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(var(--accent-rgb),0.20)_0%,rgba(var(--accent-rgb),0.05)_50%,transparent_75%)] pointer-events-none z-0" />
 
-      <div ref={containerRef} className="w-full h-[420px] sm:h-[550px] md:h-[650px] lg:h-[800px] relative z-10">
+      <div ref={containerRef} className="w-full h-[650px] sm:h-[750px] md:h-[850px] lg:h-[100vh] relative z-10">
         <Canvas
           frameloop={isInView ? "always" : "never"}
           dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 2, 2)]}
@@ -169,27 +190,180 @@ function SpaceBoiScene() {
           <CameraFitter modelRadius={modelRadius} />
         </Canvas>
 
+        {/* Style block for cinematic transitions and animation timing sequence */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes finalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes finalFadeUp {
+            from {
+              opacity: 0;
+              transform: translateY(15px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          .final-animate-fade-in {
+            opacity: 0;
+            will-change: opacity;
+          }
+          .final-animate-fade-up {
+            opacity: 0;
+            transform: translateY(15px);
+            will-change: opacity, transform;
+          }
+          .animate-sequence .final-animate-fade-in {
+            animation: finalFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          }
+          .animate-sequence .final-animate-fade-up {
+            animation: finalFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          }
+          .delay-step-1 { animation-delay: 0.1s; }
+          .delay-step-2 { animation-delay: 0.4s; }
+          .delay-step-3 { animation-delay: 0.7s; }
+          .delay-step-4 { animation-delay: 1.0s; }
+          .delay-step-5 { animation-delay: 1.3s; }
+          .delay-step-6 { animation-delay: 1.6s; }
+          .delay-step-7 { animation-delay: 1.9s; }
+          .delay-step-8 { animation-delay: 2.2s; }
+          .delay-step-9 { animation-delay: 2.5s; }
+        `}} />
+
         {/* HTML Content Overlay */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none px-6">
-          <div className="text-center space-y-4 pointer-events-auto">
-            <h2 className="text-sm font-mono tracking-[0.2em] text-cyan-400 uppercase">06 / CURRICULUM VITAE</h2>
-            <p className="text-4xl sm:text-5xl font-display font-black tracking-tight text-white uppercase">
-              RESUME ARCHIVE
+        <div className={`absolute inset-0 flex flex-col justify-between items-center z-20 pointer-events-none px-6 pt-12 md:pt-0 pb-16 md:pb-[33vh] md:-translate-y-[10vh] ${animate ? 'animate-sequence' : ''}`}>
+          
+          {/* Top Block: Status Indicators, Heading, and Subtitle */}
+          <div className="flex flex-col items-center text-center pointer-events-auto w-full">
+            {/* Status Indicators */}
+            <div className="flex flex-col items-center w-full">
+              <span className="final-animate-fade-in delay-step-1 text-[10px] md:text-xs font-mono tracking-[0.3em] text-cyan-400 font-bold uppercase drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">
+                SYSTEM STATUS
+              </span>
+              
+              {/* gap 20px */}
+              <div className="h-[20px]" />
+              
+              <div className="text-[10px] md:text-xs font-mono text-zinc-400 space-y-1 text-center font-medium leading-relaxed">
+                <div className="final-animate-fade-in delay-step-2">
+                  Portfolio ........ COMPLETE ✓
+                </div>
+                <div className="final-animate-fade-in delay-step-3">
+                  Connection ...... ESTABLISHED ✓
+                </div>
+              </div>
+            </div>
+
+            {/* gap 36px */}
+            <div className="h-[36px]" />
+
+            {/* Heading */}
+            <h2 className="final-animate-fade-up delay-step-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tight text-white uppercase leading-[1.1] w-full">
+              THANK YOU<br />
+              FOR EXPLORING<br />
+              MY UNIVERSE
+            </h2>
+
+            {/* gap 24px */}
+            <div className="h-[24px]" />
+
+            {/* Subtitle */}
+            <p className="final-animate-fade-in delay-step-5 text-[10px] sm:text-xs font-mono tracking-[0.2em] text-cyan-400/90 font-bold uppercase drop-shadow-[0_0_6px_rgba(34,211,238,0.2)]">
+              Mechanical Engineer × AI Developer
             </p>
-            <p className="text-zinc-500 max-w-xl mx-auto text-sm leading-relaxed tracking-wide font-sans mb-6">
-              Download my comprehensive professional curriculum vitae outlining complete academic records and technical project logs.
-            </p>
-            <a
-              href="#"
-              onClick={handleDownload}
-              className="btn-gradient-pill inline-flex items-center space-x-2 px-8 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-lg cursor-pointer select-none"
-              data-interactive="true"
-            >
-              {downloadState === 'idle' && 'DOWNLOAD RESUME PDF'}
-              {downloadState === 'downloading' && 'DOWNLOADING...'}
-              {downloadState === 'completed' && 'DOWNLOAD COMPLETED'}
-            </a>
           </div>
+
+          {/* Flexible Spacer for the 3D Character Silhouette (visually divides the layout) */}
+          <div className="flex-grow min-h-[40px] md:min-h-[120px] lg:min-h-[180px]" />
+
+          {/* Bottom Block: Body Text, Button, Social Links, and Footer */}
+          <div className="flex flex-col items-center text-center pointer-events-auto w-full max-w-2xl">
+            {/* Body Text */}
+            <p className="final-animate-fade-in delay-step-6 text-zinc-200 text-xs sm:text-sm max-w-md mx-auto leading-relaxed tracking-wide font-sans">
+              Building intelligent products,<br className="hidden sm:inline" /> one idea at a time.<br />
+              Let's build something together.
+            </p>
+
+            {/* gap 36px */}
+            <div className="h-[36px]" />
+
+            {/* Primary Button */}
+            <div className="final-animate-fade-up delay-step-7">
+              <a
+                href="#"
+                onClick={handleDownload}
+                className="inline-flex items-center justify-center px-8 py-3 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white border border-[rgba(var(--accent-rgb),0.3)] hover:border-cyan-400 hover:text-cyan-300 bg-[var(--bg-dark)]/60 hover:bg-cyan-500/5 transition-all duration-300 shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)] hover:shadow-[0_0_25px_rgba(var(--accent-rgb),0.4)] cursor-pointer select-none"
+                data-interactive="true"
+              >
+                {downloadState === 'idle' && 'Download Resume'}
+                {downloadState === 'downloading' && 'Downloading...'}
+                {downloadState === 'completed' && 'Download Completed'}
+              </a>
+            </div>
+
+            {/* gap 32px */}
+            <div className="h-[32px]" />
+
+            {/* Secondary Links */}
+            <div className="final-animate-fade-in delay-step-8 flex items-center justify-center gap-4 text-[10px] sm:text-xs font-mono tracking-widest text-zinc-500">
+              <a 
+                href="https://github.com/ka0-0" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-zinc-400 hover:text-cyan-400 transition-colors duration-300"
+                data-interactive="true"
+              >
+                GitHub
+              </a>
+              <span className="text-zinc-700 select-none">•</span>
+              <a 
+                href="https://www.linkedin.com/in/kavya-makhan-800451370/" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-zinc-400 hover:text-cyan-400 transition-colors duration-300"
+                data-interactive="true"
+              >
+                LinkedIn
+              </a>
+              <span className="text-zinc-700 select-none">•</span>
+              <a 
+                href="mailto:kav.1609.ya@gmail.com" 
+                className="text-zinc-400 hover:text-cyan-400 transition-colors duration-300"
+                data-interactive="true"
+              >
+                Email
+              </a>
+            </div>
+
+            {/* gap 36px */}
+            <div className="h-[36px]" />
+
+            {/* Bottom: Footer */}
+            <div className="final-animate-fade-in delay-step-9 flex flex-col items-center w-full">
+              <div className="text-zinc-800 select-none text-[8px] sm:text-[10px] tracking-tight mb-4 opacity-50">
+                ────────────────────────
+              </div>
+              <div className="flex flex-col items-center text-[10px] font-mono tracking-[0.2em] text-zinc-500">
+                <span>© 2026 Kavya Makhan</span>
+                
+                {/* gap 12px */}
+                <div className="h-[12px]" />
+
+                <button
+                  onClick={handleBackToTop}
+                  className="group flex flex-col items-center gap-1 text-zinc-400 hover:text-cyan-400 transition-colors duration-300 focus:outline-none"
+                  data-interactive="true"
+                >
+                  <span className="text-sm font-bold transition-transform duration-300 group-hover:-translate-y-1">↑</span>
+                  <span className="text-[9px] uppercase tracking-[0.15em] font-semibold mt-0.5">Back to Top</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </div>
     </section>

@@ -1,0 +1,76 @@
+/* Scoped styles for the premium floating theme switch */
+.theme-toggle-container {
+  position: fixed;
+  left: 32px;
+  bottom: 32px;
+  z-index: 90;
+  pointer-events: auto;
+  width: 56px;
+  height: 56px;
+}
+
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background-color: var(--card-bg-alt); /* Dynamic card surface background */
+  border: 1.5px solid rgba(var(--accent-rgb), 0.25); /* Dynamic color border */
+  box-shadow: 0 0 calc(var(--glow-opacity) * 10px) rgba(var(--accent-rgb), calc(var(--glow-opacity) * 0.1)); /* Dynamic glow */
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  color: var(--text-main);
+  overflow: hidden;
+  position: relative;
+  transition: background-color 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+              border-color 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+              box-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Hover state styling */
+.theme-toggle-btn:hover {
+  background-color: var(--card-bg); /* Dynamic hover surface background */
+  border-color: rgba(var(--accent-rgb), 0.6); /* Dynamic hover border glow */
+  box-shadow: 0 0 calc(var(--glow-opacity) * 15px) rgba(var(--accent-rgb), calc(var(--glow-opacity) * 0.25)); /* Hover glow increase */
+}
+
+/* Focus indicator for keyboard navigation */
+.theme-toggle-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 4px;
+}
+
+/* Icon centering and styling with generous padding */
+.theme-toggle-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px; /* Refined to 18px-20px range */
+  height: 19px;
+  pointer-events: none;
+}
+
+.theme-toggle-icon {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Mobile adjustments: size reduction and safe offset spacing alignment with MobileNavbar */
+@media (max-width: 767px) {
+  .theme-toggle-container {
+    left: 16px;
+    bottom: calc(env(safe-area-inset-bottom) + 20px);
+    width: 48px;
+    height: 48px;
+  }
+
+  .theme-toggle-icon-wrapper {
+    width: 16px;
+    height: 16px;
+  }
+}

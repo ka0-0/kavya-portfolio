@@ -64,7 +64,7 @@ export default function SectionNavigator({ activeSection, handleNavClick }) {
                 onClick={(e) => handleNavClick(e, item.id)}
                 onMouseEnter={() => setHoveredId(item.id)}
                 onMouseLeave={() => setHoveredId(null)}
-                className="relative flex items-center justify-center w-[14px] h-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE] focus-visible:ring-offset-4 focus-visible:ring-offset-black rounded-full transition-shadow duration-200 cursor-pointer"
+                className="relative flex items-center justify-center w-[14px] h-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)] focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--bg-dark)] rounded-full transition-shadow duration-200 cursor-pointer"
                 aria-label={`Go to ${item.label} section`}
                 aria-current={isActive ? 'true' : 'false'}
               >
@@ -77,10 +77,10 @@ export default function SectionNavigator({ activeSection, handleNavClick }) {
                           scale: 1,
                           width: 12,
                           height: 12,
-                          backgroundColor: '#22D3EE',
+                          backgroundColor: 'var(--accent-color)',
                           opacity: 1,
                           boxShadow:
-                            '0 0 6px rgba(34, 211, 238, 0.6), 0 0 18px rgba(34, 211, 238, 0.25)',
+                            '0 0 6px rgba(var(--accent-rgb), 0.6), 0 0 18px rgba(var(--accent-rgb), 0.25)',
                         }
                       : {
                           scale: 1,

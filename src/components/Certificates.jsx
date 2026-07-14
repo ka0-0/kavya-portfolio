@@ -309,7 +309,7 @@ function CertificateViewerModal({ selectedCert, onClose }) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 30 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="bg-zinc-900/90 border border-zinc-800/80 w-full max-w-5xl h-[88dvh] sm:h-[88vh] rounded-[24px] flex flex-col shadow-[0_30px_70px_rgba(0,0,0,0.5)] overflow-hidden"
+            className="bg-zinc-900/90 border border-[var(--border-color)] w-full max-w-5xl h-[88dvh] sm:h-[88vh] rounded-[24px] flex flex-col shadow-[0_30px_70px_rgba(0,0,0,0.5)] overflow-hidden"
           >
             {/* Toolbar Header matching Resume Viewer design */}
             <div className="h-16 border-b border-zinc-800/75 px-4 sm:px-6 flex items-center justify-between bg-zinc-950/60 backdrop-blur-[10px] modal-toolbar">
@@ -460,7 +460,7 @@ function CylinderItem({ cert, i, activeIdx, radius, angleStep, activeIndex, hand
         style={{
           opacity: dotOpacity,
         }}
-        className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] shrink-0"
+        className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(var(--accent-rgb),0.8)] shrink-0"
       />
       <span className="font-display text-xs sm:text-sm md:text-base tracking-wider uppercase">
         {cert.cylinderTitle}
@@ -622,7 +622,7 @@ export default function Certificates() {
     <section
       ref={sectionRef}
       id="certificates"
-      className="relative w-full bg-[#09090b] border-t border-zinc-900 overflow-hidden z-20 select-none"
+      className="relative w-full bg-[var(--bg-dark)] border-t border-[var(--border-color)] overflow-hidden z-20 select-none"
     >
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
@@ -679,7 +679,7 @@ export default function Certificates() {
               </span>
 
               <div className="flex-1 flex items-center justify-center relative">
-                <div className="w-full h-[1px] bg-gradient-to-r from-cyan-500/20 via-cyan-400/60 to-cyan-500/20 shadow-[0_0_8px_rgba(6,182,212,0.4)]" />
+                <div className="w-full h-[1px] bg-gradient-to-r from-cyan-500/20 via-cyan-400/60 to-cyan-500/20 shadow-[0_0_8px_rgba(var(--accent-rgb),0.4)]" />
                 <motion.div
                   style={{ left: timelineDotLeft }}
                   className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.9)] border border-cyan-300/90 pointer-events-none z-10"
@@ -709,7 +709,7 @@ export default function Certificates() {
       {/* 2. Pinned Interactive Display: Centers hero certificate vertically in viewport & pins */}
       <div
         ref={pinContainerRef}
-        className="w-full h-screen relative flex items-center justify-center overflow-hidden bg-[#09090b]"
+        className="w-full h-screen relative flex items-center justify-center overflow-hidden bg-[var(--bg-dark)]"
       >
         {/* Blueprint grid and radial glow */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(6,182,212,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(6,182,212,0.02)_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30 pointer-events-none" />

@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback, Suspense, lazy } from 'react';
 import LoadingScreen from './components/LoadingScreen';
 import CustomCursor from './components/CustomCursor';
+import ThemeToggle from './components/ThemeToggle';
 import Navbar from './components/Navbar';
 import SectionNavigator from './components/SectionNavigator';
+import { ThemeProvider } from './components/ThemeContext';
 
 // Lazy-load mobile navigation to avoid increasing desktop bundle size or affecting desktop performance
 const MobileNavbar = lazy(() => import('./components/MobileNavbar'));
@@ -285,7 +287,7 @@ export default function App() {
   }, [isTransitionComplete]);
 
   return (
-    <>
+    <ThemeProvider>
       {isLoading && (
         <LoadingScreen
           onStartTransition={() => setIsPortfolioVisible(true)}
@@ -297,8 +299,9 @@ export default function App() {
       )}
 
       {isPortfolioVisible && (
-        <div className="relative min-h-screen bg-[#090909] text-white selection:bg-blue-600 selection:text-white font-sans overflow-x-clip">
+        <div className="relative min-h-screen bg-[var(--bg-dark)] text-[var(--text-main)] selection:bg-[var(--accent-color)] selection:text-black font-sans overflow-x-clip transition-colors duration-300">
           <CustomCursor />
+          <ThemeToggle onClick={() => console.log('Theme toggle clicked!')} />
           <Navbar activeSection={activeSection} handleNavClick={handleNavClick} />
           <main>
             <section id="home">
@@ -322,7 +325,7 @@ export default function App() {
 
                 <section
                   id="contact"
-                  className="relative flex flex-col justify-center border-t border-zinc-900 bg-[#0a0a0c] overflow-hidden px-6 pt-6 md:pt-8 pb-12 md:pb-16"
+                  className="relative flex flex-col justify-center border-t border-[var(--border-color)] bg-[var(--card-bg)] overflow-hidden px-6 pt-6 md:pt-8 pb-12 md:pb-16"
                 >
                   <SectionHeader
                     number="05"
@@ -330,7 +333,7 @@ export default function App() {
                     rightLabel="COMMUNICATION NODE"
                   />
                   <ContactSection />
-                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(236,72,153,0.03),transparent_70%)]" />
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(var(--accent-rgb),0.03),transparent_70%)]" />
                 </section>
 
                 <SpaceBoiScene />
@@ -340,6 +343,6 @@ export default function App() {
           </main>
         </div>
       )}
-    </>
+    </ThemeProvider>
   );
 }

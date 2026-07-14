@@ -234,7 +234,7 @@ function MobileNavbar({ activeSection, handleNavClick }) {
                     }
               }
         }
-        className={`fixed left-1/2 -translate-x-1/2 z-[100] border border-white/5 bg-[#0c0c0e]/90 backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.5)] flex flex-col items-center justify-start overflow-hidden pointer-events-auto select-none touch-pan-y ${
+        className={`fixed left-1/2 -translate-x-1/2 z-[100] border border-[var(--border-color)] bg-[var(--card-bg-alt)]/90 backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.5)] flex flex-col items-center justify-start overflow-hidden pointer-events-auto select-none touch-pan-y ${
           !isOpen ? 'subtle-cyan-pulse' : 'pt-4 px-3 pb-3'
         }`}
       >
@@ -255,10 +255,10 @@ function MobileNavbar({ activeSection, handleNavClick }) {
                 key={item.id}
                 variants={itemVariants}
                 onClick={(e) => handleItemClick(e, item.id)}
-                className={`relative h-9 rounded-[12px] flex items-center justify-start font-sans font-bold text-[12px] uppercase tracking-[0.05em] px-4 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE] focus-visible:ring-offset-2 focus-visible:ring-offset-black cursor-pointer select-none active:scale-[0.98] w-full border border-transparent ${
+                className={`relative h-9 rounded-[12px] flex items-center justify-start font-sans font-bold text-[12px] uppercase tracking-[0.05em] px-4 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-dark)] cursor-pointer select-none active:scale-[0.98] w-full border border-transparent ${
                   isActive
-                    ? 'text-[#22CBE3] bg-[#22CBE3]/10 border-[#22CBE3]/20 font-extrabold shadow-[0_0_12px_rgba(34,203,227,0.05)]'
-                    : 'text-zinc-400 bg-transparent hover:text-white hover:bg-white/5'
+                    ? 'text-[var(--accent-color)] bg-[rgba(var(--accent-rgb),0.1)] border-[rgba(var(--accent-rgb),0.2)] font-extrabold shadow-[0_0_12px_rgba(var(--accent-rgb),0.05)]'
+                    : 'text-zinc-400 bg-transparent hover:text-[var(--text-main)] hover:bg-[rgba(var(--accent-rgb),0.05)]'
                 }`}
                 aria-label={`Go to ${item.label} section`}
                 aria-current={isActive ? 'true' : 'false'}
@@ -284,9 +284,9 @@ function MobileNavbar({ activeSection, handleNavClick }) {
             height: isOpen ? 52 : '100%',
           }}
           transition={springTransition}
-          className={`flex items-center justify-center gap-2 cursor-pointer select-none transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE] focus-visible:ring-offset-2 focus-visible:ring-offset-black flex-shrink-0 active:scale-95 rounded-full ${
+          className={`flex items-center justify-center gap-2 cursor-pointer select-none transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-dark)] flex-shrink-0 active:scale-95 rounded-full ${
             isOpen
-              ? 'bg-white/5 border border-white/5 shadow-md mt-3'
+              ? 'bg-white/5 border border-[var(--border-color)] shadow-md mt-3'
               : 'bg-transparent border-none'
           }`}
           aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}

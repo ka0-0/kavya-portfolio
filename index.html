@@ -6,6 +6,23 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('portfolio-theme-index');
+          var themes = ['blue', 'monochrome', 'pink', 'purple', 'orange', 'red', 'green'];
+          var index = 0;
+          if (saved !== null) {
+            var parsed = parseInt(saved, 10);
+            if (parsed >= 0 && parsed < themes.length) {
+              index = parsed;
+            }
+          }
+          var active = themes[index];
+          document.documentElement.setAttribute('data-theme', active);
+        } catch (e) {}
+      })();
+    </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"></script>
     <script>

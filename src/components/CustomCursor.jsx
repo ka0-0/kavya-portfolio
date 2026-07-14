@@ -22,13 +22,17 @@ const CustomCursor = memo(function CustomCursor() {
     let glowY = -100;
     let dotX = -100;
     let dotY = -100;
+    let snapTarget = null;
+    let snapX = 0;
+    let snapY = 0;
+    let snapSize = 60;
 
     let rafActive = false;
     let rafId = null;
     let lastMouseMoveTime = performance.now();
 
     // Deterministic state machine source of truth
-    let cursorMode = 'default'; // 'default' | 'hover' | 'view'
+    let cursorMode = 'default'; // 'default' | 'hover' | 'view' | 'snap'
     let leaveTimeout = null;
     let justEnteredView = false;
 
@@ -38,34 +42,50 @@ const CustomCursor = memo(function CustomCursor() {
       if (dotRef.current) {
         const isView = mode === 'view';
         const isHover = mode === 'hover';
+        const isSnap = mode === 'snap';
 
-        if (isView) {
-          dotRef.current.style.width = '72px';
-          dotRef.current.style.height = '72px';
-          dotRef.current.style.backgroundColor = 'rgba(8, 51, 68, 0.88)';
-          dotRef.current.style.borderColor = 'rgba(34, 211, 238, 0.85)';
-          dotRef.current.style.boxShadow = '0 0 32px rgba(34, 211, 238, 0.85)';
-          dotRef.current.style.backdropFilter = 'blur(12px)';
-          dotRef.current.style.webkitBackdropFilter = 'blur(12px)';
+        if (isSnap) {
+          dotRef.current.style.transition = `width 0.26s cubic-bezier(0.25, 1, 0.5, 1), height 0.26s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.26s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.26s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.26s cubic-bezier(0.25, 1, 0.5, 1)`;
+          dotRef.current.style.width = `${snapSize}px`;
+          dotRef.current.style.height = `${snapSize}px`;
+          dotRef.current.style.backgroundColor = 'transparent';
+          dotRef.current.style.borderColor = 'var(--accent-color)';
+          dotRef.current.style.boxShadow = '0 0 16px rgba(var(--accent-rgb), 0.5)';
+          dotRef.current.style.backdropFilter = 'none';
+          dotRef.current.style.webkitBackdropFilter = 'none';
           dotRef.current.style.mixBlendMode = 'normal';
-        } else if (isHover) {
-          dotRef.current.style.width = '28px';
-          dotRef.current.style.height = '28px';
-          dotRef.current.style.backgroundColor = 'rgb(255, 255, 255)';
-          dotRef.current.style.borderColor = 'transparent';
-          dotRef.current.style.boxShadow = 'none';
-          dotRef.current.style.backdropFilter = 'none';
-          dotRef.current.style.webkitBackdropFilter = 'none';
-          dotRef.current.style.mixBlendMode = 'difference';
         } else {
-          dotRef.current.style.width = '10px';
-          dotRef.current.style.height = '10px';
-          dotRef.current.style.backgroundColor = 'rgb(255, 255, 255)';
-          dotRef.current.style.borderColor = 'transparent';
-          dotRef.current.style.boxShadow = 'none';
-          dotRef.current.style.backdropFilter = 'none';
-          dotRef.current.style.webkitBackdropFilter = 'none';
-          dotRef.current.style.mixBlendMode = 'difference';
+          // Restore default transition configuration
+          dotRef.current.style.transition = transitionFast;
+
+          if (isView) {
+            dotRef.current.style.width = '72px';
+            dotRef.current.style.height = '72px';
+            dotRef.current.style.backgroundColor = 'rgba(8, 51, 68, 0.88)';
+            dotRef.current.style.borderColor = 'var(--accent-color)';
+            dotRef.current.style.boxShadow = '0 0 32px rgba(var(--accent-rgb), 0.85)';
+            dotRef.current.style.backdropFilter = 'blur(12px)';
+            dotRef.current.style.webkitBackdropFilter = 'blur(12px)';
+            dotRef.current.style.mixBlendMode = 'normal';
+          } else if (isHover) {
+            dotRef.current.style.width = '28px';
+            dotRef.current.style.height = '28px';
+            dotRef.current.style.backgroundColor = 'rgb(255, 255, 255)';
+            dotRef.current.style.borderColor = 'transparent';
+            dotRef.current.style.boxShadow = 'none';
+            dotRef.current.style.backdropFilter = 'none';
+            dotRef.current.style.webkitBackdropFilter = 'none';
+            dotRef.current.style.mixBlendMode = 'difference';
+          } else {
+            dotRef.current.style.width = '10px';
+            dotRef.current.style.height = '10px';
+            dotRef.current.style.backgroundColor = 'rgb(255, 255, 255)';
+            dotRef.current.style.borderColor = 'transparent';
+            dotRef.current.style.boxShadow = 'none';
+            dotRef.current.style.backdropFilter = 'none';
+            dotRef.current.style.webkitBackdropFilter = 'none';
+            dotRef.current.style.mixBlendMode = 'difference';
+          }
         }
       }
 
@@ -74,7 +94,10 @@ const CustomCursor = memo(function CustomCursor() {
       }
 
       if (glowRef.current) {
-        if (mode === 'view') {
+        if (mode === 'snap') {
+          glowRef.current.style.width = '120px';
+          glowRef.current.style.height = '120px';
+        } else if (mode === 'view') {
           glowRef.current.style.width = '160px';
           glowRef.current.style.height = '160px';
         } else if (mode === 'hover') {
@@ -144,7 +167,7 @@ const CustomCursor = memo(function CustomCursor() {
         dotX = mouseX;
         dotY = mouseY;
         justEnteredView = false;
-      } else if (timeSinceLastMove > 24) {
+      } else if (timeSinceLastMove > 24 && cursorMode !== 'snap') {
         glowX = mouseX;
         glowY = mouseY;
         dotX = mouseX;
@@ -155,6 +178,24 @@ const CustomCursor = memo(function CustomCursor() {
         glowY += (mouseY - glowY) * 0.50;
         dotX += (mouseX - dotX) * 0.85;
         dotY += (mouseY - dotY) * 0.85;
+      } else if (cursorMode === 'snap') {
+        if (snapTarget) {
+          const rect = snapTarget.getBoundingClientRect();
+          const currentSize = rect.width;
+          snapX = rect.left + rect.width / 2;
+          snapY = rect.top + rect.height / 2;
+          if (currentSize !== snapSize) {
+            snapSize = currentSize;
+            if (dotRef.current) {
+              dotRef.current.style.width = `${snapSize}px`;
+              dotRef.current.style.height = `${snapSize}px`;
+            }
+          }
+        }
+        glowX += (snapX - glowX) * 0.15;
+        glowY += (snapY - glowY) * 0.15;
+        dotX += (snapX - dotX) * 0.22;
+        dotY += (snapY - dotY) * 0.22;
       } else {
         glowX += (mouseX - glowX) * 0.25;
         glowY += (mouseY - glowY) * 0.25;
@@ -170,14 +211,16 @@ const CustomCursor = memo(function CustomCursor() {
         dotRef.current.style.transform = `translate3d(${dotX}px, ${dotY}px, 0) translate(-50%, -50%)`;
       }
 
-      const glowDist = Math.hypot(mouseX - glowX, mouseY - glowY);
-      const dotDist = Math.hypot(mouseX - dotX, mouseY - dotY);
+      const targetX = cursorMode === 'snap' ? snapX : mouseX;
+      const targetY = cursorMode === 'snap' ? snapY : mouseY;
+      const glowDist = Math.hypot(targetX - glowX, targetY - glowY);
+      const dotDist = Math.hypot(targetX - dotX, targetY - dotY);
 
       if (glowDist < 0.08 && dotDist < 0.08) {
-        glowX = mouseX;
-        glowY = mouseY;
-        dotX = mouseX;
-        dotY = mouseY;
+        glowX = targetX;
+        glowY = targetY;
+        dotX = targetX;
+        dotY = targetY;
 
         if (glowRef.current) {
           glowRef.current.style.transform = `translate3d(${glowX}px, ${glowY}px, 0) translate(-50%, -50%)`;
@@ -206,9 +249,9 @@ const CustomCursor = memo(function CustomCursor() {
     };
 
     const handlePointerOver = (e) => {
-      // Locking state: Ignore interactive hover calculations if in "view" mode
+      // Locking state: Ignore interactive hover calculations if in "view" or "snap" mode
       // or if we are inside a transition timeout (leaveTimeout is active)
-      if (cursorMode === 'view' || leaveTimeout) return;
+      if (cursorMode === 'view' || cursorMode === 'snap' || leaveTimeout) return;
 
       const isInteractive = e.target && e.target.closest && e.target.closest('button, a, input, [data-interactive="true"]');
       applyCursorStyles(isInteractive ? 'hover' : 'default');
@@ -229,12 +272,41 @@ const CustomCursor = memo(function CustomCursor() {
       }
     };
 
+    const handleSnapEnter = (e) => {
+      snapTarget = e.detail?.target;
+      if (snapTarget) {
+        const rect = snapTarget.getBoundingClientRect();
+        snapX = rect.left + rect.width / 2;
+        snapY = rect.top + rect.height / 2;
+        snapSize = rect.width;
+      }
+      applyCursorStyles('snap');
+      if (!rafActive) {
+        rafActive = true;
+        render();
+      }
+    };
+
+    const handleSnapLeave = () => {
+      snapTarget = null;
+      const hoveredEl = document.elementFromPoint(mouseX, mouseY);
+      const isInteractive = hoveredEl && hoveredEl.closest && hoveredEl.closest('button, a, input, [data-interactive="true"]');
+      applyCursorStyles(isInteractive ? 'hover' : 'default');
+      if (!rafActive) {
+        rafActive = true;
+        render();
+      }
+    };
+
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     window.addEventListener('pointerover', handlePointerOver, { passive: true });
     document.addEventListener('mouseleave', handleMouseLeaveDoc, { passive: true });
 
     window.addEventListener('view-cursor-enter', handleViewEnter);
     window.addEventListener('view-cursor-leave', handleViewLeave);
+
+    window.addEventListener('cursor-snap-enter', handleSnapEnter);
+    window.addEventListener('cursor-snap-leave', handleSnapLeave);
 
     rafActive = true;
     render();
@@ -246,6 +318,9 @@ const CustomCursor = memo(function CustomCursor() {
 
       window.removeEventListener('view-cursor-enter', handleViewEnter);
       window.removeEventListener('view-cursor-leave', handleViewLeave);
+
+      window.removeEventListener('cursor-snap-enter', handleSnapEnter);
+      window.removeEventListener('cursor-snap-leave', handleSnapLeave);
 
       if (leaveTimeout) clearTimeout(leaveTimeout);
       if (rafId) cancelAnimationFrame(rafId);
@@ -292,7 +367,7 @@ const CustomCursor = memo(function CustomCursor() {
       >
         <span
           ref={textRef}
-          className="font-mono text-[11px] font-black text-cyan-300 tracking-[0.25em] drop-shadow-[0_0_8px_rgba(34,211,238,0.9)] opacity-0 pointer-events-none select-none pl-0.5"
+          className="font-mono text-[11px] font-black text-cyan-300 tracking-[0.25em] drop-shadow-[0_0_8px_var(--accent-color)] opacity-0 pointer-events-none select-none pl-0.5"
           style={{
             transition: `opacity 0.14s ${cubicBezierEase}`,
             transitionDelay: '0ms',
