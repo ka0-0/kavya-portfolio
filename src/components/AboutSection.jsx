@@ -901,9 +901,8 @@ const AboutSection = React.memo(function AboutSection() {
 
   const staticBackground = useMemo(() => (
     <>
-      <div className="absolute inset-0 blueprint-grid opacity-[0.8] pointer-events-none" />
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-blue-900/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-cyan-950/5 blur-[120px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(6,182,212,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(6,182,212,0.02)_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30 pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.03),transparent_70%)] pointer-events-none z-0" />
     </>
   ), []);
 
@@ -1006,7 +1005,7 @@ const AboutSection = React.memo(function AboutSection() {
     <section
       ref={sectionRef}
       id="about"
-      className="relative w-full bg-[var(--card-bg)] text-white flex flex-col justify-center px-3 md:px-6 pt-6 md:pt-8 pb-10 md:pb-12 overflow-hidden select-none border-t border-t-zinc-900/60"
+      className="relative w-full bg-[var(--bg-dark)] text-white flex flex-col justify-center pt-6 md:pt-8 pb-10 md:pb-12 overflow-hidden select-none border-t border-[var(--border-color)]"
     >
       {staticStyleTag}
       {staticBackground}

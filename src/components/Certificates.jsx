@@ -649,7 +649,7 @@ export default function Certificates() {
       `}</style>
 
       {/* 1. Header Area: Scrolls in naturally and leaves top of screen before pin activates */}
-      <div className="w-full px-8 lg:px-16 flex-none z-10 pt-12 md:pt-16 pb-4 md:pb-6">
+      <div className="w-full flex-none z-10 pt-12 md:pt-16 pb-4 md:pb-6">
         <SectionHeader
           number="04"
           title="RECENT CERTIFICATES"

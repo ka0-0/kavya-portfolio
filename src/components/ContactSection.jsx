@@ -507,9 +507,6 @@ export default function ContactSection() {
         }
       `}</style>
 
-      {/* BACKGROUND EFFECTS: Radial glow & neural grid */}
-      <div className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-[radial-gradient(circle,rgba(6,182,212,0.05)_0%,transparent_70%)] rounded-full blur-[70px] pointer-events-none z-0 animate-slow-glow" />
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.002)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.002)_1px,transparent_1px)] bg-[size:32px_32px] opacity-15 pointer-events-none z-0" />
 
       {/* Floating particles */}
       {!shouldReduceMotion && particles.map((_, i) => (

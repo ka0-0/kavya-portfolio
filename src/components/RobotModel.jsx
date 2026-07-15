@@ -6,7 +6,7 @@ import { useTheme } from './ThemeContext';
 
 const faceColors = {
   blue: { start: '#93c5fd', end: '#60a5fa' },
-  monochrome: { start: '#f3f4f6', end: '#9ca3af' },
+  black: { start: '#f3f4f6', end: '#9ca3af' },
   pink: { start: '#fbcfe8', end: '#f472b6' },
   purple: { start: '#e9d5ff', end: '#c084fc' },
   orange: { start: '#fed7aa', end: '#fdba74' },
@@ -205,13 +205,13 @@ const Robot = memo(function Robot({ onLoad, onReady, isReady, responsiveScale, m
 
     // 1. Theme transition interpolation for material colors (250-350ms lerp timing)
     const themeColors = {
-      blue: { body: '#2563eb', ring: '#1e3a8a' },
-      monochrome: { body: '#6b7280', ring: '#1f2937' },
-      pink: { body: '#ec4899', ring: '#be185d' },
-      purple: { body: '#8b5cf6', ring: '#4c1d95' },
-      orange: { body: '#f97316', ring: '#7c2d12' },
-      red: { body: '#ef4444', ring: '#7f1d1d' },
-      green: { body: '#22c55e', ring: '#14532d' }
+      blue:   { body: '#2563eb', ring: '#1e3a8a', metalness: 0.2, roughness: 0.3 },
+      black:  { body: '#0a0a0a', ring: '#050505', metalness: 0.45, roughness: 0.38 }, // Piano Black / Obsidian
+      pink:   { body: '#ec4899', ring: '#be185d', metalness: 0.2, roughness: 0.3 },
+      purple: { body: '#8b5cf6', ring: '#4c1d95', metalness: 0.2, roughness: 0.3 },
+      orange: { body: '#f97316', ring: '#7c2d12', metalness: 0.2, roughness: 0.3 },
+      red:    { body: '#ef4444', ring: '#7f1d1d', metalness: 0.2, roughness: 0.3 },
+      green:  { body: '#22c55e', ring: '#14532d', metalness: 0.2, roughness: 0.3 }
     };
 
     const targetShades = themeColors[theme] || themeColors.blue;
@@ -220,9 +220,13 @@ const Robot = memo(function Robot({ onLoad, onReady, isReady, responsiveScale, m
 
     if (bodyMaterialRef.current) {
       bodyMaterialRef.current.color.lerp(new THREE.Color(targetShades.body), lerpFactor);
+      bodyMaterialRef.current.metalness = THREE.MathUtils.lerp(bodyMaterialRef.current.metalness, targetShades.metalness, lerpFactor);
+      bodyMaterialRef.current.roughness = THREE.MathUtils.lerp(bodyMaterialRef.current.roughness, targetShades.roughness, lerpFactor);
     }
     if (ringMaterialRef.current) {
       ringMaterialRef.current.color.lerp(new THREE.Color(targetShades.ring), lerpFactor);
+      ringMaterialRef.current.metalness = THREE.MathUtils.lerp(ringMaterialRef.current.metalness, targetShades.metalness, lerpFactor);
+      ringMaterialRef.current.roughness = THREE.MathUtils.lerp(ringMaterialRef.current.roughness, targetShades.roughness, lerpFactor);
     }
 
     // 2. Dynamic Double Eye Blinking Loop and dynamic theme face screen redraw
@@ -412,7 +416,7 @@ export default function RobotModel({ onLoad }) {
         <directionalLight position={[3, 5, 4]} intensity={1.6} color="#ffffff" />
         <directionalLight position={[5, 4, 2]} intensity={2.8} color={
           theme === 'blue' ? '#00d2ff' :
-          theme === 'monochrome' ? '#ffffff' :
+          theme === 'black' ? '#ffffff' :
           theme === 'pink' ? '#ec4899' :
           theme === 'purple' ? '#a855f7' :
           theme === 'orange' ? '#f97316' :
@@ -423,7 +427,7 @@ export default function RobotModel({ onLoad }) {
         <directionalLight position={[0, 6, 0]} intensity={1.0} color="#ffffff" />
         <pointLight position={[0, -1, 1.5]} intensity={1.5} color={
           theme === 'blue' ? '#00d2ff' :
-          theme === 'monochrome' ? '#ffffff' :
+          theme === 'black' ? '#ffffff' :
           theme === 'pink' ? '#ec4899' :
           theme === 'purple' ? '#a855f7' :
           theme === 'orange' ? '#f97316' :

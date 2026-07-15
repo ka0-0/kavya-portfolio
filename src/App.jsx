@@ -325,15 +325,22 @@ export default function App() {
 
                 <section
                   id="contact"
-                  className="relative flex flex-col justify-center border-t border-[var(--border-color)] bg-[var(--card-bg)] overflow-hidden px-6 pt-6 md:pt-8 pb-12 md:pb-16"
+                  className="relative flex flex-col justify-center border-t border-[var(--border-color)] bg-[var(--bg-dark)] overflow-hidden pt-6 md:pt-8 pb-12 md:pb-16"
                 >
-                  <SectionHeader
-                    number="05"
-                    title="LET'S TALK"
-                    rightLabel="COMMUNICATION NODE"
-                  />
-                  <ContactSection />
-                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(var(--accent-rgb),0.03),transparent_70%)]" />
+                  {/* Blueprint grid and radial glow */}
+                  <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(6,182,212,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(6,182,212,0.02)_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30 pointer-events-none z-0" />
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.03),transparent_70%)] pointer-events-none z-0" />
+
+                  <div className="relative z-10 w-full">
+                    <SectionHeader
+                      number="05"
+                      title="LET'S TALK"
+                      rightLabel="COMMUNICATION NODE"
+                    />
+                    <div className="px-6">
+                      <ContactSection />
+                    </div>
+                  </div>
                 </section>
 
                 <SpaceBoiScene />

@@ -43,7 +43,7 @@
     --accent-rgb: 34, 211, 238;
   }
 
-  [data-theme="monochrome"] {
+  [data-theme="black"] {
     --accent-color: #ffffff;
     --accent-light: #e4e4e7;
     --accent-dark: #71717a;

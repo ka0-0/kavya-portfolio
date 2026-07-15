@@ -226,7 +226,7 @@ export default function Projects() {
       {/* Changing to "relative" allows the header to naturally scroll up and pass *behind* the sticky stack */}
       <div 
         ref={headerRef}
-        className="relative w-full z-5 bg-[var(--bg-dark)] pt-6 pb-2 px-8 lg:px-16"
+        className="relative w-full z-5 bg-[var(--bg-dark)] pt-6 pb-2"
       >
         <SectionHeader
           number="03"

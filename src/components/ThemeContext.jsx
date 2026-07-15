@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext();
 
 // 7 accent color presets (always dark background)
-const themes = ['blue', 'monochrome', 'pink', 'purple', 'orange', 'red', 'green'];
+const themes = ['blue', 'black', 'pink', 'purple', 'orange', 'red', 'green'];
 
 export function ThemeProvider({ children }) {
   const [currentIndex, setCurrentIndex] = useState(() => {
