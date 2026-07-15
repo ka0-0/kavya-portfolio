@@ -1,0 +1,73 @@
+/* Standalone Cursor Telemetry HUD Overlay styles - Bottom Centered Status Bar */
+.cursor-telemetry-container {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 34px; /* Centered 34px above the bottom edge */
+  z-index: 85;
+  pointer-events: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-color);
+  opacity: 0.25;
+  transition: opacity 0.45s ease, filter 0.45s ease;
+  will-change: opacity, filter;
+  padding: 6px 16px;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 16px; /* spacing between telemetry fields */
+  width: max-content;
+  white-space: nowrap;
+}
+
+/* Dynamic glow matching the active theme accent */
+.cursor-telemetry-container * {
+  transition: color 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+              text-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.telemetry-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.telemetry-label {
+  font-weight: 700;
+  opacity: 0.55;
+}
+
+.telemetry-value {
+  font-weight: 500;
+  text-shadow: 0 0 5px rgba(var(--accent-rgb), 0.4);
+}
+
+.telemetry-separator {
+  opacity: 0.4;
+  font-weight: 700;
+  text-shadow: 0 0 4px rgba(var(--accent-rgb), 0.35);
+}
+
+/* Standalone occlusion state when the Theme Terminal Panel is open */
+.cursor-telemetry-container.is-hidden {
+  opacity: 0 !important;
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+/* Responsiveness: Desktop only. Hide on screens < 768px or touch-only devices */
+@media (max-width: 767px) {
+  .cursor-telemetry-container {
+    display: none !important;
+  }
+}
+
+@media (hover: none) {
+  .cursor-telemetry-container {
+    display: none !important;
+  }
+}

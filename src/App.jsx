@@ -2,9 +2,12 @@ import React, { useState, useEffect, useRef, useCallback, Suspense, lazy } from 
 import LoadingScreen from './components/LoadingScreen';
 import CustomCursor from './components/CustomCursor';
 import ThemeToggle from './components/ThemeToggle';
+import CursorTelemetry from './components/CursorTelemetry';
 import Navbar from './components/Navbar';
 import SectionNavigator from './components/SectionNavigator';
 import { ThemeProvider } from './components/ThemeContext';
+import MouseEffects from './components/MouseEffects';
+
 
 // Lazy-load mobile navigation to avoid increasing desktop bundle size or affecting desktop performance
 const MobileNavbar = lazy(() => import('./components/MobileNavbar'));
@@ -301,6 +304,8 @@ export default function App() {
       {isPortfolioVisible && (
         <div className="relative min-h-screen bg-[var(--bg-dark)] text-[var(--text-main)] selection:bg-[var(--accent-color)] selection:text-black font-sans overflow-x-clip transition-colors duration-300">
           <CustomCursor />
+          <MouseEffects />
+          <CursorTelemetry activeSection={activeSection} />
           <ThemeToggle onClick={() => console.log('Theme toggle clicked!')} />
           <Navbar activeSection={activeSection} handleNavClick={handleNavClick} />
           <main>

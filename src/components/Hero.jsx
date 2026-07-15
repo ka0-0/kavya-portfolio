@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, memo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useAnimationFrame } from 'framer-motion';
 import RobotModel from './RobotModel';
 
 function Hero({ showRobot }) {
@@ -14,8 +14,7 @@ function Hero({ showRobot }) {
   const line1 = "KAVYA".split("");
   const line2 = "MAKHAN.".split("");
 
-  const [hoveredL1, setHoveredL1] = useState(null);
-  const [hoveredL2, setHoveredL2] = useState(null);
+
 
   useEffect(() => {
     // Role Switcher Interval
@@ -24,6 +23,99 @@ function Hero({ showRobot }) {
     }, 2800);
     return () => clearInterval(interval);
   }, [roles.length]);
+
+  // Proximity dynamic weight references & settings
+  const containerRef = useRef(null);
+  const letterRefs = useRef([]);
+  const letterFactorsRef = useRef([]);
+  const lastFrameRef = useRef(0);
+  const mousePositionRef = useRef({ x: -99999, y: -99999 });
+  const isNearRef = useRef(false);
+
+  useEffect(() => {
+    // Accessibility and mobile touch exclusions
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isTouch = window.matchMedia("(pointer: coarse)").matches;
+    if (prefersReduced || isTouch) return;
+
+    const updatePosition = (clientX, clientY) => {
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      mousePositionRef.current = {
+        x: clientX - rect.left,
+        y: clientY - rect.top,
+      };
+      isNearRef.current = true;
+    };
+
+    const handleMouseMove = (ev) => {
+      updatePosition(ev.clientX, ev.clientY);
+    };
+
+    const handleMouseLeave = () => {
+      mousePositionRef.current = { x: -99999, y: -99999 };
+      isNearRef.current = false;
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseleave", handleMouseLeave);
+    
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, []);
+
+  useAnimationFrame((now) => {
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isTouch = window.matchMedia("(pointer: coarse)").matches;
+    if (prefersReduced || isTouch) return;
+
+    const container = containerRef.current;
+    if (!container) return;
+    const containerRect = container.getBoundingClientRect();
+    const mx = mousePositionRef.current.x;
+    const my = mousePositionRef.current.y;
+
+    const prevT = lastFrameRef.current || now;
+    const dtSec = Math.min(0.1, Math.max(0, (now - prevT) / 1000));
+    lastFrameRef.current = now;
+
+    const tau = 0.25; // Transition easing speed (duration)
+    const a = 1 - Math.exp(-dtSec / tau);
+    const reach = 220; // Reach bounds in pixels
+
+    for (let i = 0; i < letterRefs.current.length; i++) {
+      const letterEl = letterRefs.current[i];
+      if (!letterEl) continue;
+
+      const rect = letterEl.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2 - containerRect.left;
+      const cy = rect.top + rect.height / 2 - containerRect.top;
+      const dx = mx - cx;
+      const dy = my - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      const target = isNearRef.current ? Math.min(Math.max(1 - dist / reach, 0), 1) : 0;
+      const prev = letterFactorsRef.current[i] || 0;
+      const f = prev + (target - prev) * a;
+      letterFactorsRef.current[i] = f;
+
+      const fromWeight = 900;
+      const toWeight = 300; // Animate to lighter weight
+
+      if (f < 0.001) {
+        const fromSettings = `'wght' ${fromWeight}`;
+        if (letterEl.style.fontVariationSettings !== fromSettings) {
+          letterEl.style.fontVariationSettings = fromSettings;
+        }
+      } else {
+        const w = Math.round(fromWeight + (toWeight - fromWeight) * f);
+        letterEl.style.fontVariationSettings = `'wght' ${w}`;
+      }
+    }
+  });
 
   const scrollToSection = (id) => {
     const el = document.getElementById(id);
@@ -55,28 +147,25 @@ function Hero({ showRobot }) {
           </span>
 
           {/* KAVYA MAKHAN. */}
-          <h1 className="flex flex-col items-start gap-y-0.5 md:gap-y-1 select-none">
+          <h1 ref={containerRef} className="flex flex-col items-start gap-y-0.5 md:gap-y-1 select-none">
             {/* KAVYA */}
-            <div 
-              className="flex flex-wrap"
-              onMouseLeave={() => setHoveredL1(null)}
-            >
+            <div className="flex flex-wrap">
               {line1.map((char, idx) => {
-                const isHovered = hoveredL1 === idx;
-                const weight = isHovered ? 900 : 350;
                 return (
                   <span
                     key={idx}
-                    onMouseEnter={() => setHoveredL1(idx)}
                     className="relative inline-flex flex-col items-start select-none"
                   >
                     {/* Visible Text */}
                     <span
-                      style={{
-                        fontWeight: weight,
-                        fontVariationSettings: `"wght" ${weight}`,
+                      ref={(el) => {
+                        letterRefs.current[idx] = el;
                       }}
-                      className="hero-name-typography hero-letter hero-letter-white text-white inline-block text-[2.6rem] sm:text-[3.3rem] md:text-[4rem] lg:text-[4rem] leading-[0.9]"
+                      style={{
+                        fontWeight: 900,
+                        fontVariationSettings: '"wght" 900',
+                      }}
+                      className="hero-name-typography text-white inline-block text-[2.6rem] sm:text-[3.3rem] md:text-[4rem] lg:text-[4rem] leading-[0.9]"
                     >
                       {char}
                     </span>
@@ -93,26 +182,23 @@ function Hero({ showRobot }) {
             </div>
 
             {/* MAKHAN. */}
-            <div 
-              className="flex flex-wrap"
-              onMouseLeave={() => setHoveredL2(null)}
-            >
+            <div className="flex flex-wrap">
               {line2.map((char, idx) => {
-                const isHovered = hoveredL2 === idx;
-                const weight = isHovered ? 400 : 900;
                 return (
                   <span
                     key={idx}
-                    onMouseEnter={() => setHoveredL2(idx)}
                     className="relative inline-flex flex-col items-start select-none"
                   >
                     {/* Visible Text */}
                     <span
-                      style={{
-                        fontWeight: weight,
-                        fontVariationSettings: `"wght" ${weight}`,
+                      ref={(el) => {
+                        letterRefs.current[line1.length + idx] = el;
                       }}
-                      className="hero-name-typography hero-letter marquee-filled-gradient inline-block text-[3.12rem] sm:text-[3.96rem] md:text-[4.8rem] lg:text-[4.8rem] leading-[0.9]"
+                      style={{
+                        fontWeight: 900,
+                        fontVariationSettings: '"wght" 900',
+                      }}
+                      className="hero-name-typography marquee-filled-gradient inline-block text-[3.12rem] sm:text-[3.96rem] md:text-[4.8rem] lg:text-[4.8rem] leading-[0.9]"
                     >
                       {char}
                     </span>
@@ -188,7 +274,7 @@ function Hero({ showRobot }) {
           <div className="absolute bottom-[72px] md:bottom-28 sm:bottom-36 left-1/2 -translate-x-1/2 w-[150px] md:w-[300px] sm:w-[440px] h-[30px] md:h-[65px] sm:h-[95px] rounded-[100%] bg-[radial-gradient(ellipse_at_center,rgba(var(--accent-rgb),0.18)_0%,transparent_80%)] md:bg-[radial-gradient(ellipse_at_center,rgba(var(--accent-rgb),0.35)_0%,rgba(var(--accent-rgb),0.2)_50%,transparent_80%)] border border-[rgba(var(--accent-rgb),0.1)] md:border-[rgba(var(--accent-rgb),0.3)] blur-[1px] md:blur-[2px] shadow-[0_0_calc(var(--glow-opacity)*15px)_rgba(var(--accent-rgb),calc(var(--glow-opacity)*0.15))] md:shadow-[0_0_calc(var(--glow-opacity)*50px)_rgba(var(--accent-rgb),calc(var(--glow-opacity)*0.4))] pointer-events-none animate-pulse z-0" />
 
           {/* Render ONLY the NEW Hero GLB Avatar (/models/small_robot.glb) */}
-          <div className="relative z-10 w-full h-full flex items-center justify-center">
+          <div id="hero-robot-container" className="relative z-10 w-full h-full flex items-center justify-center">
             {showRobot && <RobotModel />}
           </div>
         </div>

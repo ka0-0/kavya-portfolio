@@ -281,6 +281,7 @@ function Navbar({ activeSection, handleNavClick }) {
           <div className="pointer-events-auto select-none mobile-contents-column">
             {/* Matte Black Decepticon-style brand emblem */}
             <motion.div
+              id="navbar-logo-emblem"
               initial="hidden"
               animate={clickedLogo === 'emblem' ? { scale: 0.95 } : 'visible'}
               whileHover={clickedLogo === 'emblem' ? undefined : 'hover'}
@@ -297,18 +298,26 @@ function Navbar({ activeSection, handleNavClick }) {
                   transition: { type: 'spring', stiffness: 300, damping: 20 }
                 }
               }}
-              className={`relative w-[58px] h-[58px] rounded-full bg-[var(--bg-dark)]/95 border-[1.5px] backdrop-blur-md flex items-center justify-center transition-all duration-300 cursor-pointer overflow-hidden group flex-shrink-0 ${
-                clickedLogo === 'emblem'
-                  ? 'border-[var(--accent-color)] shadow-[0_0_30px_rgba(var(--accent-rgb),0.8),_inset_0_1.5px_1.5px_rgba(255,255,255,0.2)]'
-                  : 'border-[rgba(var(--accent-rgb),0.8)] shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.15),_0_8px_20px_rgba(0,0,0,0.4),_0_0_12px_rgba(var(--accent-rgb),0.2)] hover:border-[var(--accent-light)] hover:shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.2),_0_8px_20px_rgba(0,0,0,0.5),_0_0_20px_rgba(var(--accent-rgb),0.4)]'
+              className={`relative w-[58px] h-[58px] flex items-center justify-center transition-all duration-300 cursor-pointer group flex-shrink-0 ${
+                activeSection === 'home'
+                  ? 'bg-transparent border-none shadow-none overflow-visible'
+                  : `rounded-full bg-[var(--bg-dark)]/95 border-[1.5px] backdrop-blur-md overflow-hidden ${
+                      clickedLogo === 'emblem'
+                        ? 'border-[var(--accent-color)] shadow-[0_0_30px_rgba(var(--accent-rgb),0.8),_inset_0_1.5px_1.5px_rgba(255,255,255,0.2)]'
+                        : 'border-[rgba(var(--accent-rgb),0.8)] shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.15),_0_8px_20px_rgba(0,0,0,0.4),_0_0_12px_rgba(var(--accent-rgb),0.2)] hover:border-[var(--accent-light)] hover:shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.2),_0_8px_20px_rgba(0,0,0,0.5),_0_0_20px_rgba(var(--accent-rgb),0.4)]'
+                    }`
               }`}
               style={{ willChange: 'transform' }}
             >
-              {/* Subtle purple/cyan gradient glow around edge */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[rgba(var(--accent-rgb),0.05)] to-[rgba(var(--accent-rgb),0.1)] opacity-30 group-hover:opacity-75 transition-opacity duration-300 pointer-events-none" />
+              {/* Subtle purple/cyan gradient glow around edge (Non-Home only) */}
+              {activeSection !== 'home' && (
+                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[rgba(var(--accent-rgb),0.05)] to-[rgba(var(--accent-rgb),0.1)] opacity-30 group-hover:opacity-75 transition-opacity duration-300 pointer-events-none" />
+              )}
 
-              {/* Small top inner highlight */}
-              <div className="absolute top-[1px] left-1/2 -translate-x-1/2 w-[80%] h-[1px] bg-white/20 pointer-events-none" />
+              {/* Small top inner highlight (Non-Home only) */}
+              {activeSection !== 'home' && (
+                <div className="absolute top-[1px] left-1/2 -translate-x-1/2 w-[80%] h-[1px] bg-white/20 pointer-events-none" />
+              )}
 
               {/* Icon inside */}
               <motion.img
@@ -318,7 +327,9 @@ function Navbar({ activeSection, handleNavClick }) {
                   rest: { rotate: 0, transition: { type: 'spring', stiffness: 200, damping: 15 } }
                 }}
                 initial="rest"
-                className="w-[62%] h-[62%] object-contain mix-blend-screen select-none pointer-events-none filter drop-shadow-[0_0_6px_var(--accent-color)]"
+                className={`w-[62%] h-[62%] object-contain mix-blend-screen select-none pointer-events-none filter drop-shadow-[0_0_6px_var(--accent-color)] transition-opacity duration-300 ${
+                  activeSection === 'home' ? 'opacity-0' : 'opacity-100'
+                }`}
               />
             </motion.div>
 

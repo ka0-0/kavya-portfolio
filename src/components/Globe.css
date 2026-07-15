@@ -1,0 +1,164 @@
+/* Globe Component Stylesheet */
+
+.globe-container-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.globe-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  transition: opacity 1s ease-in-out;
+  cursor: grab;
+}
+
+.globe-canvas:active {
+  cursor: grabbing;
+}
+
+/* Cyberpunk Boot Terminal Overlay */
+.globe-loader-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: #000000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  font-family: 'Space Grotesk', 'Courier New', Courier, monospace;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.globe-loader-terminal {
+  width: 100%;
+  max-width: 320px;
+  text-align: left;
+  border: 1px solid rgba(var(--accent-rgb), 0.15);
+  background-color: rgba(9, 9, 9, 0.85);
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), 0 0 10px rgba(var(--accent-rgb), 0.05);
+}
+
+.globe-loader-line {
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.globe-loader-line.active {
+  color: var(--accent-light);
+  text-shadow: 0 0 8px rgba(var(--accent-rgb), 0.4);
+}
+
+.globe-loader-line.done {
+  color: var(--accent-color);
+}
+
+.globe-loader-line.success {
+  color: #22c55e;
+  font-weight: bold;
+}
+
+.globe-loader-cursor::after {
+  content: "█";
+  margin-left: 4px;
+  animation: globe-blink 0.8s infinite;
+  color: var(--accent-color);
+}
+
+/* Holographic Floating Beacon Information Card */
+.globe-popover {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  margin-top: -12px;
+  width: 190px;
+  border-radius: 12px;
+  background-color: rgba(12, 12, 14, 0.96);
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 12px 14px;
+  box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.2), 0 4px 30px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+  z-index: 40;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  will-change: transform, opacity;
+  transform-origin: bottom center;
+}
+
+.globe-popover::after {
+  display: none;
+}
+
+.globe-popover-header {
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  color: var(--accent-light);
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.globe-popover-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1px;
+}
+
+.globe-popover-subtitle {
+  font-size: 9.5px;
+  color: var(--accent-color);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: 6px;
+}
+
+.globe-popover-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 6px;
+  margin-top: 4px;
+  font-size: 8.5px;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.globe-popover-status {
+  color: #22c55e;
+  font-weight: bold;
+}
+
+/* Animations */
+@keyframes globe-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}

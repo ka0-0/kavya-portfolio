@@ -23,6 +23,12 @@
     --text-muted: #a1a1aa;
     --border-color: rgba(255, 255, 255, 0.05);
     
+    /* Layout variables for Theme Toggle and Cursor Telemetry spacing */
+    --theme-btn-left: 32px;
+    --theme-btn-bottom: 32px;
+    --theme-btn-size: 56px;
+    --theme-btn-spacing: 24px;
+    
     /* Glow/Shadow scaling transition variable */
     --glow-opacity: 1;
 
@@ -167,7 +173,7 @@
 }
 
 .hero-name-typography {
-  font-family: 'Geist', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Rubik Variable', 'Rubik', sans-serif;
   letter-spacing: -0.03em;
   line-height: 0.9;
   text-transform: uppercase;

@@ -17,7 +17,7 @@ function getPdfFilename(title) {
   return `${name}.PDF`;
 }
 
-const certificatesData = [
+export const certificatesData = [
   {
     id: 1,
     cylinderTitle: "Google AI Essentials",
@@ -749,7 +749,7 @@ export default function Certificates() {
             </div>
 
             {/* Right Column (Hero certificate preview - shifted downward by 60-80px for generous top breathing room) */}
-            <div className="col-span-1 md:col-span-7 flex flex-col justify-center items-center md:items-start pt-6 md:pt-16 lg:pt-20">
+            <div className="col-span-1 md:col-span-7 flex flex-col justify-center items-center md:items-start pt-6 md:pt-16 lg:pt-20 md:pl-12">
               <div className="relative w-full min-h-[420px] max-[374px]:min-h-[390px] xs:min-h-[450px] sm:min-h-[500px] md:min-h-[480px] lg:min-h-[520px] xl:min-h-[580px]">
                 <AnimatePresence mode="popLayout" initial={false}>
                   <motion.div
@@ -762,12 +762,12 @@ export default function Certificates() {
                     style={{ transformStyle: 'preserve-3d' }}
                   >
                     {/* Ambient Floating Glass Card */}
-                    <div className="w-full flex justify-center">
+                    <div className="w-full flex justify-center md:justify-start px-4 md:px-1">
                       <TiltCard image={activeCert.image} title={activeCert.title} onOpenViewer={handleOpenViewer} />
                     </div>
 
-                    {/* Detail Text Logs (Increased vertical spacing by ~24px below preview) */}
-                    <div className="w-full text-center md:text-left mt-8 md:mt-16 lg:mt-20 px-4 md:px-1">
+                    {/* Detail Text Logs (Unified positioning directly below preview) */}
+                    <div className="w-full text-center md:text-left mt-5 md:mt-6 px-4 md:px-1">
                       <span className="font-mono text-[9px] tracking-[0.25em] text-cyan-400 font-bold uppercase block">
                         {activeCert.organization}
                       </span>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SectionHeader from './SectionHeader';
+import Globe from './Globe';
 
 // ==========================================
 // STATIC PROFILE DATA CONSTANTS
@@ -242,7 +243,7 @@ const TerminalContent = React.memo(function TerminalContent({ bootCompleteTermin
 
   return (
     <div ref={containerRef} className="w-full h-full flex flex-col justify-between font-mono text-[10.5px]">
-      <div className="p-3 bg-zinc-950/45 border border-[var(--border-color)]/60 rounded flex-1 flex flex-col justify-start min-h-[380px] space-y-1.5 overflow-hidden pr-1 scrollbar-thin scrollbar-thumb-zinc-800">
+      <div className="p-3 bg-zinc-950/45 border border-[var(--border-color)]/60 rounded flex-1 flex flex-col justify-start min-h-[310px] space-y-1.5 overflow-hidden pr-1 scrollbar-thin scrollbar-thumb-zinc-800">
         {completedLines.map(idx => renderTerminalLine(idx))}
         {completedLines.length < terminalData.length && renderTerminalLine(activeLineIdx, true)}
       </div>
@@ -257,133 +258,10 @@ const TerminalContent = React.memo(function TerminalContent({ bootCompleteTermin
 // ==========================================
 // 1.8. Isolated Interactive Map Component (Prevents AboutSection parent re-renders during map hover)
 // ==========================================
-const InteractiveMapContent = React.memo(function InteractiveMapContent({ bootCompleteMap }) {
-  const [isHovered, setIsHovered] = useState(false);
-  const hoverTimeoutRef = useRef(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting);
-      },
-      { threshold: 0 }
-    );
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-    return () => observer.disconnect();
-  }, []);
-
-  const handleMouseEnter = () => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-      hoverTimeoutRef.current = null;
-    }
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    hoverTimeoutRef.current = setTimeout(() => {
-      setIsHovered(false);
-    }, 280);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
-    };
-  }, []);
-
+const InteractiveMapContent = React.memo(function InteractiveMapContent() {
   return (
-    <div ref={containerRef} className="relative w-full h-full min-h-[220px] flex items-center justify-center overflow-visible rounded-lg bg-zinc-950/10 border border-[var(--border-color)]/40">
-      {/* World Map Background Image Container to clip scaled image */}
-      <div className="absolute inset-0 overflow-hidden rounded-lg pointer-events-none">
-        <motion.img 
-          src="/world_map.jpg" 
-          alt="World Map" 
-          loading="lazy"
-          initial={{ opacity: 0 }}
-          animate={bootCompleteMap ? { opacity: 0.55 } : {}}
-          transition={{ duration: 1.0, ease: 'easeOut' }}
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none mix-blend-screen"
-          style={{
-            transform: 'scale(1.18)',
-            transformOrigin: 'center center',
-          }}
-        />
-      </div>
-
-      {/* Interactive Wrapper aligned to Delhi */}
-      <div 
-        className="absolute"
-        style={{
-          left: '69.0%',
-          top: '46.8%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 30,
-        }}
-      >
-        {/* Invisible larger hit area (32-40px) */}
-        <div 
-          className="relative flex items-center justify-center cursor-pointer"
-          style={{ width: '40px', height: '40px' }}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-        >
-          {/* Blue node container */}
-          <div className="map-node-container relative flex items-center justify-center">
-            {/* Concentric expanding pulse rings */}
-            <div className={`map-node-ring absolute rounded-full border border-[rgba(var(--accent-rgb),0.4)] bg-cyan-400/5 pointer-events-none w-10 h-10 ${isVisible ? '' : 'map-animation-paused'}`} />
-            <div className={`map-node-ring absolute rounded-full border border-[rgba(var(--accent-rgb),0.2)] bg-transparent pointer-events-none w-10 h-10 ${isVisible ? '' : 'map-animation-paused'}`} style={{ animationDelay: '1.1s' }} />
-            
-            {/* Center dot */}
-            <div className={`map-node-dot w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(var(--accent-rgb),0.8)] ${isHovered || !isVisible ? 'map-node-dot-paused' : ''}`} />
-          </div>
-        </div>
-
-        {/* Floating Holographic Location Info Card */}
-        <AnimatePresence>
-          {isHovered && (
-            <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.96, filter: 'blur(6px)', x: '-50%' }}
-              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', x: '-50%' }}
-              exit={{ opacity: 0, y: -8, scale: 0.96, filter: 'blur(6px)', x: '-50%' }}
-              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-              className="absolute bottom-[28px] left-1/2 p-4 w-[215px] rounded-[20px] bg-[var(--card-bg-alt)]/95 border border-[rgba(var(--accent-rgb),0.3)] backdrop-blur-md font-sans text-left z-40 cursor-default select-text"
-              style={{
-                boxShadow: '0 0 20px rgba(var(--accent-rgb),0.2), 0 4px 30px rgba(0,0,0,0.85)',
-                transformOrigin: 'bottom center',
-              }}
-            >
-              {/* Connector stem / pointer */}
-              <div className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 w-2 h-2 bg-[var(--card-bg-alt)] border-r border-b border-[rgba(var(--accent-rgb),0.3)] rotate-45 z-[-1]" />
-
-              <div className="flex flex-col gap-1.5">
-                {/* DELHI, INDIA */}
-                <div className="flex items-center gap-1.5 text-white font-black text-[10.5px] uppercase tracking-wide">
-                  <span>📍</span> DELHI, INDIA
-                </div>
-                
-                {/* AI ENGINEER & MECHANICAL ENGINEER */}
-                <div className="text-cyan-400 font-bold text-[8.5px] tracking-wider uppercase font-mono leading-tight mt-0.5">
-                  AI ENGINEER & MECHANICAL ENGINEER
-                </div>
-                
-                {/* Currently Building Intelligent AI Experiences */}
-                <div className="text-zinc-400 text-[9px] leading-relaxed font-light font-mono mt-0.5">
-                  Currently Building Intelligent AI Experiences
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+    <div className="relative w-full h-full min-h-[260px] md:min-h-[330px] flex items-center justify-center overflow-visible rounded-lg bg-zinc-950/10 border border-[var(--border-color)]/40 p-5">
+      <Globe />
     </div>
   );
 });
@@ -428,7 +306,8 @@ const CyberCard = React.memo(function CyberCard({
   children,
   title = '',
   nodeCode = '',
-  isBootComplete = false
+  isBootComplete = false,
+  bodyClass = 'p-4 md:p-6'
 }) {
   const cardRef = useRef(null);
   const rectRef = useRef(null);
@@ -520,7 +399,7 @@ const CyberCard = React.memo(function CyberCard({
       </div>
 
       {/* Card Content */}
-      <div className="p-4 md:p-6 min-h-[220px] relative flex-1 flex flex-col justify-between">
+      <div className={`${bodyClass} min-h-[220px] relative flex-1 flex flex-col justify-between`}>
         {children}
       </div>
     </div>
@@ -671,19 +550,21 @@ const AboutSection = React.memo(function AboutSection() {
   }, []);
 
   const profileCardContent = useMemo(() => (
-    <div className="flex flex-col md:flex-row gap-6 items-start h-full justify-between w-full">
-      <div className="flex-1 space-y-4">
+    <div className="flex flex-col md:flex-row gap-6 items-start justify-between w-full h-full">
+      {/* Left Column: AI Profile Dashboard Details */}
+      <div className="flex-1 space-y-5 w-full">
         <div className="space-y-0.5">
           <div className="text-zinc-500 font-mono text-[8px] tracking-widest uppercase">NODE REGISTERED ID</div>
           <h2 className="text-xl sm:text-2xl font-black tracking-wide text-white font-sans uppercase">KAVYA MAKHAN</h2>
-          <div className="text-cyan-400 font-mono text-xs tracking-wider font-semibold">AI ENGINEER & MECHANICAL ENGINEER</div>
+          <div className="text-[rgba(var(--accent-rgb),1)] font-mono text-xs tracking-wider font-semibold">AI ENGINEER & MECHANICAL ENGINEER</div>
         </div>
 
-        <p className="text-zinc-400 text-xs leading-relaxed max-w-xl font-sans">
+        <p className="text-zinc-400 text-xs leading-relaxed max-w-3xl font-sans">
           I operate at the convergence of Artificial Intelligence and Mechanical Engineering. My core focus centers on mapping cognitive learning models directly onto hardware dynamics—constructing intelligent neural control loops, architecting computer vision networks, and engineering autonomous kinetic machinery.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-zinc-800/40 text-xs font-sans">
+        {/* 2x3 Dashboard Information Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 pt-4 border-t border-zinc-800/40 text-xs font-sans">
           <div>
             <span className="block text-zinc-500 font-mono text-[8px] tracking-wider uppercase mb-0.5">CURRENT FOCUS</span>
             <span className="text-zinc-300 font-semibold">Autonomous Controllers & Embedded AI</span>
@@ -692,27 +573,80 @@ const AboutSection = React.memo(function AboutSection() {
             <span className="block text-zinc-500 font-mono text-[8px] tracking-wider uppercase mb-0.5">CORE PHILOSOPHY</span>
             <span className="text-zinc-300 font-semibold">Embodying virtual intelligence in hardware</span>
           </div>
+          <div>
+            <span className="block text-zinc-500 font-mono text-[8px] tracking-wider uppercase mb-0.5">NODE STATUS</span>
+            <span className="text-zinc-300 font-semibold flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[rgba(var(--accent-rgb),1)] animate-pulse shadow-[0_0_6px_rgba(var(--accent-rgb),0.6)]" />
+              ONLINE
+            </span>
+          </div>
+          <div>
+            <span className="block text-zinc-500 font-mono text-[8px] tracking-wider uppercase mb-0.5">LOCATION</span>
+            <span className="text-zinc-300 font-semibold">Delhi, India</span>
+          </div>
+          <div>
+            <span className="block text-zinc-500 font-mono text-[8px] tracking-wider uppercase mb-0.5">EXPERIENCE</span>
+            <span className="text-zinc-300 font-semibold">Robotics & Control Systems</span>
+          </div>
+          <div>
+            <span className="block text-zinc-500 font-mono text-[8px] tracking-wider uppercase mb-0.5">SPECIALIZATION</span>
+            <span className="text-zinc-300 font-semibold">Computer Vision & Autonomy</span>
+          </div>
         </div>
       </div>
 
-      {/* Column/Card: Futuristic Android Avatar Container */}
-      <div className="flex flex-col items-center justify-center p-2.5 border border-zinc-800/40 rounded-lg bg-zinc-950/20 w-full md:w-[190px] h-[200px] sm:h-[240px] md:h-auto self-stretch relative overflow-hidden">
-        {/* Subtle tech background grid texture */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--accent-rgb),0.03),transparent_70%)] pointer-events-none" />
-        {/* Static Image Wrapper */}
-        <div className="w-full h-full flex items-center justify-center p-1.5">
-          <img
-            src="/profile_pic.png"
-            alt="Futuristic Android AI Identity"
-            loading="lazy"
-            className="w-full h-full object-contain select-none pointer-events-none filter drop-shadow-[0_0_8px_rgba(6,182,212,0.45)] drop-shadow-[0_12px_24px_rgba(59,130,246,0.25)]"
-            style={{
-              maxHeight: '94%',
-              maxWidth: '94%',
-              transform: 'scale(1.18) translateY(8.5px)',
-              transformOrigin: 'center center'
-            }}
-          />
+      {/* Right Column: Avatar Frame & System Status Panel */}
+      <div className="flex flex-col w-full md:w-[220px] flex-shrink-0">
+        {/* Avatar Frame (Height reduced by ~20%) */}
+        <div className="flex flex-col items-center justify-center p-1.5 border border-zinc-800/40 rounded-lg bg-zinc-950/20 w-full h-[170px] sm:h-[190px] md:h-[190px] relative overflow-hidden">
+          {/* Subtle tech background grid texture */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--accent-rgb),0.03),transparent_70%)] pointer-events-none" />
+          {/* Static Image Wrapper */}
+          <div className="w-full h-full flex items-center justify-center p-0.5">
+            <img
+              src="/profile_pic.png"
+              alt="Futuristic Android AI Identity"
+              loading="lazy"
+              className="w-full h-full object-contain select-none pointer-events-none filter drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.45)] drop-shadow-[0_12px_24px_rgba(59,130,246,0.25)]"
+              style={{
+                maxHeight: '96%',
+                maxWidth: '96%',
+                transform: 'scale(1.18) translateY(8.5px)',
+                transformOrigin: 'center center'
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Dynamic AI System Status Panel */}
+        <div className="flex flex-col font-mono text-[9px] text-zinc-400 space-y-1.5 mt-4">
+          <div className="border-t border-zinc-800/50 pt-2.5 flex justify-between items-center">
+            <span className="text-zinc-500 text-[8px] tracking-wider">SYSTEM STATUS</span>
+            <span className="text-[rgba(var(--accent-rgb),1)] font-bold flex items-center gap-1">
+              <span className="w-1 h-1 rounded-full bg-[rgba(var(--accent-rgb),1)] animate-ping" />
+              ONLINE
+            </span>
+          </div>
+          <div className="flex justify-between items-baseline">
+            <span className="text-zinc-500">CPU LOAD</span>
+            <span className="flex-1 border-b border-dotted border-zinc-800 mx-2 self-stretch mb-0.5" />
+            <span className="text-zinc-300 font-semibold">12%</span>
+          </div>
+          <div className="flex justify-between items-baseline">
+            <span className="text-zinc-500">AI CORE</span>
+            <span className="flex-1 border-b border-dotted border-zinc-800 mx-2 self-stretch mb-0.5" />
+            <span className="text-[rgba(var(--accent-rgb),1)] font-semibold">ACTIVE</span>
+          </div>
+          <div className="flex justify-between items-baseline">
+            <span className="text-zinc-500">LOCATION</span>
+            <span className="flex-1 border-b border-dotted border-zinc-800 mx-2 self-stretch mb-0.5" />
+            <span className="text-zinc-300 font-semibold">DELHI, INDIA</span>
+          </div>
+          <div className="flex justify-between items-baseline pb-2.5 border-b border-zinc-800/50">
+            <span className="text-zinc-500">NETWORK</span>
+            <span className="flex-1 border-b border-dotted border-zinc-800 mx-2 self-stretch mb-0.5" />
+            <span className="text-zinc-300 font-semibold">SECURE</span>
+          </div>
         </div>
       </div>
     </div>
@@ -818,11 +752,11 @@ const AboutSection = React.memo(function AboutSection() {
 
   const metricsCardContent = useMemo(() => (
     <div className="w-full h-full flex flex-col justify-between">
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-y-6 md:gap-x-4 flex-1 items-center py-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-y-6 md:gap-x-4 flex-1 items-center py-2">
         {metricsData.map((m, idx) => (
           <div
             key={idx}
-            className="p-3.5 sm:p-5 border border-[var(--border-color)]/60 rounded bg-zinc-950/20 flex flex-col justify-between min-h-[150px] sm:min-h-[155px] hover:border-[rgba(var(--accent-rgb),0.2)] transition-colors duration-300"
+            className="p-3.5 sm:p-5 border border-[var(--border-color)]/60 rounded bg-zinc-950/20 flex flex-col justify-between min-h-[120px] sm:min-h-[135px] hover:border-[rgba(var(--accent-rgb),0.2)] transition-colors duration-300"
           >
             <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-wider leading-tight">{m.label}</span>
             <div className="text-2xl font-black text-white font-sans mt-1">
@@ -1046,6 +980,7 @@ const AboutSection = React.memo(function AboutSection() {
             title="IDENTITY VERIFICATION"
             nodeCode="SECURE_NODE_01"
             isBootComplete={bootComplete.profile}
+            bodyClass="p-4 md:p-6 pb-3 md:pb-4.5"
           >
             {profileCardContent}
           </CyberCard>
@@ -1062,6 +997,7 @@ const AboutSection = React.memo(function AboutSection() {
             title="NEURAL NETWORK MAP"
             nodeCode="SECURE_NODE_02"
             isBootComplete={bootComplete.map}
+            bodyClass="p-4 md:p-6 pb-3 md:pb-4.5"
           >
             {mapCardContent}
           </CyberCard>
@@ -1074,7 +1010,7 @@ const AboutSection = React.memo(function AboutSection() {
           variants={cardVariants}
           onAnimationComplete={handleRevealCompleteTerminal}
           style={staticCardStyle}
-          className="col-span-12 md:col-span-6 lg:col-span-4 h-[530px] flex flex-col"
+          className="col-span-12 md:col-span-6 lg:col-span-4 h-[460px] flex flex-col"
         >
           <CyberCard
             title="AI CORE TELEMETRY"
@@ -1090,7 +1026,7 @@ const AboutSection = React.memo(function AboutSection() {
           variants={cardVariants}
           onAnimationComplete={handleRevealCompleteSkills}
           style={staticCardStyle}
-          className="col-span-12 md:col-span-6 lg:col-span-4 h-[530px] flex flex-col"
+          className="col-span-12 md:col-span-6 lg:col-span-4 h-[460px] flex flex-col"
         >
           <CyberCard
             title="COGNITIVE SPECTRUM"
@@ -1138,7 +1074,7 @@ const AboutSection = React.memo(function AboutSection() {
               </div>
 
               {/* Tab Panel contents with Framer Motion transitions */}
-              <div className="relative h-[395px] w-full z-0 overflow-hidden">
+              <div className="relative h-[320px] w-full z-0 overflow-hidden">
                 <AnimatePresence mode="wait">
                   {bootComplete.skills && (
                     <motion.div
@@ -1149,7 +1085,7 @@ const AboutSection = React.memo(function AboutSection() {
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.22, ease: 'easeOut' }}
                       style={staticCardStyle}
-                      className="h-[395px] overflow-hidden text-left font-sans pr-1 scrollbar-thin scrollbar-thumb-zinc-800"
+                      className="h-[320px] overflow-hidden text-left font-sans pr-1 scrollbar-thin scrollbar-thumb-zinc-800"
                     >
                       {tabContent}
                     </motion.div>
@@ -1171,7 +1107,7 @@ const AboutSection = React.memo(function AboutSection() {
           variants={cardVariants}
           onAnimationComplete={handleRevealCompleteMetrics}
           style={staticCardStyle}
-          className="col-span-12 lg:col-span-4 h-[530px] flex flex-col"
+          className="col-span-12 lg:col-span-4 h-[460px] flex flex-col"
         >
           <CyberCard
             title="SYSTEM METRICS"
