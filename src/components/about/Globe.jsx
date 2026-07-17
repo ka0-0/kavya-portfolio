@@ -22,7 +22,7 @@ import {
   LineBasicMaterial,
   LineSegments,
 } from "three";
-import { useTheme } from "./ThemeContext";
+import { useTheme } from "../theme/ThemeContext";
 import "./Globe.css";
 
 // Helper: Convert Lat/Lng to 3D Cartesian coordinates on a sphere of given radius

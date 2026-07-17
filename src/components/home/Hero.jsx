@@ -140,14 +140,14 @@ function Hero({ showRobot }) {
       <div className="w-full max-w-7xl mx-auto my-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-12 lg:gap-8 items-center z-[5] relative py-8">
         
         {/* LEFT SIDE: Text & CTA Buttons (45% width -> 5 cols on lg) */}
-        <div className="lg:col-span-5 flex flex-col items-start text-left space-y-6 translate-y-0 md:-translate-y-20 lg:-translate-y-28">
+        <div className="lg:col-span-5 flex flex-col items-start text-left space-y-6 translate-x-4 translate-y-0 md:-translate-y-20 lg:-translate-y-28">
           {/* HI, I'M */}
           <span className="font-mono text-xs sm:text-sm font-semibold tracking-[0.25em] text-cyan-400 uppercase">
             HI, I'M
           </span>
 
           {/* KAVYA MAKHAN. */}
-          <h1 ref={containerRef} className="flex flex-col items-start gap-y-0.5 md:gap-y-1 select-none">
+          <h1 ref={containerRef} className="flex flex-col items-start gap-y-0.5 md:gap-y-1 select-none -translate-x-[6px]">
             {/* KAVYA */}
             <div className="flex flex-wrap">
               {line1.map((char, idx) => {

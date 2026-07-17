@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, useMotionValue, useSpring, animate, useReducedMotion, useTransform, useMotionTemplate, AnimatePresence } from 'framer-motion';
-import SectionHeader from '../SectionHeader';
+import SectionHeader from '../navigation/SectionHeader';
 import {
   JsIcon,
   ReactIcon,

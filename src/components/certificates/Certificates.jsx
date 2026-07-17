@@ -4,7 +4,7 @@ import { motion, useMotionValue, useSpring, useTransform, useMotionValueEvent, u
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { X, FileText, ZoomIn, ZoomOut, RotateCcw, Download } from 'lucide-react';
-import SectionHeader from './SectionHeader';
+import SectionHeader from '../navigation/SectionHeader';
 
 function getPdfFilename(title) {
   if (!title) return "DOCUMENT.PDF";

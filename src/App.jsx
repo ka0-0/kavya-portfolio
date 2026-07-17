@@ -1,24 +1,24 @@
 import React, { useState, useEffect, useRef, useCallback, Suspense, lazy } from 'react';
-import LoadingScreen from './components/LoadingScreen';
-import CustomCursor from './components/CustomCursor';
-import ThemeToggle from './components/ThemeToggle';
-import CursorTelemetry from './components/CursorTelemetry';
-import Navbar from './components/Navbar';
-import SectionNavigator from './components/SectionNavigator';
-import { ThemeProvider } from './components/ThemeContext';
-import MouseEffects from './components/MouseEffects';
+import LoadingScreen from './components/loading/LoadingScreen';
+import CustomCursor from './components/cursor/CustomCursor';
+import ThemeToggle from './components/theme/ThemeToggle';
+import CursorTelemetry from './components/cursor/CursorTelemetry';
+import Navbar from './components/navigation/Navbar';
+import SectionNavigator from './components/navigation/SectionNavigator';
+import { ThemeProvider } from './components/theme/ThemeContext';
+import MouseEffects from './components/effects/MouseEffects';
 
 
 // Lazy-load mobile navigation to avoid increasing desktop bundle size or affecting desktop performance
-const MobileNavbar = lazy(() => import('./components/MobileNavbar'));
-import Hero from './components/Hero';
-import AboutSection from './components/AboutSection';
+const MobileNavbar = lazy(() => import('./components/navigation/MobileNavbar'));
+import Hero from './components/home/Hero';
+import AboutSection from './components/about/AboutSection';
 import Skills from './components/skills/Skills';
-import SectionHeader from './components/SectionHeader';
-import SpaceBoiScene from './components/SpaceBoiScene';
-import Projects from './components/Projects';
-import Certificates from './components/Certificates';
-import ContactSection from './components/ContactSection';
+import SectionHeader from './components/navigation/SectionHeader';
+import SpaceBoiScene from './components/outro/SpaceBoiScene';
+import Projects from './components/projects/Projects';
+import Certificates from './components/certificates/Certificates';
+import ContactSection from './components/contact/ContactSection';
 import Lenis from 'lenis';
 import { useGLTF } from '@react-three/drei';
 

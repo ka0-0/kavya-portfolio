@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
-import { downloadResume } from '../utils/resume';
+import { downloadResume } from '../../utils/resume';
 
 // SVG Icons
 const GithubIcon = () => (

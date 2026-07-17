@@ -10,8 +10,9 @@ import {
   trackEmailClick,
   trackLinkedInClick,
   trackGitHubClick
-} from '../utils/analytics';
-import { downloadResume } from '../utils/resume';
+} from '../../utils/analytics';
+import { downloadResume } from '../../utils/resume';
+
 const navLinks = [
   { name: 'Home', id: 'home' },
   { name: 'About', id: 'about' },
@@ -271,10 +272,10 @@ function Navbar({ activeSection, handleNavClick }) {
           isRestarting ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       />
-      <header className="fixed top-0 left-0 right-0 z-[100] pointer-events-none w-full">
-        {/* Outer content boundary matching the max-w-7xl px-4 grid alignment of the page */}
+      <header className="fixed top-0 left-0 right-0 z-[100] pointer-events-none w-full px-6 md:px-12 lg:px-20">
+        {/* Outer content boundary matching the max-w-7xl grid alignment of the page */}
         <div 
-          className="max-w-7xl mx-auto px-4 md:px-4 h-24 relative w-full mobile-header-container"
+          className="max-w-7xl mx-auto h-24 relative w-full mobile-header-container"
         >
           
           {/* Column 1: Brand Logo & Emblem - Far Left */}
@@ -298,26 +299,18 @@ function Navbar({ activeSection, handleNavClick }) {
                   transition: { type: 'spring', stiffness: 300, damping: 20 }
                 }
               }}
-              className={`relative w-[58px] h-[58px] flex items-center justify-center transition-all duration-300 cursor-pointer group flex-shrink-0 ${
-                activeSection === 'home'
-                  ? 'bg-transparent border-none shadow-none overflow-visible'
-                  : `rounded-full bg-[var(--bg-dark)]/95 border-[1.5px] backdrop-blur-md overflow-hidden ${
-                      clickedLogo === 'emblem'
-                        ? 'border-[var(--accent-color)] shadow-[0_0_30px_rgba(var(--accent-rgb),0.8),_inset_0_1.5px_1.5px_rgba(255,255,255,0.2)]'
-                        : 'border-[rgba(var(--accent-rgb),0.8)] shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.15),_0_8px_20px_rgba(0,0,0,0.4),_0_0_12px_rgba(var(--accent-rgb),0.2)] hover:border-[var(--accent-light)] hover:shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.2),_0_8px_20px_rgba(0,0,0,0.5),_0_0_20px_rgba(var(--accent-rgb),0.4)]'
-                    }`
+              className={`relative w-[58px] h-[58px] flex items-center justify-center transition-all duration-300 cursor-pointer group flex-shrink-0 rounded-full bg-[var(--bg-dark)]/95 border-[1.5px] backdrop-blur-md overflow-hidden ${
+                clickedLogo === 'emblem'
+                  ? 'border-[var(--accent-color)] shadow-[0_0_30px_rgba(var(--accent-rgb),0.8),_inset_0_1.5px_1.5px_rgba(255,255,255,0.2)]'
+                  : 'border-[rgba(var(--accent-rgb),0.8)] shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.15),_0_8px_20px_rgba(0,0,0,0.4),_0_0_12px_rgba(var(--accent-rgb),0.2)] hover:border-[var(--accent-light)] hover:shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.2),_0_8px_20px_rgba(0,0,0,0.5),_0_0_20px_rgba(var(--accent-rgb),0.4)]'
               }`}
               style={{ willChange: 'transform' }}
             >
-              {/* Subtle purple/cyan gradient glow around edge (Non-Home only) */}
-              {activeSection !== 'home' && (
-                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[rgba(var(--accent-rgb),0.05)] to-[rgba(var(--accent-rgb),0.1)] opacity-30 group-hover:opacity-75 transition-opacity duration-300 pointer-events-none" />
-              )}
+              {/* Subtle purple/cyan gradient glow around edge */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[rgba(var(--accent-rgb),0.05)] to-[rgba(var(--accent-rgb),0.1)] opacity-30 group-hover:opacity-75 transition-opacity duration-300 pointer-events-none" />
 
-              {/* Small top inner highlight (Non-Home only) */}
-              {activeSection !== 'home' && (
-                <div className="absolute top-[1px] left-1/2 -translate-x-1/2 w-[80%] h-[1px] bg-white/20 pointer-events-none" />
-              )}
+              {/* Small top inner highlight */}
+              <div className="absolute top-[1px] left-1/2 -translate-x-1/2 w-[80%] h-[1px] bg-white/20 pointer-events-none" />
 
               {/* Icon inside */}
               <motion.img
@@ -327,9 +320,7 @@ function Navbar({ activeSection, handleNavClick }) {
                   rest: { rotate: 0, transition: { type: 'spring', stiffness: 200, damping: 15 } }
                 }}
                 initial="rest"
-                className={`w-[62%] h-[62%] object-contain mix-blend-screen select-none pointer-events-none filter drop-shadow-[0_0_6px_var(--accent-color)] transition-opacity duration-300 ${
-                  activeSection === 'home' ? 'opacity-0' : 'opacity-100'
-                }`}
+                className="w-[62%] h-[62%] object-contain mix-blend-screen select-none pointer-events-none filter drop-shadow-[0_0_6px_var(--accent-color)] transition-opacity duration-300 opacity-100"
               />
             </motion.div>
 

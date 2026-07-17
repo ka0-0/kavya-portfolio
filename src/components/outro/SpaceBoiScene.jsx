@@ -2,7 +2,7 @@ import React, { Suspense, useRef, useMemo, useState, useEffect, memo } from 'rea
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { downloadResume } from '../utils/resume';
+import { downloadResume } from '../../utils/resume';
 
 
 const SpaceBoi = memo(function SpaceBoi({ onModelLoaded }) {

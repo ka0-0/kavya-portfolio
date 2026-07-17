@@ -2,7 +2,7 @@ import React, { Suspense, useRef, useEffect, useState, useMemo, memo } from 'rea
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, useAnimations, Environment } from '@react-three/drei';
 import * as THREE from 'three';
-import { useTheme } from './ThemeContext';
+import { useTheme } from '../theme/ThemeContext';
 
 const faceColors = {
   blue: { start: '#93c5fd', end: '#60a5fa' },

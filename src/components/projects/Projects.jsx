@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import SectionHeader from './SectionHeader';
+import SectionHeader from '../navigation/SectionHeader';
 
 gsap.registerPlugin(ScrollTrigger);
 

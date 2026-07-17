@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import SectionHeader from './SectionHeader';
+import SectionHeader from '../navigation/SectionHeader';
 import Globe from './Globe';
 
 // ==========================================
