@@ -26,6 +26,10 @@ function RobotScene({ onProgress, onFinished, onReady }) {
     if (!isInitializedRef.current) {
       isInitializedRef.current = true;
 
+      // Reset scale and position to default before measuring bounds, since useGLTF caches the scene object globally
+      scene.scale.set(1, 1, 1);
+      scene.position.set(0, 0, 0);
+
       const box = new THREE.Box3().setFromObject(scene);
       const size = new THREE.Vector3();
       box.getSize(size);
