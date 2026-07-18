@@ -67,8 +67,8 @@ function MagneticButton({ children, href, onClick, className, shouldReduceMotion
         onMouseLeave={handleMouseLeave}
         animate={{ x: position.x, y: position.y }}
         transition={
-          shouldReduceMotion 
-            ? { duration: 0.15 } 
+          shouldReduceMotion
+            ? { duration: 0.15 }
             : { type: 'spring', stiffness: 140, damping: 15, mass: 0.15 }
         }
         className={className}
@@ -87,8 +87,8 @@ function MagneticButton({ children, href, onClick, className, shouldReduceMotion
       onMouseLeave={handleMouseLeave}
       animate={{ x: position.x, y: position.y }}
       transition={
-        shouldReduceMotion 
-          ? { duration: 0.15 } 
+        shouldReduceMotion
+          ? { duration: 0.15 }
           : { type: 'spring', stiffness: 140, damping: 15, mass: 0.15 }
       }
       className={className}
@@ -102,15 +102,15 @@ function MagneticButton({ children, href, onClick, className, shouldReduceMotion
 export default function ContactSection() {
   const shouldReduceMotion = useReducedMotion();
   const containerRef = useRef(null);
-  
+
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
-  
+
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     name: '',
@@ -129,7 +129,7 @@ export default function ContactSection() {
   const handleCopy = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const emailStr = 'kav.1609.ya@gmail.com';
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -172,7 +172,7 @@ export default function ContactSection() {
   const handleDownload = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     try {
       downloadResume();
       setDownloaded(true);
@@ -463,27 +463,27 @@ export default function ContactSection() {
 
   const modalBoxVariants = {
     hidden: { opacity: 0, scale: 0.95, y: 15 },
-    visible: { 
-      opacity: 1, 
-      scale: 1, 
-      y: 0, 
-      transition: { 
-        type: 'spring', 
-        stiffness: 350, 
-        damping: 28, 
-        mass: 0.8 
-      } 
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: 'spring',
+        stiffness: 350,
+        damping: 28,
+        mass: 0.8
+      }
     },
-    exit: { 
-      opacity: 0, 
-      scale: 0.95, 
-      y: 10, 
-      transition: { duration: 0.2 } 
+    exit: {
+      opacity: 0,
+      scale: 0.95,
+      y: 10,
+      transition: { duration: 0.2 }
     },
   };
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="relative w-full max-w-7xl mx-auto mt-20 px-3 md:px-8 z-10 select-none"
     >
@@ -532,7 +532,7 @@ export default function ContactSection() {
       >
         {/* LEFT COLUMN */}
         <div className="lg:col-span-6 flex flex-col items-start text-left space-y-6 md:space-y-8">
-          <motion.span 
+          <motion.span
             variants={labelVariants}
             className="font-mono text-xs font-semibold tracking-[0.25em] text-cyan-400 uppercase select-none"
           >
@@ -545,7 +545,7 @@ export default function ContactSection() {
                 custom={0}
                 variants={headlineVariants(0)}
                 className="font-display text-[6.8vw] min-[380px]:text-[7.2vw] min-[480px]:text-[2.8rem] sm:text-[4rem] md:text-[5.4rem] lg:text-[5.5rem] xl:text-[6.6rem] font-black uppercase text-white block tracking-tight"
-                style={{ 
+                style={{
                   textShadow: '0 0 24px rgba(6, 182, 212, 0.42)',
                   willChange: 'transform, opacity'
                 }}
@@ -558,7 +558,7 @@ export default function ContactSection() {
                 custom={1}
                 variants={headlineVariants(1)}
                 className="font-display text-[6.8vw] min-[380px]:text-[7.2vw] min-[480px]:text-[2.8rem] sm:text-[4rem] md:text-[5.4rem] lg:text-[5.5rem] xl:text-[6.6rem] font-black uppercase text-white block tracking-tight"
-                style={{ 
+                style={{
                   textShadow: '0 0 24px rgba(6, 182, 212, 0.42)',
                   willChange: 'transform, opacity'
                 }}
@@ -569,6 +569,7 @@ export default function ContactSection() {
           </h2>
 
           <motion.p
+            id="contact-description"
             variants={paragraphVariants}
             className="font-sans text-[14px] sm:text-[15px] md:text-[16px] text-zinc-400 leading-relaxed max-w-[90%] md:max-w-[560px] px-0"
             style={{ willChange: 'transform, opacity' }}
@@ -582,11 +583,12 @@ export default function ContactSection() {
             className="w-full flex justify-start"
           >
             <MagneticButton
+              id="contact-cta-button"
               onClick={openModal}
               shouldReduceMotion={shouldReduceMotion}
               className="group relative inline-flex items-center justify-center sm:justify-between w-full max-w-[340px] sm:max-w-none sm:w-[280px] h-[58px] px-8 rounded-full bg-cyan-500/10 hover:bg-cyan-500/15 border border-[rgba(var(--accent-rgb),0.4)] hover:border-cyan-400 backdrop-blur-md transition-colors duration-300 select-none cursor-pointer"
             >
-              <div 
+              <div
                 className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none blur-md"
                 style={{ willChange: 'opacity' }}
               />
@@ -602,6 +604,7 @@ export default function ContactSection() {
 
         {/* RIGHT COLUMN */}
         <motion.div
+          id="contact-cards-panel"
           rightPanelVariants
           variants={rightPanelVariants}
           style={{ willChange: 'transform, opacity' }}
@@ -629,7 +632,7 @@ export default function ContactSection() {
               className="group relative rounded-2xl bg-white/[0.02] border border-[var(--border-color)] p-4 flex flex-col justify-between hover:border-[rgba(var(--accent-rgb),0.3)] transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden"
               style={{ willChange: 'transform, border-color' }}
             >
-              <div 
+              <div
                 className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none blur-md"
                 style={{ willChange: 'opacity' }}
               />
@@ -663,7 +666,7 @@ export default function ContactSection() {
               className="group relative rounded-2xl bg-white/[0.02] border border-[var(--border-color)] p-4 flex flex-col justify-between hover:border-[rgba(var(--accent-rgb),0.3)] transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden"
               style={{ willChange: 'transform, border-color' }}
             >
-              <div 
+              <div
                 className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none blur-md"
                 style={{ willChange: 'opacity' }}
               />
@@ -695,7 +698,7 @@ export default function ContactSection() {
               className={`group relative rounded-2xl bg-white/[0.02] border p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden ${copied ? 'border-cyan-400/80 shadow-[0_0_20px_rgba(var(--accent-rgb),0.15)] bg-cyan-500/[0.02]' : 'border-[var(--border-color)] hover:border-[rgba(var(--accent-rgb),0.3)]'}`}
               style={{ willChange: 'transform, border-color' }}
             >
-              <div 
+              <div
                 className={`absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent transition-opacity duration-300 pointer-events-none blur-md ${copied ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                 style={{ willChange: 'opacity' }}
               />
@@ -737,7 +740,7 @@ export default function ContactSection() {
               className={`group relative rounded-2xl bg-white/[0.02] border p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden ${downloaded ? 'border-cyan-400/80 shadow-[0_0_20px_rgba(var(--accent-rgb),0.15)] bg-cyan-500/[0.02]' : 'border-[var(--border-color)] hover:border-[rgba(var(--accent-rgb),0.3)]'}`}
               style={{ willChange: 'transform, border-color' }}
             >
-              <div 
+              <div
                 className={`absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent transition-opacity duration-300 pointer-events-none blur-md ${downloaded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                 style={{ willChange: 'opacity' }}
               />
@@ -788,7 +791,7 @@ export default function ContactSection() {
           className="group relative rounded-2xl bg-[var(--card-bg)]/40 border border-[var(--border-color)] backdrop-blur-xl p-6 flex flex-col justify-between hover:border-[rgba(var(--accent-rgb),0.2)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
           style={{ willChange: 'transform, border-color' }}
         >
-          <div 
+          <div
             className="absolute inset-0 bg-gradient-to-t from-cyan-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none blur-md"
             style={{ willChange: 'opacity' }}
           />
@@ -820,7 +823,7 @@ export default function ContactSection() {
           className="group relative rounded-2xl bg-[var(--card-bg)]/40 border border-[var(--border-color)] backdrop-blur-xl p-6 flex flex-col justify-between hover:border-[rgba(var(--accent-rgb),0.2)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
           style={{ willChange: 'transform, border-color' }}
         >
-          <div 
+          <div
             className="absolute inset-0 bg-gradient-to-t from-cyan-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none blur-md"
             style={{ willChange: 'opacity' }}
           />
@@ -848,7 +851,7 @@ export default function ContactSection() {
           className="group relative rounded-2xl bg-[var(--card-bg)]/40 border border-[var(--border-color)] backdrop-blur-xl p-6 flex flex-col justify-between hover:border-[rgba(var(--accent-rgb),0.2)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
           style={{ willChange: 'transform, border-color' }}
         >
-          <div 
+          <div
             className="absolute inset-0 bg-gradient-to-t from-cyan-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none blur-md"
             style={{ willChange: 'opacity' }}
           />
@@ -909,9 +912,9 @@ export default function ContactSection() {
                   className="absolute top-5 right-5 sm:top-6 sm:right-6 w-9 h-9 sm:w-8 sm:h-8 rounded-full border border-[var(--border-color)] hover:border-[rgba(var(--accent-rgb),0.3)] flex items-center justify-center text-zinc-400 hover:text-[var(--text-main)] bg-white/[0.02] cursor-pointer transition-colors duration-300 focus:outline-none focus:border-[var(--accent-color)] focus:ring-1 focus:ring-[rgba(var(--accent-rgb),0.2)]"
                   aria-label="Close modal"
                 >
-                  <motion.div 
-                    whileHover={shouldReduceMotion ? {} : { rotate: 90 }} 
-                    transition={{ duration: 0.25 }} 
+                  <motion.div
+                    whileHover={shouldReduceMotion ? {} : { rotate: 90 }}
+                    transition={{ duration: 0.25 }}
                     className="w-5 h-5 flex items-center justify-center"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -928,8 +931,8 @@ export default function ContactSection() {
                       initial={{ scale: 0, rotate: -45 }}
                       animate={{ scale: 1, rotate: 0 }}
                       transition={
-                        shouldReduceMotion 
-                          ? { duration: 0.2 } 
+                        shouldReduceMotion
+                          ? { duration: 0.2 }
                           : { type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }
                       }
                       className="w-16 h-16 rounded-full bg-cyan-950/50 border border-[rgba(var(--accent-rgb),0.4)] flex items-center justify-center text-cyan-455 mb-6 shadow-[0_0_24px_rgba(var(--accent-rgb),0.2)]"
@@ -1072,7 +1075,7 @@ export default function ContactSection() {
                           className="group relative w-full sm:w-auto min-w-[200px] h-[54px] px-8 rounded-full bg-cyan-950/20 hover:bg-cyan-950/30 border border-[rgba(var(--accent-rgb),0.4)] hover:border-cyan-400 text-white font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center cursor-pointer transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed select-none focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/20"
                           aria-label="Submit message"
                         >
-                          <div 
+                          <div
                             className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none blur-md"
                             style={{ willChange: 'opacity' }}
                           />

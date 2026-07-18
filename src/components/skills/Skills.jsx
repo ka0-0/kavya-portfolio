@@ -144,19 +144,19 @@ function SkillPill({ name, category, registerPill, unregisterPill, prefersReduce
               prefersReducedMotion
                 ? {}
                 : {
-                    x: floatX,
-                    y: floatY,
-                  }
+                  x: floatX,
+                  y: floatY,
+                }
             }
             transition={
               prefersReducedMotion
                 ? {}
                 : {
-                    duration: floatDuration,
-                    delay: floatDelay,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }
+                  duration: floatDuration,
+                  delay: floatDelay,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }
             }
           >
             {/* Visual Pill Body */}
@@ -165,16 +165,15 @@ function SkillPill({ name, category, registerPill, unregisterPill, prefersReduce
                 prefersReducedMotion
                   ? {}
                   : {
-                      y: -5,
-                      scale: 1.03,
-                      transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] }
-                    }
+                    y: -5,
+                    scale: 1.03,
+                    transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] }
+                  }
               }
-              className={`px-4 py-2 text-xs md:text-sm text-zinc-400 bg-[var(--card-bg-alt)]/50 border border-[var(--border-color)] rounded-full backdrop-blur-md transition-all duration-300 font-sans-body ease-out ${
-                isDraggingState
-                  ? theme.draggingGlow
-                  : `${theme.borderGlow} ${theme.textColor}`
-              }`}
+              className={`px-4 py-2 text-xs md:text-sm text-zinc-400 bg-[var(--card-bg-alt)]/50 border border-[var(--border-color)] rounded-full backdrop-blur-md transition-all duration-300 font-sans-body ease-out ${isDraggingState
+                ? theme.draggingGlow
+                : `${theme.borderGlow} ${theme.textColor}`
+                }`}
             >
               {name}
             </motion.div>
@@ -188,25 +187,25 @@ function SkillPill({ name, category, registerPill, unregisterPill, prefersReduce
 const OrbitIcon = React.memo(function OrbitIcon({ skill, index, total, radius, rotation, hoveredSkill, setHoveredSkill, activeSkill, setActiveSkill, isHoveredRef, hoverTimeoutRef }) {
   const angle = (index * 360) / total;
   const angleInRadians = (angle * Math.PI) / 180;
-  
+
   // Base offset to center the absolute-positioned icon (using tailwind custom properties for responsiveness)
   const leftPos = `calc(50% + ${Math.cos(angleInRadians) * radius}px - var(--icon-half-size))`;
   const topPos = `calc(50% + ${Math.sin(angleInRadians) * radius}px - var(--icon-half-size))`;
-  
+
   const hoverOffset = useMotionValue(0);
   const springHoverOffset = useSpring(hoverOffset, { stiffness: 300, damping: 20 });
-  
+
   const isHovered = hoveredSkill?.name === skill.name;
   const isAnyHovered = hoveredSkill !== null;
   const isDimmed = isAnyHovered && !isHovered;
-  
+
   // Radial translation on hover: translates outward by 8px along its respective radial angle
   const x = useTransform(springHoverOffset, (offset) => Math.cos(angleInRadians) * offset);
   const y = useTransform(springHoverOffset, (offset) => Math.sin(angleInRadians) * offset);
-  
+
   // Inverted rotation to keep icons perfectly upright at all times
   const negRotation = useTransform(rotation, (r) => -r);
-  
+
   const handleMouseEnter = () => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
@@ -217,7 +216,7 @@ const OrbitIcon = React.memo(function OrbitIcon({ skill, index, total, radius, r
     hoverOffset.set(8); // Translate outward by 8px
     isHoveredRef.current = true; // Pause orbit rotation immediately
   };
-  
+
   const handleMouseLeave = () => {
     hoverOffset.set(0);
     // Defer resetting hoveredSkill to see if we enter another icon immediately
@@ -227,7 +226,7 @@ const OrbitIcon = React.memo(function OrbitIcon({ skill, index, total, radius, r
       isHoveredRef.current = false;
     }, 50); // Small 50ms window to catch neighboring icon entry
   };
-  
+
   return (
     <motion.div
       onMouseEnter={handleMouseEnter}
@@ -376,7 +375,7 @@ export default function Skills() {
 
   const [activeSkill, setActiveSkill] = useState(orbitSkills[0]);
   const [hoveredSkill, setHoveredSkill] = useState(null);
-  
+
   // Orbit rotation controls using requestAnimationFrame for smooth pause/resume
   const rotation = useMotionValue(0);
   const isHoveredRef = useRef(false);
@@ -615,7 +614,10 @@ export default function Skills() {
       {/* Balanced layout: centered flex container with visual placeholder and right-aligned skills panel */}
       <div className="mx-auto w-full max-w-7xl px-6 z-10 relative flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12 my-auto lg:-translate-x-6">
         {/* Left Side: Interactive 3D Skill Orbit */}
-        <div className="flex-1 flex items-center justify-center w-full min-h-[330px] md:min-h-[460px] lg:min-h-[530px] relative">
+        <div
+          id="skills-orbit-container"
+          className="flex-1 flex items-center justify-center w-full min-h-[330px] md:min-h-[460px] lg:min-h-[530px] relative"
+        >
           <motion.div
             onMouseMove={handleOrbitMouseMove}
             onMouseLeave={handleOrbitMouseLeave}
@@ -628,7 +630,7 @@ export default function Skills() {
             className="relative flex items-center justify-center w-[276px] h-[276px] md:w-[405px] md:h-[405px] lg:w-[515px] lg:h-[515px] mx-auto select-none"
           >
             {/* Center Panel (Fixed, does not rotate but tilts) */}
-            <div 
+            <div
               className="absolute w-[138px] h-[138px] md:w-[175px] md:h-[175px] lg:w-[212px] lg:h-[212px] rounded-full bg-[var(--card-bg-alt)]/95 border border-[var(--border-color)] backdrop-blur-xl flex items-center justify-center z-20 transition-all duration-500 ease-out overflow-hidden"
               style={{
                 transform: 'translateZ(35px)',
@@ -637,7 +639,7 @@ export default function Skills() {
               }}
             >
               {/* Radial glow background inside center panel */}
-              <div 
+              <div
                 className="absolute inset-0 opacity-15 pointer-events-none transition-all duration-500 ease-out"
                 style={{
                   background: `radial-gradient(circle at center, ${activeSkill.color}, transparent 70%)`
@@ -653,21 +655,21 @@ export default function Skills() {
                   transition={{ duration: 0.22, ease: 'easeInOut' }}
                   className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 md:p-6 w-full h-full select-none"
                 >
-                  <div 
+                  <div
                     className="w-7 h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center mb-1.5 transition-colors duration-300"
                     style={{ color: activeSkill.color }}
                   >
                     <activeSkill.icon className="w-full h-full" />
                   </div>
-                  
+
                   <h4 className="font-sans font-bold text-[10px] md:text-[11px] lg:text-xs uppercase tracking-wider text-white">
                     {activeSkill.name}
                   </h4>
-                  
+
                   <span className="font-mono text-[7px] md:text-[8px] lg:text-[9px] text-zinc-500 uppercase tracking-widest mt-0.5 mb-1">
                     {activeSkill.category}
                   </span>
-                  
+
                   <p className="font-sans text-[8.5px] md:text-[9px] lg:text-[11px] text-zinc-400 leading-normal max-w-[120px] md:max-w-[150px] lg:max-w-[190px]">
                     {activeSkill.description}
                   </p>
@@ -682,7 +684,7 @@ export default function Skills() {
               className="absolute w-[86%] h-[86%] rounded-full pointer-events-none"
               style={{ transformStyle: "preserve-3d" }}
             >
-              <div 
+              <div
                 className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full blur-[1.5px]"
                 style={{
                   backgroundColor: activeSkill.color,
@@ -701,10 +703,10 @@ export default function Skills() {
             >
               {/* Outer glowing ring */}
               <div className="absolute w-[86%] h-[86%] rounded-full border border-[var(--border-color)] shadow-[0_0_50px_rgba(255,255,255,0.01)]" />
-              
+
               {/* Inner dashed ring */}
               <div className="absolute w-[60%] h-[60%] rounded-full border border-dashed border-[var(--border-color)] opacity-40" />
-              
+
               {/* Render Orbit Icons */}
               {orbitSkills.map((skill, index) => (
                 <OrbitIcon
@@ -726,70 +728,83 @@ export default function Skills() {
           </motion.div>
         </div>
 
-        {/* Right Side Compact Glass Panel */}
-        <motion.div
-          ref={containerRef}
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.15 }}
-          onMouseMove={handleMouseMove}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          className="relative rounded-3xl overflow-hidden bg-[var(--card-bg)]/60 border border-[var(--border-color)] backdrop-blur-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full lg:max-w-[560px] xl:max-w-[600px] grid grid-cols-1 md:grid-cols-2 shrink-0 self-center"
-        >
-          {/* Subtle background glow mapping */}
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.04),transparent_60%)] pointer-events-none" />
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_100%,rgba(59,130,246,0.03),transparent_60%)] pointer-events-none" />
+        {/* Right Side Container with relative positioning for AIKAV placeholder */}
+        <div className="relative shrink-0 self-center w-full lg:max-w-[560px] xl:max-w-[600px]">
+          {/* Absolute Placeholder for KaviAICore */}
+          <div
+            id="aikav-placeholder-skills"
+            className="absolute -top-36 left-1/2 -translate-x-1/2 lg:translate-x-0 lg:-top-64 lg:-left-44 w-[120px] h-[120px] pointer-events-none"
+            style={{
+              zIndex: 998,
+            }}
+          />
 
-          {/* Overlay grid mesh */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.002)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.002)_1px,transparent_1px)] bg-[size:24px_24px] opacity-20 pointer-events-none" />
+          {/* Right Side Compact Glass Panel */}
+          <motion.div
+            ref={containerRef}
+            id="skills-card-panel"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.15 }}
+            onMouseMove={handleMouseMove}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className="relative rounded-3xl overflow-hidden bg-[var(--card-bg)]/60 border border-[var(--border-color)] backdrop-blur-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full grid grid-cols-1 md:grid-cols-2"
+          >
+            {/* Subtle background glow mapping */}
+            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.04),transparent_60%)] pointer-events-none" />
+            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_100%,rgba(59,130,246,0.03),transparent_60%)] pointer-events-none" />
 
-          {/* Corner highlights */}
-          <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-purple-500/20 pointer-events-none" />
-          <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-blue-500/20 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-blue-500/20 pointer-events-none" />
-          <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-purple-500/20 pointer-events-none" />
+            {/* Overlay grid mesh */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.002)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.002)_1px,transparent_1px)] bg-[size:24px_24px] opacity-20 pointer-events-none" />
 
-          {categories.map((cat, idx) => {
-            // Soft inner borders for perfectly equal quadrants
-            let borderClass = '';
-            if (idx === 0) borderClass = 'border-b md:border-r border-[var(--border-color)]';
-            else if (idx === 1) borderClass = 'border-b border-[var(--border-color)]';
-            else if (idx === 2) borderClass = 'border-b md:border-b-0 md:border-r border-[var(--border-color)]';
-            else if (idx === 3) borderClass = '';
+            {/* Corner highlights */}
+            <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-purple-500/20 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-blue-500/20 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-blue-500/20 pointer-events-none" />
+            <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-purple-500/20 pointer-events-none" />
 
-            return (
-              <motion.div
-                key={cat.id}
-                variants={quadrantVariants}
-                className={`py-5 px-6 md:py-6 md:px-7 flex flex-col justify-start min-h-[190px] md:min-h-[220px] relative group/quadrant ${borderClass}`}
-              >
-                {/* Category Header */}
-                <motion.div variants={titleVariants} className="flex items-center gap-2 mb-4">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
-                  <h3 className="font-mono-code text-[11px] font-semibold tracking-widest text-zinc-500 uppercase select-none">
-                    {cat.title}
-                  </h3>
+            {categories.map((cat, idx) => {
+              // Soft inner borders for perfectly equal quadrants
+              let borderClass = '';
+              if (idx === 0) borderClass = 'border-b md:border-r border-[var(--border-color)]';
+              else if (idx === 1) borderClass = 'border-b border-[var(--border-color)]';
+              else if (idx === 2) borderClass = 'border-b md:border-b-0 md:border-r border-[var(--border-color)]';
+              else if (idx === 3) borderClass = '';
+
+              return (
+                <motion.div
+                  key={cat.id}
+                  variants={quadrantVariants}
+                  className={`py-5 px-6 md:py-6 md:px-7 flex flex-col justify-start min-h-[190px] md:min-h-[220px] relative group/quadrant ${borderClass}`}
+                >
+                  {/* Category Header */}
+                  <motion.div variants={titleVariants} className="flex items-center gap-2 mb-4">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
+                    <h3 className="font-mono-code text-[11px] font-semibold tracking-widest text-zinc-500 uppercase select-none">
+                      {cat.title}
+                    </h3>
+                  </motion.div>
+
+                  {/* Left Aligned, Non-stretching Skills Container */}
+                  <div className="flex flex-wrap gap-2.5 max-w-md justify-start items-center">
+                    {cat.skills.map((skill) => (
+                      <SkillPill
+                        key={skill}
+                        name={skill}
+                        category={cat.id}
+                        registerPill={registerPill}
+                        unregisterPill={unregisterPill}
+                        prefersReducedMotion={prefersReducedMotion}
+                      />
+                    ))}
+                  </div>
                 </motion.div>
-
-                {/* Left Aligned, Non-stretching Skills Container */}
-                <div className="flex flex-wrap gap-2.5 max-w-md justify-start items-center">
-                  {cat.skills.map((skill) => (
-                    <SkillPill
-                      key={skill}
-                      name={skill}
-                      category={cat.id}
-                      registerPill={registerPill}
-                      unregisterPill={unregisterPill}
-                      prefersReducedMotion={prefersReducedMotion}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            );
-          })}
-        </motion.div>
+              );
+            })}
+          </motion.div>
+        </div>
       </div>
     </section>
   );

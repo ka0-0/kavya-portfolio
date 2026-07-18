@@ -171,7 +171,7 @@ export default function LoadingScreen({ onStartTransition, onComplete }) {
             <ambientLight intensity={0.5} color="#ffffff" />
             <directionalLight position={[5, 8, 5]} intensity={1.5} color="#ffffff" />
             <Suspense fallback={null}>
-              <SpaceBoi onModelLoaded={setModelRadius} />
+              <SpaceBoi onModelLoaded={setModelRadius} rotationSpeedMultiplier={5.0} />
             </Suspense>
             <CameraFitter modelRadius={modelRadius} />
           </Canvas>

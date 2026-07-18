@@ -33,8 +33,9 @@ function RobotScene({ onProgress, onFinished, onReady }) {
       if (maxDim > 0) {
         const scaleMultiplier = 2.0 / maxDim;
         scene.scale.set(scaleMultiplier, scaleMultiplier, scaleMultiplier);
-        // Position model closer to text (Y = -0.18)
-        scene.position.set(0, -0.18, 0);
+        // Position model closer to text (Y = -0.18), shifted to the right on desktop (X = 1.6)
+        const isDesktop = window.innerWidth >= 1024;
+        scene.position.set(isDesktop ? 1.6 : 0, -0.18, 0);
       }
     }
 

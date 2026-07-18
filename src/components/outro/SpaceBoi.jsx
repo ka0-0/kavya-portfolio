@@ -6,7 +6,7 @@ import * as THREE from 'three';
 // Preload the SpaceBoi GLB model asset
 useGLTF.preload('/models/space_boi.glb');
 
-export const SpaceBoi = memo(function SpaceBoi({ onModelLoaded }) {
+export const SpaceBoi = memo(function SpaceBoi({ onModelLoaded, rotationSpeedMultiplier = 1.0 }) {
   const { scene } = useGLTF('/models/space_boi.glb');
   const meshRef = useRef();
 
@@ -40,8 +40,8 @@ export const SpaceBoi = memo(function SpaceBoi({ onModelLoaded }) {
   useFrame((state) => {
     const elapsed = state.clock.getElapsedTime();
     if (meshRef.current) {
-      // Rotate 360 degrees (2 * Math.PI) over 100 seconds
-      meshRef.current.rotation.y = (elapsed * (2 * Math.PI)) / 25;
+      // Rotate 360 degrees (2 * Math.PI) over 25 seconds, scaled by rotationSpeedMultiplier
+      meshRef.current.rotation.y = (elapsed * (2 * Math.PI) * rotationSpeedMultiplier) / 25;
 
       // Calculate dynamic vertical offset (16% of viewport height down)
       const fovRad = (state.camera.fov * Math.PI) / 180;

@@ -460,9 +460,25 @@ function CylinderItem({ cert, i, activeIdx, radius, angleStep, activeIndex, hand
         style={{
           opacity: dotOpacity,
         }}
-        className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(var(--accent-rgb),0.8)] shrink-0"
-      />
-      <span className="font-display text-xs sm:text-sm md:text-base tracking-wider uppercase">
+        className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(var(--accent-rgb),0.8)] shrink-0 relative"
+      >
+        {isActive && (
+          <div
+            id="aikav-placeholder-certificates"
+            className="absolute pointer-events-none"
+            style={{
+              left: `${radius < 150 ? -38 : radius < 220 ? -52 : -64}px`,
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '10px',
+              height: '10px'
+            }}
+          />
+        )}
+      </motion.div>
+      <span className={`font-display text-xs sm:text-sm md:text-base tracking-wider uppercase transition-all duration-300 ${
+        isActive ? 'pl-4' : ''
+      }`}>
         {cert.cylinderTitle}
       </span>
     </motion.div>
@@ -476,6 +492,11 @@ export default function Certificates() {
   const scrollTriggerInstanceRef = useRef(null);
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const activeIndexRef = useRef(0);
+  const galleryCompletedRef = useRef(false);
+  const replayPromptShownRef = useRef(false);
+  const isCarouselLockedRef = useRef(false);
+
   const [selectedViewerCert, setSelectedViewerCert] = useState(null);
 
   const [isMobileViewport, setIsMobileViewport] = useState(false);
@@ -558,7 +579,8 @@ export default function Certificates() {
       currentIdx = totalItems - 1;
     }
     const clampedIdx = Math.max(0, Math.min(totalItems - 1, currentIdx));
-    if (clampedIdx !== activeIndex) {
+    if (clampedIdx !== activeIndexRef.current) {
+      activeIndexRef.current = clampedIdx;
       setActiveIndex(clampedIdx);
     }
   });
@@ -590,14 +612,97 @@ export default function Certificates() {
         pin: true,
         pinSpacing: true,
         scrub: 1,
+        onLeave: () => {
+          if (activeIndexRef.current === certificatesData.length - 1) {
+            galleryCompletedRef.current = true;
+          }
+        },
+        onEnterBack: () => {
+          if (galleryCompletedRef.current && !replayPromptShownRef.current) {
+            isCarouselLockedRef.current = true;
+            replayPromptShownRef.current = true;
+            rotationProgress.set(0.85); // Lock display at final index
+            window.dispatchEvent(new CustomEvent('certificates-replay-request'));
+          }
+        },
+        onLeaveBack: () => {
+          galleryCompletedRef.current = false;
+          replayPromptShownRef.current = false;
+          isCarouselLockedRef.current = false;
+        },
         onUpdate: (self) => {
-          rotationProgress.set(self.progress);
+          if (isCarouselLockedRef.current) {
+            rotationProgress.set(0.85);
+          } else {
+            rotationProgress.set(self.progress);
+          }
         }
       });
     }, sectionRef);
 
     return () => ctx.revert();
   }, [timelineDotProgress, rotationProgress]);
+
+  // Handle Yes/No replay prompt choices
+  useEffect(() => {
+    const handleReplayResponse = (e) => {
+      const { action } = e.detail || {};
+      if (action === 'yes') {
+        isCarouselLockedRef.current = false;
+        galleryCompletedRef.current = false;
+        replayPromptShownRef.current = false;
+
+        const trigger = scrollTriggerInstanceRef.current;
+        if (trigger) {
+          const targetScroll = trigger.start + 0.85 * (trigger.end - trigger.start);
+          if (window.lenis) {
+            window.lenis.scrollTo(targetScroll, { duration: 0.5 });
+          } else {
+            window.scrollTo({
+              top: targetScroll,
+              behavior: 'smooth'
+            });
+          }
+          rotationProgress.set(0.85);
+        }
+      } else if (action === 'no') {
+        isCarouselLockedRef.current = true;
+        galleryCompletedRef.current = false;
+        
+        const projectCards = document.querySelectorAll('.projects-card-item');
+        const targetCard = projectCards[2] || projectCards[projectCards.length - 1];
+        if (targetCard) {
+          if (window.lenis) {
+            window.lenis.scrollTo(targetCard, { offset: -120, duration: 1.0 });
+          } else {
+            const targetY = targetCard.getBoundingClientRect().top + window.scrollY - 120;
+            window.scrollTo({
+              top: targetY,
+              behavior: 'smooth'
+            });
+          }
+        } else {
+          if (window.lenis) {
+            window.lenis.scrollTo('#projects');
+          } else {
+            const projectsEl = document.getElementById('projects');
+            if (projectsEl) {
+              const targetY = projectsEl.getBoundingClientRect().top + window.scrollY - 150;
+              window.scrollTo({
+                top: targetY,
+                behavior: 'smooth'
+              });
+            }
+          }
+        }
+      }
+    };
+
+    window.addEventListener('certificates-replay-response', handleReplayResponse);
+    return () => {
+      window.removeEventListener('certificates-replay-response', handleReplayResponse);
+    };
+  }, [rotationProgress]);
 
   // Click title: smooth scroll & cylinder rotation
   const handleClickItem = (i) => {

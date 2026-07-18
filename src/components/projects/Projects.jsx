@@ -241,7 +241,7 @@ export default function Projects() {
           <div
             key={project.id}
             ref={addToCardRefs}
-            className="sticky top-[120px] w-[94vw] h-[80vh] bg-[var(--card-bg-alt)] border border-[rgba(var(--accent-rgb),0.2)] rounded-3xl shadow-[0_0_50px_rgba(var(--accent-rgb),0.15)] overflow-hidden flex flex-col justify-between mx-auto"
+            className="sticky top-[120px] w-[94vw] h-[80vh] bg-[var(--card-bg-alt)] border border-[rgba(var(--accent-rgb),0.2)] rounded-3xl shadow-[0_0_50px_rgba(var(--accent-rgb),0.15)] overflow-hidden flex flex-col justify-between mx-auto projects-card-item"
             style={{
               zIndex: idx + 10,
               marginBottom: '40vh', // Critical: Apply exact same margin-bottom to ALL cards (including last card)
@@ -256,7 +256,7 @@ export default function Projects() {
               <div className="w-full h-full flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-4 sm:py-8 z-10">
                 
                 {/* Left Column (Project Info - 35% width, clean background area) */}
-                <div className="w-full lg:w-[35%] lg:max-w-[35%] flex-shrink-0 flex flex-col justify-center items-start text-left gap-2 sm:gap-4 md:gap-5 order-2 lg:order-1">
+                <div className="w-full lg:w-[35%] lg:max-w-[35%] flex-shrink-0 flex flex-col justify-center items-start text-left gap-2 sm:gap-4 md:gap-5 order-2 lg:order-1 projects-info-column">
                   <div className="flex flex-col gap-1 md:gap-2">
                     <span className="font-mono text-cyan-400 text-xs md:text-sm font-bold tracking-[0.25em]">
                       {project.number} / 03
@@ -289,7 +289,7 @@ export default function Projects() {
                 </div>
 
                 {/* Right Column (Screenshot Media - 65% width) */}
-                <div className="w-full lg:w-[65%] lg:max-w-[65%] flex-shrink-0 flex items-center justify-center order-1 lg:order-2">
+                <div className="w-full lg:w-[65%] lg:max-w-[65%] flex-shrink-0 flex items-center justify-center order-1 lg:order-2 projects-media-column">
                   <BrowserMockup project={project} />
                 </div>
 

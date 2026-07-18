@@ -32,10 +32,11 @@ useEnvironment.preload({ preset: 'city' });
 const sectionConfigs = {
   home: { placeholderId: 'aikav-placeholder-home' },
   about: { placeholderId: 'aikav-placeholder-dock' },
-  skills: { placeholderId: 'aikav-placeholder-dock' },
+  skills: { placeholderId: 'aikav-placeholder-skills' },
   projects: { placeholderId: 'aikav-placeholder-dock' },
-  certificates: { placeholderId: 'aikav-placeholder-dock' },
-  contact: { placeholderId: 'aikav-placeholder-dock' }
+  certificates: { placeholderId: 'aikav-placeholder-certificates' },
+  contact: { placeholderId: 'aikav-placeholder-dock' },
+  resume: { placeholderId: 'aikav-placeholder-dock' }
 };
 
 import {
@@ -105,8 +106,6 @@ export default function App() {
     Object.entries(sectionConfigs).forEach(([section, config]) => {
       const el = document.getElementById(config.placeholderId);
       if (el) {
-        const rect = el.getBoundingClientRect();
-
         let targetSize = 120;
         if (section === 'home') {
           targetSize = 78; // 78px core size results in 52px outer ring, which is exactly 90% of 58px emblem container
@@ -114,6 +113,137 @@ export default function App() {
           targetSize = coreSize;
         }
 
+        // Custom relative midpoint layout calculation for Skills section
+        if (section === 'skills') {
+          const skillsSection = document.getElementById('skills');
+          const skillWheel = document.getElementById('skills-orbit-container');
+          const skillsCard = document.getElementById('skills-card-panel');
+
+          if (skillsSection && skillWheel && skillsCard) {
+            const sectionRect = skillsSection.getBoundingClientRect();
+            const wheelRect = skillWheel.getBoundingClientRect();
+            const cardRect = skillsCard.getBoundingClientRect();
+            const isMobileLayout = window.innerWidth < 1024;
+
+            let centerX, centerY;
+            if (isMobileLayout) {
+              // Vertically center between bottom of wheel and top of card
+              centerY = (wheelRect.bottom + cardRect.top) / 2;
+              centerX = sectionRect.left + sectionRect.width / 2;
+            } else {
+              // Horizontally: midpoint between wheel.right and card.left, shifted 50px left
+              centerX = (wheelRect.right + cardRect.left) / 2 - 50;
+              // Vertically: level with FRONTEND title header, matching the cursor position
+              centerY = cardRect.top + 45;
+            }
+
+            newCoords[section] = {
+              centerX: centerX,
+              centerY: centerY,
+              size: targetSize
+            };
+            return; // Skip standard coordinate calculation
+          }
+        }
+
+        // Custom relative midpoint layout calculation for Projects section
+        if (section === 'projects') {
+          const cards = document.querySelectorAll('.projects-card-item');
+          if (cards.length > 0) {
+            // Find the active sticky card
+            let activeCard = cards[0];
+            for (let i = 0; i < cards.length; i++) {
+              const rect = cards[i].getBoundingClientRect();
+              // Card is sticky at top: 120px, so we look for the card currently in view/pinned
+              if (rect.top <= 130 && rect.bottom > 130) {
+                activeCard = cards[i];
+                break;
+              }
+            }
+
+            const infoCol = activeCard.querySelector('.projects-info-column');
+            const mediaCol = activeCard.querySelector('.projects-media-column');
+
+            if (infoCol && mediaCol) {
+              const infoRect = infoCol.getBoundingClientRect();
+              const mediaRect = mediaCol.getBoundingClientRect();
+              const isMobileLayout = window.innerWidth < 1024;
+
+              let centerX, centerY;
+              if (isMobileLayout) {
+                // Centered horizontally, vertically between info and media
+                centerX = infoRect.left + infoRect.width / 2;
+                centerY = (infoRect.bottom + mediaRect.top) / 2;
+              } else {
+                // Horizontally: midpoint of the gap
+                centerX = (infoRect.right + mediaRect.left) / 2;
+                // Vertically: level with browser traffic lights / top bar of mockup
+                centerY = mediaRect.top + 22;
+              }
+
+              newCoords[section] = {
+                centerX: centerX,
+                centerY: centerY,
+                size: targetSize
+              };
+              return; // Skip standard coordinate calculation
+            }
+          }
+        }
+
+        // Custom relative midpoint layout calculation for Contact section
+        if (section === 'contact') {
+          const descEl = document.getElementById('contact-description');
+          const btnEl = document.getElementById('contact-cta-button');
+          const cardsEl = document.getElementById('contact-cards-panel');
+
+          if (descEl && btnEl && cardsEl) {
+            const descRect = descEl.getBoundingClientRect();
+            const btnRect = btnEl.getBoundingClientRect();
+            const cardsRect = cardsEl.getBoundingClientRect();
+            const isMobileLayout = window.innerWidth < 1024;
+
+            if (!isMobileLayout) {
+              // Horizontally: midpoint between the right edge of description/button and the left edge of cards panel
+              const leftEdge = Math.max(descRect.right, btnRect.right);
+              const centerX = (leftEdge + cardsRect.left) / 2;
+
+              // Vertically: midpoint between bottom of description and top of CTA button
+              const centerY = (descRect.bottom + btnRect.top) / 2;
+
+              newCoords[section] = {
+                centerX: centerX,
+                centerY: centerY,
+                size: targetSize
+              };
+              return; // Skip standard coordinate calculation
+            }
+          }
+        }
+
+        // Custom relative layout calculation for Resume section
+        if (section === 'resume') {
+          const resumeEl = document.getElementById('resume');
+          if (resumeEl) {
+            const rect = resumeEl.getBoundingClientRect();
+            const isMobileLayout = window.innerWidth < 1024;
+            if (!isMobileLayout) {
+              // centerX: left side of viewport, e.g. 15% of width or at least 160px from the left
+              const centerX = rect.left + Math.max(160, window.innerWidth * 0.15);
+              // centerY: vertical center of the section's viewport bounding box
+              const centerY = rect.top + rect.height / 2;
+
+              newCoords[section] = {
+                centerX: centerX,
+                centerY: centerY,
+                size: 240 // Make him big!
+              };
+              return; // Skip standard coordinate calculation
+            }
+          }
+        }
+
+        const rect = el.getBoundingClientRect();
         newCoords[section] = {
           centerX: rect.left + rect.width / 2,
           centerY: rect.top + rect.height / 2,
@@ -130,15 +260,17 @@ export default function App() {
     }
   }, [coreSize]);
 
-  // Sync coords on visibility, resize, and active section changes
+  // Sync coords on visibility, resize, scroll, and active section changes
   useEffect(() => {
     if (!isTransitionComplete) return;
 
     updateCoords();
 
     window.addEventListener('resize', updateCoords);
+    window.addEventListener('scroll', updateCoords);
     return () => {
       window.removeEventListener('resize', updateCoords);
+      window.removeEventListener('scroll', updateCoords);
     };
   }, [isTransitionComplete, updateCoords, activeSection]);
 
@@ -468,7 +600,7 @@ export default function App() {
           />
           <main>
             <section id="home">
-              <Hero showRobot={isPortfolioVisible} glanceAtAIKAV={glanceAtAIKAV} activeSection={activeSection} />
+              <Hero showRobot={isTransitionComplete} glanceAtAIKAV={glanceAtAIKAV} activeSection={activeSection} />
             </section>
 
             {isTransitionComplete && (
@@ -479,7 +611,7 @@ export default function App() {
                     <MobileNavbar activeSection={activeSection} handleNavClick={handleNavClick} />
                   </Suspense>
                 )}
-                <AboutSection />
+                <AboutSection isTransitionComplete={isTransitionComplete} activeSection={activeSection} />
                 <Skills />
 
                 <Projects />
@@ -524,12 +656,7 @@ export default function App() {
             {isTransitionComplete && coords[activeSection] && (
               <>
                 <motion.div
-                  initial={{
-                    x: (coords[activeSection]?.centerX ?? 0) - (coords[activeSection]?.size ?? 120) / 2,
-                    y: (coords[activeSection]?.centerY ?? 0) - (coords[activeSection]?.size ?? 120) / 2,
-                    scale: ((coords[activeSection]?.size ?? 120) / 300) * 0.92,
-                    opacity: 0,
-                  }}
+                  initial={false}
                   animate={{
                     x: (coords[activeSection]?.centerX ?? 0) - (coords[activeSection]?.size ?? 120) / 2,
                     y: (coords[activeSection]?.centerY ?? 0) - (coords[activeSection]?.size ?? 120) / 2,
@@ -576,6 +703,11 @@ export default function App() {
                 {/* AI.KAV Home Introduction Dialogue Bubble */}
                 <AIKAVDialogueBubble
                   homeCoords={coords['home']}
+                  skillsCoords={coords['skills']}
+                  projectsCoords={coords['projects']}
+                  certificatesCoords={coords['certificates']}
+                  contactCoords={coords['contact']}
+                  resumeCoords={coords['resume']}
                   activeSection={activeSection}
                   isTransitioning={isTransitioning}
                   onRobotGlance={setGlanceAtAIKAV}

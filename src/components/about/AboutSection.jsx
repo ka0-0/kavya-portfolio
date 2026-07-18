@@ -232,10 +232,36 @@ const TerminalContent = React.memo(function TerminalContent({ bootCompleteTermin
 // ==========================================
 // 1.8. Isolated Interactive Map Component (Prevents AboutSection parent re-renders during map hover)
 // ==========================================
-const InteractiveMapContent = React.memo(function InteractiveMapContent() {
+const InteractiveMapContent = React.memo(function InteractiveMapContent({ isTransitionComplete }) {
+  const containerRef = useRef(null);
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    if (!isTransitionComplete) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldRender(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [isTransitionComplete]);
+
   return (
-    <div className="relative w-full h-full min-h-[260px] md:min-h-[330px] flex items-center justify-center overflow-visible rounded-lg bg-zinc-950/10 border border-[var(--border-color)]/40 p-5">
-      <Globe />
+    <div 
+      ref={containerRef}
+      className="relative w-full h-full min-h-[260px] md:min-h-[330px] flex items-center justify-center overflow-visible rounded-lg bg-zinc-950/10 border border-[var(--border-color)]/40 p-5"
+    >
+      {shouldRender ? <Globe /> : <div className="text-zinc-500 font-mono text-[10px] tracking-wider animate-pulse">CONNECTING TO MAP NODE...</div>}
     </div>
   );
 });
@@ -359,7 +385,7 @@ let hasPlayedAboutDialogueGlobal = false;
 // ==========================================
 // 5. Main Component: Redesigned About Section
 // ==========================================
-const AboutSection = React.memo(function AboutSection() {
+const AboutSection = React.memo(function AboutSection({ isTransitionComplete, activeSection }) {
   const sectionRef = useRef(null);
   const [triggerDialogue, setTriggerDialogue] = useState(false);
   const dialogueTriggeredRef = useRef(hasPlayedAboutDialogueGlobal);
@@ -589,8 +615,8 @@ const AboutSection = React.memo(function AboutSection() {
   ), []);
 
   const mapCardContent = useMemo(() => (
-    <InteractiveMapContent bootCompleteMap={bootComplete.map} />
-  ), [bootComplete.map]);
+    <InteractiveMapContent isTransitionComplete={isTransitionComplete} bootCompleteMap={bootComplete.map} />
+  ), [isTransitionComplete, bootComplete.map]);
 
   const terminalCardContent = useMemo(() => (
     <TerminalContent bootCompleteTerminal={bootComplete.terminal} />
@@ -1028,7 +1054,7 @@ const AboutSection = React.memo(function AboutSection() {
       </div>
 
       {/* Completely decoupled, independent About dialogue system */}
-      <AboutDialogueBubble trigger={triggerDialogue} />
+      <AboutDialogueBubble trigger={triggerDialogue && activeSection === 'about'} />
     </section>
   );
 });

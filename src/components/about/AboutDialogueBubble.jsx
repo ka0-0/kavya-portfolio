@@ -19,7 +19,7 @@ export default function AboutDialogueBubble({ trigger }) {
   const [isFadingText, setIsFadingText] = useState(false);
   const [isBubbleVisible, setIsBubbleVisible] = useState(false);
 
-  // Sync starting the dialogue when the trigger prop becomes true
+  // Sync starting the dialogue when the trigger prop becomes true, and clean up when false
   useEffect(() => {
     if (trigger) {
       setMsgIndex(0);
@@ -28,6 +28,11 @@ export default function AboutDialogueBubble({ trigger }) {
       setIsTyping(true);
       setIsFadingText(false);
       setIsBubbleVisible(true);
+    } else {
+      setIsBubbleVisible(false);
+      setIsTyping(false);
+      setIsFadingText(false);
+      setCharIndex(0);
     }
   }, [trigger]);
 
