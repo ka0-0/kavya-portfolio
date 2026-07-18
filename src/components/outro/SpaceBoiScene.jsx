@@ -1,102 +1,10 @@
-import React, { Suspense, useRef, useMemo, useState, useEffect, memo } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
-import * as THREE from 'three';
+import React, { useRef, useState, useEffect, memo } from 'react';
 import { downloadResume } from '../../utils/resume';
-
-
-const SpaceBoi = memo(function SpaceBoi({ onModelLoaded }) {
-  const { scene } = useGLTF('/models/space_boi.glb');
-  const meshRef = useRef();
-
-  // Run on mount or load to compute bounding box, center the model's geometry locally
-  useEffect(() => {
-    if (scene) {
-      if (!scene.userData.isCentered) {
-        // Reset position to (0,0,0) before computing bounding box to ensure original bounds are evaluated
-        scene.position.set(0, 0, 0);
-
-        const box = new THREE.Box3().setFromObject(scene);
-        const center = box.getCenter(new THREE.Vector3());
-        const sphere = box.getBoundingSphere(new THREE.Sphere());
-
-        // Center geometry around (0,0,0) locally so rotation has no orbital wobble
-        scene.position.set(-center.x, -center.y, -center.z);
-
-        scene.userData.center = center;
-        scene.userData.radius = sphere.radius;
-        scene.userData.isCentered = true;
-      }
-
-      // Report model's bounding radius to frame the camera
-      if (onModelLoaded) {
-        onModelLoaded(scene.userData.radius);
-      }
-    }
-  }, [scene, onModelLoaded]);
-
-  // Linear Y-axis rotation (1 full rotation every ~100s) + subtle floating oscillation
-  useFrame((state) => {
-    const elapsed = state.clock.getElapsedTime();
-    if (meshRef.current) {
-      // Rotate 360 degrees (2 * Math.PI) over 100 seconds
-      meshRef.current.rotation.y = (elapsed * (2 * Math.PI)) / 25;
-
-      // Calculate dynamic vertical offset (16% of viewport height down)
-      const fovRad = (state.camera.fov * Math.PI) / 180;
-      const distance = state.camera.position.z;
-      const viewportHeight = 2 * distance * Math.tan(fovRad / 2);
-      const baseSpace = -viewportHeight * 0.04;
-
-      // Floating oscillation (amplitude: ~0.04 units, period: 10s)
-      const floatOffset = Math.sin((elapsed * (2 * Math.PI)) / 10) * 0.04;
-
-      meshRef.current.position.y = baseSpace + floatOffset;
-    }
-  });
-
-  return (
-    <group ref={meshRef}>
-      <primitive object={scene} />
-    </group>
-  );
-});
-
-// Dynamic camera framing component to scale fitting to 70% of the canvas
-const CameraFitter = memo(function CameraFitter({ modelRadius }) {
-  const { camera, size } = useThree();
-
-  useEffect(() => {
-    if (modelRadius > 0) {
-      const aspect = size.width / size.height;
-      const fovRad = (camera.fov * Math.PI) / 180;
-
-      // Half vertical angle
-      const thetaV = fovRad / 2;
-
-      // Half horizontal angle
-      const thetaH = Math.atan(Math.tan(thetaV) * aspect);
-
-      // Use the smaller of the two angles to ensure it fits in both dimensions
-      const theta = Math.min(thetaV, thetaH);
-
-      // Calculate camera distance to occupy 70% (0.70) of the viewport
-      const distance = modelRadius / (3 * Math.sin(theta));
-
-      camera.position.set(0, 0, distance);
-      camera.near = distance / 20;
-      camera.far = distance * 20;
-      camera.updateProjectionMatrix();
-    }
-  }, [modelRadius, size.width, size.height, camera]);
-
-  return null;
-});
+import LoadingRobot from '../loading/LoadingRobot';
 
 function SpaceBoiScene() {
   const containerRef = useRef(null);
   const [isInView, setIsInView] = useState(false);
-  const [modelRadius, setModelRadius] = useState(0);
   const [downloadState, setDownloadState] = useState('idle');
   const [animate, setAnimate] = useState(false);
 
@@ -146,16 +54,6 @@ function SpaceBoiScene() {
     }
   }, [isInView]);
 
-  const glSettings = useMemo(
-    () => ({
-      alpha: true,
-      antialias: true,
-      powerPreference: 'high-performance',
-      preserveDrawingBuffer: false,
-    }),
-    []
-  );
-
   return (
     <section
       id="resume"
@@ -165,30 +63,7 @@ function SpaceBoiScene() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(var(--accent-rgb),0.20)_0%,rgba(var(--accent-rgb),0.05)_50%,transparent_75%)] pointer-events-none z-0" />
 
       <div ref={containerRef} className="w-full h-[650px] sm:h-[750px] md:h-[850px] lg:h-[100vh] relative z-10">
-        <Canvas
-          frameloop={isInView ? "always" : "never"}
-          dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 2, 2)]}
-          gl={glSettings}
-          camera={{ position: [0, 0, 10], fov: 45 }}
-          style={{ background: 'transparent', width: '100%', height: '100%' }}
-          onCreated={({ gl }) => {
-            gl.toneMapping = THREE.ACESFilmicToneMapping;
-            gl.toneMappingExposure = 1.05;
-            gl.outputColorSpace = THREE.SRGBColorSpace;
-          }}
-        >
-          {/* Subtle fill ambient lighting */}
-          <ambientLight intensity={0.5} color="#ffffff" />
-
-          {/* Soft directional lighting to maintain mysterious monochrome tone */}
-          <directionalLight position={[5, 8, 5]} intensity={1.5} color="#ffffff" />
-
-          <Suspense fallback={null}>
-            <SpaceBoi onModelLoaded={setModelRadius} />
-          </Suspense>
-
-          <CameraFitter modelRadius={modelRadius} />
-        </Canvas>
+        <LoadingRobot />
 
         {/* Style block for cinematic transitions and animation timing sequence */}
         <style dangerouslySetInnerHTML={{ __html: `

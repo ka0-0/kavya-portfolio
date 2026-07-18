@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import SectionHeader from '../navigation/SectionHeader';
 import Globe from './Globe';
+import AboutDialogueBubble from './AboutDialogueBubble';
 
 // ==========================================
 // STATIC PROFILE DATA CONSTANTS
@@ -71,33 +72,6 @@ const missionData = [
   "Design experiences that combine performance with beautiful interaction.",
   "Create products people genuinely enjoy using."
 ];
-
-const staticViewport = { once: true };
-const staticTimeCardStyle = { willChange: 'transform, opacity' };
-
-const staticTimeSectionInitial = { opacity: 0, y: 30, scale: 0.98 };
-const staticTimeSectionWhileInView = { opacity: 1, y: 0, scale: 1 };
-const staticTimeSectionViewport = { once: true, amount: 0.25 };
-const staticTimeSectionTransition = { type: 'spring', stiffness: 100, damping: 20 };
-const staticTimeSectionStyle = { willChange: 'transform, opacity' };
-
-const staticDashboardViewport = { once: true, amount: 0.25 };
-const staticDashboardStyle = { willChange: 'transform, opacity' };
-const staticCardStyle = { willChange: 'transform, opacity' };
-
-const timeCardVariants = {
-  hidden: { opacity: 0, y: 15 },
-  visible: (idx) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: 'spring',
-      stiffness: 120,
-      damping: 18,
-      delay: idx * 0.05
-    }
-  })
-};
 
 
 // ==========================================
@@ -266,38 +240,6 @@ const InteractiveMapContent = React.memo(function InteractiveMapContent() {
   );
 });
 
-// ==========================================
-// 2. Framer Motion Unified Variants
-// ==========================================
-const containerVariants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.12, // Exact 120ms staggered delay
-      delayChildren: 0.15,
-    }
-  }
-};
-
-const cardVariants = {
-  hidden: {
-    opacity: 0,
-    y: 60,
-    scale: 0.96,
-    filter: "blur(6px)"
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    filter: "blur(0px)",
-    transition: {
-      type: "spring",
-      duration: 0.8,
-      bounce: 0 // Smooth spring with no bounce
-    }
-  }
-};
 
 // ==========================================
 // 3. Cyber HUD Card (Hover tilt & radial light, transform split)
@@ -411,11 +353,16 @@ const CyberCard = React.memo(function CyberCard({
 // ==========================================
 
 
+// Global persistent state for About dialogue to prevent replay on navigation/remount
+let hasPlayedAboutDialogueGlobal = false;
+
 // ==========================================
 // 5. Main Component: Redesigned About Section
 // ==========================================
 const AboutSection = React.memo(function AboutSection() {
   const sectionRef = useRef(null);
+  const [triggerDialogue, setTriggerDialogue] = useState(false);
+  const dialogueTriggeredRef = useRef(hasPlayedAboutDialogueGlobal);
 
   // Time on Earth Refs
   const yearsRef = useRef(null);
@@ -479,6 +426,15 @@ const AboutSection = React.memo(function AboutSection() {
         } else if (!isVisible) {
           cancelAnimationFrame(frameId);
         }
+
+        // Trigger About Dialogue on first entry
+        if (entry.isIntersecting && !dialogueTriggeredRef.current) {
+          dialogueTriggeredRef.current = true;
+          hasPlayedAboutDialogueGlobal = true;
+          setTimeout(() => {
+            setTriggerDialogue(true);
+          }, 800);
+        }
       },
       { threshold: 0 }
     );
@@ -493,34 +449,14 @@ const AboutSection = React.memo(function AboutSection() {
     };
   }, []);
 
-  // Keep track of which card completed its Framer Motion spring reveal
-  const [bootComplete, setBootComplete] = useState({
-    profile: false,
-    terminal: false,
-    map: false,
-    skills: false,
-    metrics: false,
-  });
-
-  const handleRevealCompleteProfile = useCallback((def) => {
-    if (def === 'visible') setBootComplete(p => p.profile ? p : { ...p, profile: true });
-  }, []);
-
-  const handleRevealCompleteMap = useCallback((def) => {
-    if (def === 'visible') setBootComplete(p => p.map ? p : { ...p, map: true });
-  }, []);
-
-  const handleRevealCompleteTerminal = useCallback((def) => {
-    if (def === 'visible') setBootComplete(p => p.terminal ? p : { ...p, terminal: true });
-  }, []);
-
-  const handleRevealCompleteSkills = useCallback((def) => {
-    if (def === 'visible') setBootComplete(p => p.skills ? p : { ...p, skills: true });
-  }, []);
-
-  const handleRevealCompleteMetrics = useCallback((def) => {
-    if (def === 'visible') setBootComplete(p => p.metrics ? p : { ...p, metrics: true });
-  }, []);
+  // All cards are fully booted immediately on render (no entrance animation delays)
+  const bootComplete = useMemo(() => ({
+    profile: true,
+    terminal: true,
+    map: true,
+    skills: true,
+    metrics: true,
+  }), []);
 
   const [activeTab, setActiveTab] = useState('education');
 
@@ -796,14 +732,8 @@ const AboutSection = React.memo(function AboutSection() {
             { label: 'SECONDS', ref: secondsRef },
             { label: 'MILLISECONDS', ref: msRef, isMs: true },
           ].map((item, idx) => (
-            <motion.div
+            <div
               key={item.label}
-              custom={idx}
-              variants={timeCardVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={staticViewport}
-              style={staticTimeCardStyle}
               className="p-4 border border-[var(--border-color)]/60 rounded-lg bg-zinc-950/20 flex flex-col items-center justify-center min-h-[90px] transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(var(--accent-rgb),0.3)] hover:shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)] select-none"
             >
               <span
@@ -813,7 +743,7 @@ const AboutSection = React.memo(function AboutSection() {
                 00
               </span>
               <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-wider mt-1.5">{item.label}</span>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
@@ -958,24 +888,12 @@ const AboutSection = React.memo(function AboutSection() {
         </div>
       </div>
 
-      {/* Dashboard 12-Column Layout Grid staggered container */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={staticDashboardViewport}
-        style={staticDashboardStyle}
-        className="max-w-7xl mx-auto w-full px-3 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6 z-10"
-      >
+      {/* Dashboard 12-Column Layout Grid */}
+      <div className="max-w-7xl mx-auto w-full px-3 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6 z-10">
         {/* ROW 1: Card 1 (Profile Info) & Card 2 (Network Map) */}
 
         {/* Card 1: Identity Profile (Span 8) */}
-        <motion.div
-          variants={cardVariants}
-          onAnimationComplete={handleRevealCompleteProfile}
-          style={staticCardStyle}
-          className="col-span-12 lg:col-span-8"
-        >
+        <div className="col-span-12 lg:col-span-8">
           <CyberCard
             title="IDENTITY VERIFICATION"
             nodeCode="SECURE_NODE_01"
@@ -984,15 +902,10 @@ const AboutSection = React.memo(function AboutSection() {
           >
             {profileCardContent}
           </CyberCard>
-        </motion.div>
+        </div>
 
         {/* Card 2: Interactive Network Map (Span 4) */}
-        <motion.div
-          variants={cardVariants}
-          onAnimationComplete={handleRevealCompleteMap}
-          style={staticCardStyle}
-          className="col-span-12 lg:col-span-4"
-        >
+        <div className="col-span-12 lg:col-span-4">
           <CyberCard
             title="NEURAL NETWORK MAP"
             nodeCode="SECURE_NODE_02"
@@ -1001,17 +914,12 @@ const AboutSection = React.memo(function AboutSection() {
           >
             {mapCardContent}
           </CyberCard>
-        </motion.div>
+        </div>
 
         {/* ROW 2: Card 3 (Terminal), Card 4 (Skills), Card 5 (Metrics) */}
 
         {/* Card 3: AI Telemetry Terminal (Span 4) */}
-        <motion.div
-          variants={cardVariants}
-          onAnimationComplete={handleRevealCompleteTerminal}
-          style={staticCardStyle}
-          className="col-span-12 md:col-span-6 lg:col-span-4 h-[460px] flex flex-col"
-        >
+        <div className="col-span-12 md:col-span-6 lg:col-span-4 h-[460px] flex flex-col">
           <CyberCard
             title="AI CORE TELEMETRY"
             nodeCode="SECURE_NODE_03"
@@ -1019,15 +927,10 @@ const AboutSection = React.memo(function AboutSection() {
           >
             {terminalCardContent}
           </CyberCard>
-        </motion.div>
+        </div>
 
         {/* Card 4: Skill Spectrum (Span 4) */}
-        <motion.div
-          variants={cardVariants}
-          onAnimationComplete={handleRevealCompleteSkills}
-          style={staticCardStyle}
-          className="col-span-12 md:col-span-6 lg:col-span-4 h-[460px] flex flex-col"
-        >
+        <div className="col-span-12 md:col-span-6 lg:col-span-4 h-[460px] flex flex-col">
           <CyberCard
             title="COGNITIVE SPECTRUM"
             nodeCode="SECURE_NODE_04"
@@ -1084,7 +987,6 @@ const AboutSection = React.memo(function AboutSection() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.22, ease: 'easeOut' }}
-                      style={staticCardStyle}
                       className="h-[320px] overflow-hidden text-left font-sans pr-1 scrollbar-thin scrollbar-thumb-zinc-800"
                     >
                       {tabContent}
@@ -1100,15 +1002,10 @@ const AboutSection = React.memo(function AboutSection() {
               </div>
             </div>
           </CyberCard>
-        </motion.div>
+        </div>
 
         {/* Card 5: Engineering Metrics (Span 4) */}
-        <motion.div
-          variants={cardVariants}
-          onAnimationComplete={handleRevealCompleteMetrics}
-          style={staticCardStyle}
-          className="col-span-12 lg:col-span-4 h-[460px] flex flex-col"
-        >
+        <div className="col-span-12 lg:col-span-4 h-[460px] flex flex-col">
           <CyberCard
             title="SYSTEM METRICS"
             nodeCode="SECURE_NODE_05"
@@ -1116,18 +1013,11 @@ const AboutSection = React.memo(function AboutSection() {
           >
             {metricsCardContent}
           </CyberCard>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
 
       {/* TIME ON EARTH Live Telemetry Counter */}
-      <motion.div
-        initial={staticTimeSectionInitial}
-        whileInView={staticTimeSectionWhileInView}
-        viewport={staticTimeSectionViewport}
-        transition={staticTimeSectionTransition}
-        style={staticTimeSectionStyle}
-        className="max-w-7xl mx-auto w-full px-3 md:px-8 mt-8 z-10"
-      >
+      <div className="max-w-7xl mx-auto w-full px-3 md:px-8 mt-8 z-10">
         <CyberCard
           title="TIME ON EARTH"
           nodeCode="SECURE_NODE_06"
@@ -1135,7 +1025,10 @@ const AboutSection = React.memo(function AboutSection() {
         >
           {timeOnEarthCardContent}
         </CyberCard>
-      </motion.div>
+      </div>
+
+      {/* Completely decoupled, independent About dialogue system */}
+      <AboutDialogueBubble trigger={triggerDialogue} />
     </section>
   );
 });

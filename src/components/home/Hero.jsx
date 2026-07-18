@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, memo } from 'react';
 import { motion, useAnimationFrame } from 'framer-motion';
 import RobotModel from './RobotModel';
 
-function Hero({ showRobot }) {
+function Hero({ showRobot, glanceAtAIKAV, activeSection }) {
   const heroRef = useRef(null);
   const [currentRoleIndex, setCurrentRoleIndex] = useState(0);
 
@@ -275,7 +275,7 @@ function Hero({ showRobot }) {
 
           {/* Render ONLY the NEW Hero GLB Avatar (/models/small_robot.glb) */}
           <div id="hero-robot-container" className="relative z-10 w-full h-full flex items-center justify-center">
-            {showRobot && <RobotModel />}
+            {showRobot && <RobotModel glanceAtAIKAV={glanceAtAIKAV} activeSection={activeSection} />}
           </div>
         </div>
 

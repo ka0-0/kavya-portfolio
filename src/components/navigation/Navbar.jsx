@@ -22,7 +22,7 @@ const navLinks = [
   { name: 'Contact', id: 'contact' },
 ];
 
-function Navbar({ activeSection, handleNavClick }) {
+function Navbar({ activeSection, handleNavClick, showEmblem }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false); // Mobile menu toggle
   const [hoveredSection, setHoveredSection] = useState(null);
@@ -279,50 +279,55 @@ function Navbar({ activeSection, handleNavClick }) {
         >
           
           {/* Column 1: Brand Logo & Emblem - Far Left */}
-          <div className="pointer-events-auto select-none mobile-contents-column">
-            {/* Matte Black Decepticon-style brand emblem */}
-            <motion.div
-              id="navbar-logo-emblem"
-              initial="hidden"
-              animate={clickedLogo === 'emblem' ? { scale: 0.95 } : 'visible'}
-              whileHover={clickedLogo === 'emblem' ? undefined : 'hover'}
-              onClick={(e) => handleRestartClick(e, 'emblem')}
-              variants={{
-                hidden: { opacity: 0, scale: 0.9 },
-                visible: {
-                  opacity: 1,
-                  scale: 1,
-                  transition: { duration: 0.6, ease: 'easeOut' }
-                },
-                hover: {
-                  scale: 1.06,
-                  transition: { type: 'spring', stiffness: 300, damping: 20 }
-                }
-              }}
-              className={`relative w-[58px] h-[58px] flex items-center justify-center transition-all duration-300 cursor-pointer group flex-shrink-0 rounded-full bg-[var(--bg-dark)]/95 border-[1.5px] backdrop-blur-md overflow-hidden ${
-                clickedLogo === 'emblem'
-                  ? 'border-[var(--accent-color)] shadow-[0_0_30px_rgba(var(--accent-rgb),0.8),_inset_0_1.5px_1.5px_rgba(255,255,255,0.2)]'
-                  : 'border-[rgba(var(--accent-rgb),0.8)] shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.15),_0_8px_20px_rgba(0,0,0,0.4),_0_0_12px_rgba(var(--accent-rgb),0.2)] hover:border-[var(--accent-light)] hover:shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.2),_0_8px_20px_rgba(0,0,0,0.5),_0_0_20px_rgba(var(--accent-rgb),0.4)]'
-              }`}
-              style={{ willChange: 'transform' }}
-            >
-              {/* Subtle purple/cyan gradient glow around edge */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[rgba(var(--accent-rgb),0.05)] to-[rgba(var(--accent-rgb),0.1)] opacity-30 group-hover:opacity-75 transition-opacity duration-300 pointer-events-none" />
+          <div className="pointer-events-auto select-none mobile-contents-column relative">
+            {/* Permanent emblem position container */}
+            <div id="aikav-placeholder-home" className="w-[58px] h-[58px] min-w-[58px] min-h-[58px] flex-shrink-0 relative block">
+              {showEmblem && (
+                /* Matte Black Decepticon-style brand emblem */
+                <motion.div
+                  id="navbar-logo-emblem"
+                  initial="hidden"
+                  animate={clickedLogo === 'emblem' ? { scale: 0.95 } : 'visible'}
+                  whileHover={clickedLogo === 'emblem' ? undefined : 'hover'}
+                  onClick={(e) => handleRestartClick(e, 'emblem')}
+                  variants={{
+                    hidden: { opacity: 0, scale: 0.9 },
+                    visible: {
+                      opacity: 1,
+                      scale: 1,
+                      transition: { duration: 0.6, ease: 'easeOut' }
+                    },
+                    hover: {
+                      scale: 1.06,
+                      transition: { type: 'spring', stiffness: 300, damping: 20 }
+                    }
+                  }}
+                  className={`relative w-[58px] h-[58px] flex items-center justify-center transition-all duration-300 cursor-pointer group flex-shrink-0 rounded-full bg-[var(--bg-dark)]/95 border-[1.5px] backdrop-blur-md overflow-hidden ${
+                    clickedLogo === 'emblem'
+                      ? 'border-[var(--accent-color)] shadow-[0_0_30px_rgba(var(--accent-rgb),0.8),_inset_0_1.5px_1.5px_rgba(255,255,255,0.2)]'
+                      : 'border-[rgba(var(--accent-rgb),0.8)] shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.15),_0_8px_20px_rgba(0,0,0,0.4),_0_0_12px_rgba(var(--accent-rgb),0.2)] hover:border-[var(--accent-light)] hover:shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.2),_0_8px_20px_rgba(0,0,0,0.5),_0_0_20px_rgba(var(--accent-rgb),0.4)]'
+                  }`}
+                  style={{ willChange: 'transform' }}
+                >
+                  {/* Subtle purple/cyan gradient glow around edge */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[rgba(var(--accent-rgb),0.05)] to-[rgba(var(--accent-rgb),0.1)] opacity-30 group-hover:opacity-75 transition-opacity duration-300 pointer-events-none" />
 
-              {/* Small top inner highlight */}
-              <div className="absolute top-[1px] left-1/2 -translate-x-1/2 w-[80%] h-[1px] bg-white/20 pointer-events-none" />
+                  {/* Small top inner highlight */}
+                  <div className="absolute top-[1px] left-1/2 -translate-x-1/2 w-[80%] h-[1px] bg-white/20 pointer-events-none" />
 
-              {/* Icon inside */}
-              <motion.img
-                src="/emblem.png"
-                variants={{
-                  hover: { rotate: 4, transition: { type: 'spring', stiffness: 200, damping: 10 } },
-                  rest: { rotate: 0, transition: { type: 'spring', stiffness: 200, damping: 15 } }
-                }}
-                initial="rest"
-                className="w-[62%] h-[62%] object-contain mix-blend-screen select-none pointer-events-none filter drop-shadow-[0_0_6px_var(--accent-color)] transition-opacity duration-300 opacity-100"
-              />
-            </motion.div>
+                  {/* Icon inside */}
+                  <motion.img
+                    src="/emblem.png"
+                    variants={{
+                      hover: { rotate: 4, transition: { type: 'spring', stiffness: 200, damping: 10 } },
+                      rest: { rotate: 0, transition: { type: 'spring', stiffness: 200, damping: 15 } }
+                    }}
+                    initial="rest"
+                    className="w-[62%] h-[62%] object-contain mix-blend-screen select-none pointer-events-none filter drop-shadow-[0_0_6px_var(--accent-color)] transition-opacity duration-300 opacity-100"
+                  />
+                </motion.div>
+              )}
+            </div>
 
             {/* Existing KAVYA. Logo Pill */}
             <motion.div

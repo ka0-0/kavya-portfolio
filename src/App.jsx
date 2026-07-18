@@ -7,6 +7,8 @@ import Navbar from './components/navigation/Navbar';
 import SectionNavigator from './components/navigation/SectionNavigator';
 import { ThemeProvider } from './components/theme/ThemeContext';
 import MouseEffects from './components/effects/MouseEffects';
+import AIKAVCore from './components/effects/AIKAVCore';
+import AIKAVDialogueBubble from './components/effects/AIKAVDialogueBubble';
 
 
 // Lazy-load mobile navigation to avoid increasing desktop bundle size or affecting desktop performance
@@ -20,12 +22,23 @@ import Projects from './components/projects/Projects';
 import Certificates from './components/certificates/Certificates';
 import ContactSection from './components/contact/ContactSection';
 import Lenis from 'lenis';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, useEnvironment } from '@react-three/drei';
+import { motion } from 'framer-motion';
 
-// Preload the Hero robot model asset during the loading screen phase
+// Preload the Hero robot model asset and HDRI environment during the loading screen phase
 useGLTF.preload('/models/small_robot.glb');
+useEnvironment.preload({ preset: 'city' });
 
-import { 
+const sectionConfigs = {
+  home: { placeholderId: 'aikav-placeholder-home' },
+  about: { placeholderId: 'aikav-placeholder-dock' },
+  skills: { placeholderId: 'aikav-placeholder-dock' },
+  projects: { placeholderId: 'aikav-placeholder-dock' },
+  certificates: { placeholderId: 'aikav-placeholder-dock' },
+  contact: { placeholderId: 'aikav-placeholder-dock' }
+};
+
+import {
   trackLoadingStarted,
   trackLoadingCompleted,
   trackPageView,
@@ -40,7 +53,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPortfolioVisible, setIsPortfolioVisible] = useState(false);
   const [isTransitionComplete, setIsTransitionComplete] = useState(false);
-  
+
   // Shared navigation state
   const [activeSection, setActiveSection] = useState('home');
   const targetSectionRef = useRef(null);
@@ -56,6 +69,118 @@ export default function App() {
     setIsMobile(media.matches);
     media.addEventListener('change', listener);
     return () => media.removeEventListener('change', listener);
+  }, []);
+
+  const [coreSize, setCoreSize] = useState(120);
+
+  const [coords, setCoords] = useState({});
+  const targetPosition = activeSection === 'home' ? 'home' : 'dock';
+  const [currentPosition, setCurrentPosition] = useState(targetPosition);
+
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [glanceAtAIKAV, setGlanceAtAIKAV] = useState(false);
+  const [lookAway, setLookAway] = useState(false);
+
+  // Controlled AIKAV Home -> Dock transition states
+  const [forceBlink, setForceBlink] = useState(false);
+  const [lookDirection, setLookDirection] = useState(null);
+  const [isMoving, setIsMoving] = useState(false);
+
+  const [moveFrom, setMoveFrom] = useState(targetPosition);
+  const [moveTo, setMoveTo] = useState(targetPosition);
+
+  const coordsRef = useRef(coords);
+  useEffect(() => {
+    coordsRef.current = coords;
+  }, [coords]);
+
+  // Warp Thruster & Ring Speed Boost states
+  const [ringSpeedBoost, setRingSpeedBoost] = useState(false);
+  const [thrusterActive, setThrusterActive] = useState(false);
+  const [thrusterAngle, setThrusterAngle] = useState(135);
+  const [glowBoost, setGlowBoost] = useState(false);
+
+  const updateCoords = useCallback(() => {
+    const newCoords = {};
+    Object.entries(sectionConfigs).forEach(([section, config]) => {
+      const el = document.getElementById(config.placeholderId);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+
+        let targetSize = 120;
+        if (section === 'home') {
+          targetSize = 78; // 78px core size results in 52px outer ring, which is exactly 90% of 58px emblem container
+        } else {
+          targetSize = coreSize;
+        }
+
+        newCoords[section] = {
+          centerX: rect.left + rect.width / 2,
+          centerY: rect.top + rect.height / 2,
+          size: targetSize
+        };
+      }
+    });
+
+    if (Object.keys(newCoords).length > 0) {
+      setCoords(prev => ({
+        ...prev,
+        ...newCoords
+      }));
+    }
+  }, [coreSize]);
+
+  // Sync coords on visibility, resize, and active section changes
+  useEffect(() => {
+    if (!isTransitionComplete) return;
+
+    updateCoords();
+
+    window.addEventListener('resize', updateCoords);
+    return () => {
+      window.removeEventListener('resize', updateCoords);
+    };
+  }, [isTransitionComplete, updateCoords, activeSection]);
+
+  // Single Continuous Spring Transition Effect
+  useEffect(() => {
+    if (targetPosition !== currentPosition) {
+      setIsTransitioning(true);
+      setMoveFrom(currentPosition);
+      setMoveTo(targetPosition);
+      setGlowBoost(true);
+      setIsMoving(true);
+
+      const tDone = setTimeout(() => {
+        setIsMoving(false);
+        setIsTransitioning(false);
+        setGlowBoost(false);
+        setCurrentPosition(targetPosition);
+      }, 680);
+
+      return () => {
+        clearTimeout(tDone);
+        setIsMoving(false);
+        setIsTransitioning(false);
+        setGlowBoost(false);
+      };
+    }
+  }, [targetPosition, currentPosition]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const w = window.innerWidth;
+      if (w < 640) {
+        setCoreSize(80);
+      } else if (w < 1024) {
+        setCoreSize(100);
+      } else {
+        setCoreSize(120);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // 1. Track loading started on initial mount
@@ -119,7 +244,7 @@ export default function App() {
           entries.forEach((entry) => {
             if (entry.isIntersecting && entry.target.id === targetSectionRef.current) {
               setActiveSection(targetSectionRef.current);
-              
+
               // Track in analytics
               let name = targetSectionRef.current.charAt(0).toUpperCase() + targetSectionRef.current.slice(1);
               if (targetSectionRef.current === 'home') name = 'Hero';
@@ -157,7 +282,7 @@ export default function App() {
           trackSectionView(name);
         }
       },
-      { 
+      {
         // Multiple thresholds to get fine-grained ratio updates (especially at low visibility levels)
         threshold: [0, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
         rootMargin: '-10% 0px -15% 0px'
@@ -276,11 +401,11 @@ export default function App() {
       let timer;
       if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
         window.requestIdleCallback(() => {
-          useGLTF.preload('/models/space_boi.glb');
+          useGLTF.preload('/models/robot.glb');
         });
       } else {
         timer = setTimeout(() => {
-          useGLTF.preload('/models/space_boi.glb');
+          useGLTF.preload('/models/robot.glb');
         }, 1000);
       }
       return () => {
@@ -288,6 +413,35 @@ export default function App() {
       };
     }
   }, [isTransitionComplete]);
+
+  // Single continuous movement calculator
+  const getTransitionAnimation = () => {
+    const endKey = moveTo === 'home' ? 'home' : 'about';
+
+    if (!coords[endKey]) {
+      return {
+        x: (coords[activeSection]?.centerX ?? 0) - (coords[activeSection]?.size ?? 120) / 2,
+        y: (coords[activeSection]?.centerY ?? 0) - (coords[activeSection]?.size ?? 120) / 2,
+        scale: (coords[activeSection]?.size ?? 120) / 300,
+        rotate: 0,
+        opacity: 1,
+      };
+    }
+
+    const endX = coords[endKey].centerX - coords[endKey].size / 2;
+    const endY = coords[endKey].centerY - coords[endKey].size / 2;
+    const endScale = (coords[endKey].size / 300) * 0.98;
+    const isLeavingHome = moveFrom === 'home';
+    const tilt = isLeavingHome ? 2 : -2;
+
+    return {
+      x: endX,
+      y: endY,
+      scale: endScale,
+      rotate: tilt,
+      opacity: 1,
+    };
+  };
 
   return (
     <ThemeProvider>
@@ -307,10 +461,14 @@ export default function App() {
           <MouseEffects />
           <CursorTelemetry activeSection={activeSection} />
           <ThemeToggle onClick={() => console.log('Theme toggle clicked!')} />
-          <Navbar activeSection={activeSection} handleNavClick={handleNavClick} />
+          <Navbar
+            activeSection={activeSection}
+            handleNavClick={handleNavClick}
+            showEmblem={activeSection !== 'home' && !isTransitioning}
+          />
           <main>
             <section id="home">
-              <Hero showRobot={true} />
+              <Hero showRobot={isPortfolioVisible} glanceAtAIKAV={glanceAtAIKAV} activeSection={activeSection} />
             </section>
 
             {isTransitionComplete && (
@@ -352,6 +510,79 @@ export default function App() {
               </>
             )}
 
+            {/* Stationary Dock Placeholder for other sections */}
+            <div
+              id="aikav-placeholder-dock"
+              className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 lg:bottom-8 lg:right-8 z-[999] pointer-events-none"
+              style={{
+                width: coreSize,
+                height: coreSize,
+              }}
+            />
+
+            {/* Unified single AIKAVCore instance with dynamic positioning */}
+            {isTransitionComplete && coords[activeSection] && (
+              <>
+                <motion.div
+                  initial={{
+                    x: (coords[activeSection]?.centerX ?? 0) - (coords[activeSection]?.size ?? 120) / 2,
+                    y: (coords[activeSection]?.centerY ?? 0) - (coords[activeSection]?.size ?? 120) / 2,
+                    scale: ((coords[activeSection]?.size ?? 120) / 300) * 0.92,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    x: (coords[activeSection]?.centerX ?? 0) - (coords[activeSection]?.size ?? 120) / 2,
+                    y: (coords[activeSection]?.centerY ?? 0) - (coords[activeSection]?.size ?? 120) / 2,
+                    scale: (coords[activeSection]?.size ?? 120) / 300,
+                    rotate: activeSection === 'home' ? 0 : 2,
+                    opacity: 1,
+                  }}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 180,
+                    damping: 24,
+                    mass: 0.8,
+                  }}
+                  style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: 300,
+                    height: 300,
+                    transformOrigin: 'top left',
+                    zIndex: 999,
+                    pointerEvents: coords[activeSection] ? 'auto' : 'none',
+                    filter: 'drop-shadow(0 0 20px rgba(0, 255, 255, 0.15))',
+                    opacity: coords[activeSection] ? 1 : 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    willChange: 'transform',
+                  }}
+                >
+                  <AIKAVCore
+                    size={300}
+                    lookAway={lookAway}
+                    forceBlink={forceBlink}
+                    lookDirection={lookDirection}
+                    isMoving={isMoving}
+                    ringSpeedBoost={ringSpeedBoost}
+                    thrusterActive={thrusterActive}
+                    thrusterAngle={thrusterAngle}
+                    glowBoost={glowBoost}
+                  />
+                </motion.div>
+
+                {/* AI.KAV Home Introduction Dialogue Bubble */}
+                <AIKAVDialogueBubble
+                  homeCoords={coords['home']}
+                  activeSection={activeSection}
+                  isTransitioning={isTransitioning}
+                  onRobotGlance={setGlanceAtAIKAV}
+                  onAIKAVLookAway={setLookAway}
+                />
+              </>
+            )}
           </main>
         </div>
       )}

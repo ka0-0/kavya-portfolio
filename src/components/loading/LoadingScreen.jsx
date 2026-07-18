@@ -1,9 +1,12 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import LoadingRobot from './LoadingRobot';
+import React, { useState, useCallback, useEffect, useRef, Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
+import * as THREE from 'three';
+import { SpaceBoi, CameraFitter } from '../outro/SpaceBoi';
 
 export default function LoadingScreen({ onStartTransition, onComplete }) {
   const [displayProgress, setDisplayProgress] = useState(0);
   const [robotFinished, setRobotFinished] = useState(false);
+  const [modelRadius, setModelRadius] = useState(0);
   const [pillVisible, setPillVisible] = useState(true);
   const [pillExpanded, setPillExpanded] = useState(true);
   const [phase, setPhase] = useState('loading'); // 'loading' | 'welcome' | 'expanding'
@@ -153,11 +156,25 @@ export default function LoadingScreen({ onStartTransition, onComplete }) {
         {/* Background Subtle Radial Glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] sm:w-[850px] sm:h-[850px] bg-[radial-gradient(circle,rgba(37,99,235,0.12)_0%,rgba(6,182,212,0.04)_45%,transparent_70%)] blur-3xl pointer-events-none z-0" />
 
-        {/* Centered Loading Robot Canvas */}
-        <div className="absolute inset-0 z-[1] flex items-center justify-center pointer-events-none overflow-hidden">
-          <div className="w-full max-w-[650px] h-[550px] sm:h-[650px] relative flex items-center justify-center">
-            <LoadingRobot onProgress={handleProgress} onFinished={handleFinished} />
-          </div>
+        {/* Centered Loading SpaceBoi Canvas */}
+        <div className="absolute inset-0 z-[1] pointer-events-none">
+          <Canvas
+            camera={{ position: [0, 0, 10], fov: 45 }}
+            gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
+            style={{ width: '100%', height: '100%', background: 'transparent' }}
+            onCreated={({ gl }) => {
+              gl.toneMapping = THREE.ACESFilmicToneMapping;
+              gl.toneMappingExposure = 1.05;
+              gl.outputColorSpace = THREE.SRGBColorSpace;
+            }}
+          >
+            <ambientLight intensity={0.5} color="#ffffff" />
+            <directionalLight position={[5, 8, 5]} intensity={1.5} color="#ffffff" />
+            <Suspense fallback={null}>
+              <SpaceBoi onModelLoaded={setModelRadius} />
+            </Suspense>
+            <CameraFitter modelRadius={modelRadius} />
+          </Canvas>
         </div>
 
         {/* Loading Indicator Overlay */}
