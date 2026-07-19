@@ -182,7 +182,7 @@ export default function MouseEffects() {
         position: 'fixed',
         inset: 0,
         pointerEvents: 'none',
-        zIndex: 85,
+        zIndex: 999950,
         overflow: 'visible'
       }}
     />

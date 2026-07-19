@@ -345,21 +345,21 @@
   --accent-rgb: 168, 85, 247;
 }
 .theme-terminal-panel[data-theme-preview="orange"] {
-  --accent-color: #f97316;
-  --accent-light: #fb923c;
-  --accent-dark: #c2410c;
-  --accent-rgb: 249, 115, 22;
+  --accent-color: #FF8C00;
+  --accent-light: #FFF3E0;
+  --accent-dark: #FFA726;
+  --accent-rgb: 255, 140, 0;
 }
 .theme-terminal-panel[data-theme-preview="red"] {
   --accent-color: #ef4444;
-  --accent-light: #f87171;
-  --accent-dark: #b91c1c;
+  --accent-light: #FFEAEA;
+  --accent-dark: #DC2626;
   --accent-rgb: 239, 68, 68;
 }
 .theme-terminal-panel[data-theme-preview="green"] {
   --accent-color: #22c55e;
-  --accent-light: #4ade80;
-  --accent-dark: #15803d;
+  --accent-light: #E8FFF2;
+  --accent-dark: #16A34A;
   --accent-rgb: 34, 197, 94;
 }
 

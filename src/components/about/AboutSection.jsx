@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SectionHeader from '../navigation/SectionHeader';
 import Globe from './Globe';
 import AboutDialogueBubble from './AboutDialogueBubble';
+import CyberpunkAvatar from '../effects/CyberpunkAvatar';
 
 // ==========================================
 // STATIC PROFILE DATA CONSTANTS
@@ -557,27 +558,11 @@ const AboutSection = React.memo(function AboutSection({ isTransitionComplete, ac
         </div>
       </div>
 
-      {/* Right Column: Avatar Frame & System Status Panel */}
+      {/* Right Column: Avatar & System Status Panel */}
       <div className="flex flex-col w-full md:w-[220px] flex-shrink-0">
-        {/* Avatar Frame (Height reduced by ~20%) */}
-        <div className="flex flex-col items-center justify-center p-1.5 border border-zinc-800/40 rounded-lg bg-zinc-950/20 w-full h-[170px] sm:h-[190px] md:h-[190px] relative overflow-hidden">
-          {/* Subtle tech background grid texture */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--accent-rgb),0.03),transparent_70%)] pointer-events-none" />
-          {/* Static Image Wrapper */}
-          <div className="w-full h-full flex items-center justify-center p-0.5">
-            <img
-              src="/profile_pic.png"
-              alt="Futuristic Android AI Identity"
-              loading="lazy"
-              className="w-full h-full object-contain select-none pointer-events-none filter drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.45)] drop-shadow-[0_12px_24px_rgba(59,130,246,0.25)]"
-              style={{
-                maxHeight: '96%',
-                maxWidth: '96%',
-                transform: 'scale(1.18) translateY(8.5px)',
-                transformOrigin: 'center center'
-              }}
-            />
-          </div>
+        {/* Integrated Cyberpunk Avatar (No inner frame/box) */}
+        <div className="w-full h-[210px] sm:h-[230px] md:h-[230px] flex items-center justify-center relative">
+          <CyberpunkAvatar className="w-full h-full" maskFadeBottom={false} revealRadius={65} />
         </div>
 
         {/* Dynamic AI System Status Panel */}

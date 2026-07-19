@@ -5,7 +5,7 @@ import SectionHeader from '../navigation/SectionHeader';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const projectsData = [
+export const projectsData = [
   {
     id: 1,
     number: "01",

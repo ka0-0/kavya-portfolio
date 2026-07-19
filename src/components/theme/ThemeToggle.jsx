@@ -478,7 +478,7 @@ const GearIcon = () => (
 );
 
 // Main ThemeToggle wrapper component
-export default function ThemeToggle({ onClick }) {
+export default function ThemeToggle({ onClick, isLanding = false }) {
   const { currentThemeIndex, setTheme, nextTheme } = useTheme();
   
   // Settings speed-dial state
@@ -546,10 +546,13 @@ export default function ThemeToggle({ onClick }) {
       }
     }
 
-    // Notify custom cursor to snap
+    // Notify custom cursor to snap (capsule morph on Landing Page Theme button)
     window.dispatchEvent(
       new CustomEvent('cursor-snap-enter', {
-        detail: { target: ref.current }
+        detail: {
+          target: ref.current,
+          variant: (isLanding && targetKey === 'theme') ? 'capsule' : 'snap'
+        }
       })
     );
   };
@@ -673,7 +676,9 @@ export default function ThemeToggle({ onClick }) {
     const hasSpaceLeft = btnRect.left >= (panelWidth + gap + 16);
     
     let selectedSide = 'right';
-    if (hasSpaceRight) {
+    if (isLanding) {
+      selectedSide = 'above';
+    } else if (hasSpaceRight) {
       selectedSide = 'right';
     } else if (hasSpaceLeft) {
       selectedSide = 'left';
@@ -788,6 +793,10 @@ export default function ThemeToggle({ onClick }) {
   // Tooltip visibility
   const isSettingsTooltipVisible = isSettingsHovered && !isMenuOpen && isHoverSupported();
   const isThemeTooltipVisible = isThemeHovered && isHoverSupported();
+
+  if (isLanding) {
+    return null;
+  }
 
   return (
     <div 

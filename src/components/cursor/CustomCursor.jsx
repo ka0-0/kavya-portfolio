@@ -23,16 +23,19 @@ const CustomCursor = memo(function CustomCursor() {
     let dotX = -100;
     let dotY = -100;
     let snapTarget = null;
+    let snapVariant = 'snap';
     let snapX = 0;
     let snapY = 0;
-    let snapSize = 60;
+    let snapW = 60;
+    let snapH = 60;
+    let snapRadius = '50%';
 
     let rafActive = false;
     let rafId = null;
     let lastMouseMoveTime = performance.now();
 
     // Deterministic state machine source of truth
-    let cursorMode = 'default'; // 'default' | 'hover' | 'view' | 'snap'
+    let cursorMode = 'default'; // 'default' | 'hover' | 'view' | 'snap' | 'capsule'
     let leaveTimeout = null;
     let justEnteredView = false;
 
@@ -43,20 +46,26 @@ const CustomCursor = memo(function CustomCursor() {
         const isView = mode === 'view';
         const isHover = mode === 'hover';
         const isSnap = mode === 'snap';
+        const isCapsule = mode === 'capsule';
 
-        if (isSnap) {
-          dotRef.current.style.transition = `width 0.26s cubic-bezier(0.25, 1, 0.5, 1), height 0.26s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.26s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.26s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.26s cubic-bezier(0.25, 1, 0.5, 1)`;
-          dotRef.current.style.width = `${snapSize}px`;
-          dotRef.current.style.height = `${snapSize}px`;
-          dotRef.current.style.backgroundColor = 'transparent';
+        if (isSnap || isCapsule) {
+          const snapEase = `cubic-bezier(0.25, 1, 0.5, 1)`;
+          dotRef.current.style.transition = `width 0.26s ${snapEase}, height 0.26s ${snapEase}, border-radius 0.26s ${snapEase}, background-color 0.26s ${snapEase}, border-color 0.26s ${snapEase}, box-shadow 0.26s ${snapEase}`;
+          dotRef.current.style.width = `${snapW}px`;
+          dotRef.current.style.height = `${snapH}px`;
+          dotRef.current.style.borderRadius = snapRadius;
+          dotRef.current.style.backgroundColor = isCapsule ? 'rgba(34, 211, 238, 0.04)' : 'transparent';
           dotRef.current.style.borderColor = 'var(--accent-color)';
-          dotRef.current.style.boxShadow = '0 0 16px rgba(var(--accent-rgb), 0.5)';
+          dotRef.current.style.boxShadow = isCapsule
+            ? '0 0 12px rgba(var(--accent-rgb), 0.5), inset 0 0 8px rgba(var(--accent-rgb), 0.15)'
+            : '0 0 16px rgba(var(--accent-rgb), 0.5)';
           dotRef.current.style.backdropFilter = 'none';
           dotRef.current.style.webkitBackdropFilter = 'none';
           dotRef.current.style.mixBlendMode = 'normal';
         } else {
           // Restore default transition configuration
           dotRef.current.style.transition = transitionFast;
+          dotRef.current.style.borderRadius = '50%';
 
           if (isView) {
             dotRef.current.style.width = '72px';
@@ -94,18 +103,26 @@ const CustomCursor = memo(function CustomCursor() {
       }
 
       if (glowRef.current) {
-        if (mode === 'snap') {
+        if (mode === 'capsule') {
+          glowRef.current.style.width = `${snapW * 1.3}px`;
+          glowRef.current.style.height = `${snapH * 2.2}px`;
+          glowRef.current.style.borderRadius = snapRadius;
+        } else if (mode === 'snap') {
           glowRef.current.style.width = '120px';
           glowRef.current.style.height = '120px';
+          glowRef.current.style.borderRadius = '9999px';
         } else if (mode === 'view') {
           glowRef.current.style.width = '160px';
           glowRef.current.style.height = '160px';
+          glowRef.current.style.borderRadius = '9999px';
         } else if (mode === 'hover') {
           glowRef.current.style.width = '144px';
           glowRef.current.style.height = '144px';
+          glowRef.current.style.borderRadius = '9999px';
         } else {
           glowRef.current.style.width = '96px';
           glowRef.current.style.height = '96px';
+          glowRef.current.style.borderRadius = '9999px';
         }
       }
     };
@@ -167,7 +184,7 @@ const CustomCursor = memo(function CustomCursor() {
         dotX = mouseX;
         dotY = mouseY;
         justEnteredView = false;
-      } else if (timeSinceLastMove > 24 && cursorMode !== 'snap') {
+      } else if (timeSinceLastMove > 24 && cursorMode !== 'snap' && cursorMode !== 'capsule') {
         glowX = mouseX;
         glowY = mouseY;
         dotX = mouseX;
@@ -178,17 +195,25 @@ const CustomCursor = memo(function CustomCursor() {
         glowY += (mouseY - glowY) * 0.50;
         dotX += (mouseX - dotX) * 0.85;
         dotY += (mouseY - dotY) * 0.85;
-      } else if (cursorMode === 'snap') {
+      } else if (cursorMode === 'snap' || cursorMode === 'capsule') {
         if (snapTarget) {
           const rect = snapTarget.getBoundingClientRect();
-          const currentSize = rect.width;
           snapX = rect.left + rect.width / 2;
           snapY = rect.top + rect.height / 2;
-          if (currentSize !== snapSize) {
-            snapSize = currentSize;
+          let targetW, targetH;
+          if (cursorMode === 'capsule') {
+            targetW = rect.width * 0.88;
+            targetH = rect.height * 0.88;
+          } else {
+            targetW = rect.width;
+            targetH = rect.width;
+          }
+          if (targetW !== snapW || targetH !== snapH) {
+            snapW = targetW;
+            snapH = targetH;
             if (dotRef.current) {
-              dotRef.current.style.width = `${snapSize}px`;
-              dotRef.current.style.height = `${snapSize}px`;
+              dotRef.current.style.width = `${snapW}px`;
+              dotRef.current.style.height = `${snapH}px`;
             }
           }
         }
@@ -211,8 +236,8 @@ const CustomCursor = memo(function CustomCursor() {
         dotRef.current.style.transform = `translate3d(${dotX}px, ${dotY}px, 0) translate(-50%, -50%)`;
       }
 
-      const targetX = cursorMode === 'snap' ? snapX : mouseX;
-      const targetY = cursorMode === 'snap' ? snapY : mouseY;
+      const targetX = (cursorMode === 'snap' || cursorMode === 'capsule') ? snapX : mouseX;
+      const targetY = (cursorMode === 'snap' || cursorMode === 'capsule') ? snapY : mouseY;
       const glowDist = Math.hypot(targetX - glowX, targetY - glowY);
       const dotDist = Math.hypot(targetX - dotX, targetY - dotY);
 
@@ -251,7 +276,7 @@ const CustomCursor = memo(function CustomCursor() {
     const handlePointerOver = (e) => {
       // Locking state: Ignore interactive hover calculations if in "view" or "snap" mode
       // or if we are inside a transition timeout (leaveTimeout is active)
-      if (cursorMode === 'view' || cursorMode === 'snap' || leaveTimeout) return;
+      if (cursorMode === 'view' || cursorMode === 'snap' || cursorMode === 'capsule' || leaveTimeout) return;
 
       const isInteractive = e.target && e.target.closest && e.target.closest('button, a, input, [data-interactive="true"]');
       applyCursorStyles(isInteractive ? 'hover' : 'default');
@@ -274,13 +299,25 @@ const CustomCursor = memo(function CustomCursor() {
 
     const handleSnapEnter = (e) => {
       snapTarget = e.detail?.target;
+      snapVariant = e.detail?.variant || 'snap';
+
       if (snapTarget) {
         const rect = snapTarget.getBoundingClientRect();
         snapX = rect.left + rect.width / 2;
         snapY = rect.top + rect.height / 2;
-        snapSize = rect.width;
+
+        if (snapVariant === 'capsule') {
+          snapW = rect.width * 0.88;
+          snapH = rect.height * 0.88;
+          const cs = window.getComputedStyle(snapTarget);
+          snapRadius = cs.borderRadius && cs.borderRadius !== '0px' ? cs.borderRadius : '4px';
+        } else {
+          snapW = rect.width;
+          snapH = rect.width;
+          snapRadius = '50%';
+        }
       }
-      applyCursorStyles('snap');
+      applyCursorStyles(snapVariant === 'capsule' ? 'capsule' : 'snap');
       if (!rafActive) {
         rafActive = true;
         render();
@@ -330,7 +367,7 @@ const CustomCursor = memo(function CustomCursor() {
   if (!isDesktopRef.current) return null;
 
   const cubicBezierEase = 'cubic-bezier(0.22, 1, 0.36, 1)';
-  const transitionFast = `width 0.14s ${cubicBezierEase}, height 0.14s ${cubicBezierEase}, background-color 0.14s ${cubicBezierEase}, border-color 0.14s ${cubicBezierEase}, box-shadow 0.14s ${cubicBezierEase}, backdrop-filter 0.14s ${cubicBezierEase}, -webkit-backdrop-filter 0.14s ${cubicBezierEase}`;
+  const transitionFast = `width 0.14s ${cubicBezierEase}, height 0.14s ${cubicBezierEase}, border-radius 0.14s ${cubicBezierEase}, background-color 0.14s ${cubicBezierEase}, border-color 0.14s ${cubicBezierEase}, box-shadow 0.14s ${cubicBezierEase}, backdrop-filter 0.14s ${cubicBezierEase}, -webkit-backdrop-filter 0.14s ${cubicBezierEase}`;
 
   return (
     <>

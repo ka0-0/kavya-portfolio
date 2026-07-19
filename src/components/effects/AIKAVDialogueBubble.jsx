@@ -65,7 +65,8 @@ export default function AIKAVDialogueBubble({
   activeSection,
   isTransitioning,
   onRobotGlance,
-  onAIKAVLookAway
+  onAIKAVLookAway,
+  onSpeakingChange
 }) {
   const [isDialogueCompleted, setIsDialogueCompleted] = useState(isDialogueCompletedGlobal);
   const [currentMsg, setCurrentMsg] = useState("");
@@ -79,6 +80,13 @@ export default function AIKAVDialogueBubble({
   const hasPlayedProjectsRef = useRef(false);
 
   const hasTriggeredReactionsRef = useRef(false);
+
+  // Propagate speaking state changes to the parent immediately
+  useEffect(() => {
+    if (onSpeakingChange) {
+      onSpeakingChange(isTyping && isBubbleVisible);
+    }
+  }, [isTyping, isBubbleVisible, onSpeakingChange]);
 
   // Ref-based idle dialogue timing
   const isIdlePhaseRef = useRef(false);
@@ -456,15 +464,16 @@ export default function AIKAVDialogueBubble({
                 width: 'fit-content',
                 height: 'auto',
                 overflow: 'visible',
-                background: 'rgba(8, 12, 18, 0.92)',
+                background: 'var(--aikav-bubble-bg, rgba(8, 12, 18, 0.92))',
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
-                border: '1px solid rgba(56, 189, 248, 0.25)',
-                boxShadow: '0 0 16px rgba(56, 189, 248, 0.15)',
+                border: '1px solid var(--aikav-bubble-border, rgba(var(--aikav-primary-rgb, 56, 189, 248), 0.25))',
+                boxShadow: '0 0 16px var(--aikav-bubble-glow, rgba(var(--aikav-primary-rgb, 56, 189, 248), 0.15))',
                 padding: '10px 14px',
                 boxSizing: 'border-box',
                 borderRadius: '16px',
                 pointerEvents: lockPromptActive ? 'auto' : 'none',
+                transition: 'border-color 400ms ease-in-out, box-shadow 400ms ease-in-out',
               }}
             >
               {/* Typewriter text */}
@@ -488,10 +497,11 @@ export default function AIKAVDialogueBubble({
                       display: 'inline-block',
                       width: '2px',
                       height: '14px',
-                      background: '#38BDF8',
+                      background: 'var(--aikav-primary, #38BDF8)',
                       marginLeft: '2px',
                       verticalAlign: 'middle',
                       animation: 'aikav-cursor-blink 1s step-end infinite',
+                      transition: 'background-color 400ms ease-in-out',
                     }}
                   />
                 )}
@@ -511,20 +521,30 @@ export default function AIKAVDialogueBubble({
                 >
                   <button
                     onClick={handleYes}
-                    className="font-mono text-[11px] sm:text-xs font-semibold tracking-wider text-cyan-400 hover:text-white uppercase transition-all duration-300 border border-cyan-400/30 hover:border-cyan-400 hover:bg-cyan-500/20 hover:shadow-[0_0_8px_rgba(6,182,212,0.4)] px-3 py-1 rounded-[4px] cursor-pointer"
+                    className="font-mono text-[11px] sm:text-xs font-semibold tracking-wider uppercase transition-all duration-300 px-3 py-1 rounded-[4px] cursor-pointer"
                     style={{
-                      background: 'rgba(6, 182, 212, 0.05)',
+                      color: 'var(--aikav-primary, #22d3ee)',
+                      borderColor: 'rgba(var(--aikav-primary-rgb, 34, 211, 238), 0.3)',
+                      borderWidth: '1px',
+                      borderStyle: 'solid',
+                      background: 'rgba(var(--aikav-primary-rgb, 34, 211, 238), 0.05)',
                       outline: 'none',
+                      transition: 'color 400ms ease-in-out, border-color 400ms ease-in-out, background-color 400ms ease-in-out, box-shadow 400ms ease-in-out',
                     }}
                   >
                     Yes
                   </button>
                   <button
                     onClick={handleNo}
-                    className="font-mono text-[11px] sm:text-xs font-semibold tracking-wider text-cyan-400 hover:text-white uppercase transition-all duration-300 border border-cyan-400/30 hover:border-cyan-400 hover:bg-cyan-500/20 hover:shadow-[0_0_8px_rgba(6,182,212,0.4)] px-3 py-1 rounded-[4px] cursor-pointer"
+                    className="font-mono text-[11px] sm:text-xs font-semibold tracking-wider uppercase transition-all duration-300 px-3 py-1 rounded-[4px] cursor-pointer"
                     style={{
-                      background: 'rgba(6, 182, 212, 0.05)',
+                      color: 'var(--aikav-primary, #22d3ee)',
+                      borderColor: 'rgba(var(--aikav-primary-rgb, 34, 211, 238), 0.3)',
+                      borderWidth: '1px',
+                      borderStyle: 'solid',
+                      background: 'rgba(var(--aikav-primary-rgb, 34, 211, 238), 0.05)',
                       outline: 'none',
+                      transition: 'color 400ms ease-in-out, border-color 400ms ease-in-out, background-color 400ms ease-in-out, box-shadow 400ms ease-in-out',
                     }}
                   >
                     No

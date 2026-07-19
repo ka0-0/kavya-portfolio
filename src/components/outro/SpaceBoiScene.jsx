@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, memo } from 'react';
 import { downloadResume } from '../../utils/resume';
-import LoadingRobot from '../loading/LoadingRobot';
+import LoadingPlanet from '../loading/LoadingPlanet';
 
 function SpaceBoiScene() {
   const containerRef = useRef(null);
@@ -8,6 +8,7 @@ function SpaceBoiScene() {
   const [downloadState, setDownloadState] = useState('idle');
   const [animate, setAnimate] = useState(false);
 
+  // handleDownload is used to download the resume
   const handleDownload = (e) => {
     e.preventDefault();
     if (downloadState !== 'idle') return;
@@ -63,7 +64,7 @@ function SpaceBoiScene() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(var(--accent-rgb),0.20)_0%,rgba(var(--accent-rgb),0.05)_50%,transparent_75%)] pointer-events-none z-0" />
 
       <div ref={containerRef} className="w-full h-[650px] sm:h-[750px] md:h-[850px] lg:h-[100vh] relative z-10">
-        {isInView && <LoadingRobot />}
+        <LoadingPlanet />
 
         {/* Style block for cinematic transitions and animation timing sequence */}
         <style dangerouslySetInnerHTML={{
@@ -109,14 +110,18 @@ function SpaceBoiScene() {
         `}} />
 
         {/* HTML Content Overlay */}
-        <div className={`absolute inset-0 flex flex-col justify-center items-center z-20 pointer-events-none px-6 pt-8 pb-8 md:py-12 ${animate ? 'animate-sequence' : ''}`}>
+        <div className={`absolute inset-0 flex flex-col justify-between items-center z-20 pointer-events-none px-6 pt-12 md:pt-0 pb-16 md:pb-[33vh] md:-translate-y-[10vh] ${animate ? 'animate-sequence' : ''}`}>
           
-          <div className="flex flex-col items-center text-center pointer-events-auto w-full max-w-2xl justify-center gap-4 sm:gap-6 lg:gap-8 -translate-y-8 md:-translate-y-16">
+          {/* Top Block: Status Indicators, Heading, and Subtitle */}
+          <div className="flex flex-col items-center text-center pointer-events-auto w-full">
             {/* Status Indicators */}
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center w-full">
               <span className="final-animate-fade-in delay-step-1 text-[10px] md:text-xs font-mono tracking-[0.3em] text-cyan-400 font-bold uppercase drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">
                 SYSTEM STATUS
               </span>
+              
+              {/* gap 20px */}
+              <div className="h-[20px]" />
               
               <div className="text-[10px] md:text-xs font-mono text-zinc-400 space-y-1 text-center font-medium leading-relaxed">
                 <div className="final-animate-fade-in delay-step-2">
@@ -128,23 +133,38 @@ function SpaceBoiScene() {
               </div>
             </div>
 
+            {/* gap 36px */}
+            <div className="h-[36px]" />
+
             {/* Heading */}
-            <h2 className="final-animate-fade-up delay-step-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tight text-white uppercase leading-[1.3] w-full">
+            <h2 className="final-animate-fade-up delay-step-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tight text-white uppercase leading-[1.1] w-full">
               THANK YOU<br />
               FOR EXPLORING<br />
               MY UNIVERSE
             </h2>
 
+            {/* gap 24px */}
+            <div className="h-[24px]" />
+
             {/* Subtitle */}
             <p className="final-animate-fade-in delay-step-5 text-[10px] sm:text-xs font-mono tracking-[0.2em] text-cyan-400/90 font-bold uppercase drop-shadow-[0_0_6px_rgba(34,211,238,0.2)]">
               Mechanical Engineer × AI Developer
             </p>
+          </div>
 
+          {/* Flexible Spacer for the 3D Character Silhouette (visually divides the layout) */}
+          <div className="flex-grow min-h-[40px] md:min-h-[120px] lg:min-h-[180px]" />
+
+          {/* Bottom Block: Body Text, Button, Social Links, and Footer */}
+          <div className="flex flex-col items-center text-center pointer-events-auto w-full max-w-2xl">
             {/* Body Text */}
             <p className="final-animate-fade-in delay-step-6 text-zinc-200 text-xs sm:text-sm max-w-md mx-auto leading-relaxed tracking-wide font-sans">
               Building intelligent products,<br className="hidden sm:inline" /> one idea at a time.<br />
               Let's build something together.
             </p>
+
+            {/* gap 36px */}
+            <div className="h-[36px]" />
 
             {/* Primary Button */}
             <div className="final-animate-fade-up delay-step-7">
@@ -160,30 +180,33 @@ function SpaceBoiScene() {
               </a>
             </div>
 
+            {/* gap 32px */}
+            <div className="h-[32px]" />
+
             {/* Secondary Links */}
             <div className="final-animate-fade-in delay-step-8 flex items-center justify-center gap-4 text-[10px] sm:text-xs font-mono tracking-widest text-zinc-500">
-              <a
-                href="https://github.com/ka0-0"
-                target="_blank"
-                rel="noopener noreferrer"
+              <a 
+                href="https://github.com/ka0-0" 
+                target="_blank" 
+                rel="noopener noreferrer" 
                 className="text-zinc-400 hover:text-cyan-400 transition-colors duration-300"
                 data-interactive="true"
               >
                 GitHub
               </a>
               <span className="text-zinc-700 select-none">•</span>
-              <a
-                href="https://www.linkedin.com/in/kavya-makhan-800451370/"
-                target="_blank"
-                rel="noopener noreferrer"
+              <a 
+                href="https://www.linkedin.com/in/kavya-makhan-800451370/" 
+                target="_blank" 
+                rel="noopener noreferrer" 
                 className="text-zinc-400 hover:text-cyan-400 transition-colors duration-300"
                 data-interactive="true"
               >
                 LinkedIn
               </a>
               <span className="text-zinc-700 select-none">•</span>
-              <a
-                href="mailto:kav.1609.ya@gmail.com"
+              <a 
+                href="mailto:kav.1609.ya@gmail.com" 
                 className="text-zinc-400 hover:text-cyan-400 transition-colors duration-300"
                 data-interactive="true"
               >
@@ -191,23 +214,29 @@ function SpaceBoiScene() {
               </a>
             </div>
 
-            {/* Divider line */}
-            <div className="text-zinc-800 select-none text-[8px] sm:text-[10px] tracking-tight opacity-50">
-              ────────────────────────
-            </div>
+            {/* gap 36px */}
+            <div className="h-[36px]" />
 
-            {/* Bottom: Footer Info */}
-            <div className="final-animate-fade-in delay-step-9 flex flex-col items-center gap-3 text-[10px] font-mono tracking-[0.2em] text-zinc-500 w-full">
-              <span>© 2026 Kavya Makhan</span>
+            {/* Bottom: Footer */}
+            <div className="final-animate-fade-in delay-step-9 flex flex-col items-center w-full">
+              <div className="text-zinc-800 select-none text-[8px] sm:text-[10px] tracking-tight mb-4 opacity-50">
+                ────────────────────────
+              </div>
+              <div className="flex flex-col items-center text-[10px] font-mono tracking-[0.2em] text-zinc-500">
+                <span>© 2026 Kavya Makhan</span>
+                
+                {/* gap 12px */}
+                <div className="h-[12px]" />
 
-              <button
-                onClick={handleBackToTop}
-                className="group flex flex-col items-center gap-1 text-zinc-400 hover:text-cyan-400 transition-colors duration-300 focus:outline-none"
-                data-interactive="true"
-              >
-                <span className="text-sm font-bold transition-transform duration-300 group-hover:-translate-y-1">↑</span>
-                <span className="text-[9px] uppercase tracking-[0.15em] font-semibold mt-0.5">Back to Top</span>
-              </button>
+                <button
+                  onClick={handleBackToTop}
+                  className="group flex flex-col items-center gap-1 text-zinc-400 hover:text-cyan-400 transition-colors duration-300 focus:outline-none"
+                  data-interactive="true"
+                >
+                  <span className="text-sm font-bold transition-transform duration-300 group-hover:-translate-y-1">↑</span>
+                  <span className="text-[9px] uppercase tracking-[0.15em] font-semibold mt-0.5">Back to Top</span>
+                </button>
+              </div>
             </div>
 
           </div>

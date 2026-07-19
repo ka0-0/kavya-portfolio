@@ -4,7 +4,7 @@
   left: 50%;
   transform: translateX(-50%);
   bottom: 34px; /* Centered 34px above the bottom edge */
-  z-index: 85;
+  z-index: 1002;
   pointer-events: none;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 10px;
@@ -38,18 +38,19 @@
 
 .telemetry-label {
   font-weight: 700;
-  opacity: 0.55;
+  opacity: 0.75;
+  text-shadow: 0 0 3px #000000, 0 0 6px #000000, 0 1px 2px #000000;
 }
 
 .telemetry-value {
   font-weight: 500;
-  text-shadow: 0 0 5px rgba(var(--accent-rgb), 0.4);
+  text-shadow: 0 0 3px #000000, 0 0 6px #000000, 0 1px 2px #000000, 0 0 5px rgba(var(--accent-rgb), 0.45);
 }
 
 .telemetry-separator {
-  opacity: 0.4;
+  opacity: 0.5;
   font-weight: 700;
-  text-shadow: 0 0 4px rgba(var(--accent-rgb), 0.35);
+  text-shadow: 0 0 3px #000000, 0 0 6px #000000, 0 1px 2px #000000, 0 0 4px rgba(var(--accent-rgb), 0.35);
 }
 
 /* Standalone occlusion state when the Theme Terminal Panel is open */
