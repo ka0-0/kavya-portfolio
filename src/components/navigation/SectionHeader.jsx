@@ -110,7 +110,7 @@ export default function SectionHeader({ number, title, rightLabel }) {
       {/* Top Details bar with Thin Blueprint Divider Line */}
       <div className="section-header-details max-w-7xl mx-auto px-6 md:px-8 mb-12 md:mb-16">
         <div className="flex justify-between items-end pb-3 border-b border-zinc-800/40">
-          <span className="font-mono text-xs tracking-[0.25em] text-cyan-400 font-bold">
+          <span className="font-mono text-xs tracking-[0.25em] theme-text-accent font-bold">
             {number}
           </span>
           <span className="font-mono text-[9px] tracking-[0.25em] text-zinc-500 uppercase">

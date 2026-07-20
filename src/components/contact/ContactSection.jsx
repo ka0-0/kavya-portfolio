@@ -111,6 +111,61 @@ export default function ContactSection() {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Proximity heading animation refs & hooks
+  const headingWordsRef = useRef([]);
+  const mousePosition = useRef({ x: -9999, y: -9999 });
+  const currentIllumination = useRef(0);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      mousePosition.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    let animId;
+    const update = () => {
+      const button = document.getElementById('contact-cta-button');
+      if (button && headingWordsRef.current.length > 0) {
+        const rect = button.getBoundingClientRect();
+        const buttonCenterX = rect.left + rect.width / 2;
+        const buttonCenterY = rect.top + rect.height / 2;
+
+        const dx = mousePosition.current.x - buttonCenterX;
+        const dy = mousePosition.current.y - buttonCenterY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        const maxDistance = 350; // Proximity influence radius
+        let targetFactor = 0;
+        if (distance < maxDistance) {
+          const norm = 1 - (distance / maxDistance);
+          targetFactor = norm;
+        }
+
+        currentIllumination.current += (targetFactor - currentIllumination.current) * 0.15;
+
+        headingWordsRef.current.forEach(el => {
+          if (el) {
+            const factor = currentIllumination.current;
+            el.style.setProperty('-webkit-text-fill-color', `rgba(var(--title-glow-rgb), ${factor * 0.18})`);
+
+            if (factor > 0.01) {
+              el.style.setProperty('text-shadow', `0 0 4px rgba(255, 255, 255, ${factor * 0.35}), 0 0 16px rgba(var(--title-glow-rgb), ${factor * 0.6})`);
+            } else {
+              el.style.setProperty('text-shadow', 'none');
+            }
+          }
+        });
+      }
+      animId = requestAnimationFrame(update);
+    };
+
+    animId = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(animId);
+  }, []);
+
   // Form state
   const [formData, setFormData] = useState({
     name: '',
@@ -534,7 +589,7 @@ export default function ContactSection() {
         <div className="lg:col-span-6 flex flex-col items-start text-left space-y-6 md:space-y-8">
           <motion.span
             variants={labelVariants}
-            className="font-mono text-xs font-semibold tracking-[0.25em] text-cyan-400 uppercase select-none"
+            className="font-mono text-xs font-semibold tracking-[0.25em] theme-text-accent uppercase select-none"
           >
             GET IN TOUCH
           </motion.span>
@@ -544,26 +599,26 @@ export default function ContactSection() {
               <motion.span
                 custom={0}
                 variants={headlineVariants(0)}
-                className="font-display text-[6.8vw] min-[380px]:text-[7.2vw] min-[480px]:text-[2.8rem] sm:text-[4rem] md:text-[5.4rem] lg:text-[5.5rem] xl:text-[6.6rem] font-black uppercase text-white block tracking-tight"
+                className="font-display text-[6.8vw] min-[380px]:text-[7.2vw] min-[480px]:text-[2.8rem] sm:text-[4rem] md:text-[5.4rem] lg:text-[5.5rem] xl:text-[6.6rem] font-black uppercase block tracking-tight"
                 style={{
-                  textShadow: '0 0 24px rgba(6, 182, 212, 0.42)',
                   willChange: 'transform, opacity'
                 }}
               >
-                Let's build
+                <span className="word-hover-fill mr-[0.25em]" ref={el => headingWordsRef.current[0] = el}>Let's</span>
+                <span className="word-hover-fill" ref={el => headingWordsRef.current[1] = el}>build</span>
               </motion.span>
             </span>
             <span className="overflow-hidden block py-1.5">
               <motion.span
                 custom={1}
                 variants={headlineVariants(1)}
-                className="font-display text-[6.8vw] min-[380px]:text-[7.2vw] min-[480px]:text-[2.8rem] sm:text-[4rem] md:text-[5.4rem] lg:text-[5.5rem] xl:text-[6.6rem] font-black uppercase text-white block tracking-tight"
+                className="font-display text-[6.8vw] min-[380px]:text-[7.2vw] min-[480px]:text-[2.8rem] sm:text-[4rem] md:text-[5.4rem] lg:text-[5.5rem] xl:text-[6.6rem] font-black uppercase block tracking-tight"
                 style={{
-                  textShadow: '0 0 24px rgba(6, 182, 212, 0.42)',
                   willChange: 'transform, opacity'
                 }}
               >
-                something intelligent.
+                <span className="word-hover-fill mr-[0.25em]" ref={el => headingWordsRef.current[2] = el}>something</span>
+                <span className="word-hover-fill" ref={el => headingWordsRef.current[3] = el}>intelligent.</span>
               </motion.span>
             </span>
           </h2>

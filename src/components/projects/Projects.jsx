@@ -168,12 +168,148 @@ function BrowserMockup({ project }) {
   );
 }
 
+function ProjectCard({ project, idx, addToCardRefs }) {
+  const headingWordsRef = useRef([]);
+  const buttonRef = useRef(null);
+  const mousePosition = useRef({ x: -9999, y: -9999 });
+  const currentIllumination = useRef(0);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      mousePosition.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    let animId;
+    const update = () => {
+      const button = buttonRef.current;
+      if (button && headingWordsRef.current.length > 0) {
+        const rect = button.getBoundingClientRect();
+        const buttonCenterX = rect.left + rect.width / 2;
+        const buttonCenterY = rect.top + rect.height / 2;
+
+        const dx = mousePosition.current.x - buttonCenterX;
+        const dy = mousePosition.current.y - buttonCenterY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        const maxDistance = 350; // Proximity influence radius
+        let targetFactor = 0;
+        if (distance < maxDistance) {
+          const norm = 1 - (distance / maxDistance);
+          targetFactor = norm;
+        }
+
+        currentIllumination.current += (targetFactor - currentIllumination.current) * 0.15;
+
+        headingWordsRef.current.forEach(el => {
+          if (el) {
+            const factor = currentIllumination.current;
+            el.style.setProperty('-webkit-text-fill-color', `rgba(var(--title-glow-rgb), ${factor * 0.18})`);
+
+            if (factor > 0.01) {
+              el.style.setProperty('text-shadow', `0 0 4px rgba(255, 255, 255, ${factor * 0.35}), 0 0 16px rgba(var(--title-glow-rgb), ${factor * 0.6})`);
+            } else {
+              el.style.setProperty('text-shadow', 'none');
+            }
+          }
+        });
+      }
+      animId = requestAnimationFrame(update);
+    };
+
+    animId = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(animId);
+  }, []);
+
+  const words = project.title.split(' ');
+
+  return (
+    <div
+      ref={addToCardRefs}
+      className="sticky top-[120px] w-[94vw] h-[80vh] bg-[var(--card-bg-alt)] border border-[rgba(var(--accent-rgb),0.2)] rounded-3xl shadow-[0_0_50px_rgba(var(--accent-rgb),0.15)] overflow-hidden flex flex-col justify-between mx-auto projects-card-item"
+      style={{
+        zIndex: idx + 10,
+        marginBottom: '40vh',
+        willChange: 'transform'
+      }}
+    >
+      <div className="h-10 flex-none w-full" />
+      <div className="flex-1 w-full relative overflow-hidden max-w-7xl mx-auto px-4 sm:px-8 lg:px-16 flex items-center justify-center z-10">
+        <div className="w-full h-full flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-4 sm:py-8 z-10">
+          <div className="w-full lg:w-[35%] lg:max-w-[35%] flex-shrink-0 flex flex-col justify-center items-start text-left gap-2 sm:gap-4 md:gap-5 order-2 lg:order-1 projects-info-column">
+            <div className="flex flex-col gap-1 md:gap-2">
+              <span className="font-mono text-cyan-400 text-xs md:text-sm font-bold tracking-[0.25em]">
+                {project.number} / 03
+              </span>
+              <span className="font-mono text-zinc-500 text-[10px] md:text-xs tracking-[0.2em] uppercase">
+                {project.category}
+              </span>
+            </div>
+            <h3 
+              className="font-display text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black leading-[1.1] uppercase tracking-wide"
+            >
+              {words.map((word, wIdx) => (
+                <span
+                  key={wIdx}
+                  className="word-hover-fill"
+                  style={{ marginRight: wIdx < words.length - 1 ? '0.25em' : '0' }}
+                  ref={el => {
+                    headingWordsRef.current[wIdx] = el;
+                  }}
+                >
+                  {word}
+                </span>
+              ))}
+            </h3>
+            <p className="font-sans text-xs md:text-sm text-zinc-400 leading-relaxed max-w-sm">
+              {project.description}
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {project.technologies.map((t, tidx) => (
+                <span key={tidx} className="font-mono text-[9px] md:text-[10px] text-cyan-400/80 bg-cyan-950/20 border border-[rgba(var(--accent-rgb),0.1)] px-2 py-0.5 rounded uppercase">
+                  {t}
+                </span>
+              ))}
+            </div>
+            <div className="pt-2 md:pt-4">
+              <a
+                ref={buttonRef}
+                href={project.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative inline-flex items-center justify-between w-[190px] h-[48px] pl-5 pr-2 rounded-full bg-gradient-to-r from-blue-950/80 via-zinc-900/90 to-cyan-950/80 border border-[rgba(var(--accent-rgb),0.4)] backdrop-blur-md shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)] hover:-translate-y-0.5 transition-all duration-300 select-none cursor-pointer overflow-hidden z-10"
+                data-interactive="true"
+              >
+                <div className="button-sheen absolute inset-0 rounded-full bg-gradient-to-r from-[rgba(var(--accent-rgb),0.08)] via-[rgba(var(--accent-rgb),0.15)] to-[rgba(var(--accent-rgb),0.08)] opacity-0 transition-opacity duration-500 pointer-events-none" />
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-white group-hover:text-cyan-300 transition-colors duration-300 z-10">
+                  VISIT WEBSITE
+                </span>
+                <div className="arrow-wrapper relative w-8 h-8 rounded-full bg-gradient-to-br from-[rgba(var(--accent-rgb),0.2)] to-[rgba(var(--accent-rgb),0.1)] border border-[rgba(var(--accent-rgb),0.4)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 z-10">
+                  <svg className="arrow-svg w-3 h-3 text-cyan-300 transition-all duration-300 transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </div>
+              </a>
+            </div>
+          </div>
+          <div className="w-full lg:w-[65%] lg:max-w-[65%] flex-shrink-0 flex items-center justify-center order-1 lg:order-2 projects-media-column">
+            <BrowserMockup project={project} />
+          </div>
+        </div>
+      </div>
+      <div className="h-8 flex-none w-full" />
+    </div>
+  );
+}
+
 export default function Projects() {
   const sectionRef = useRef(null);
   const headerRef = useRef(null);
   const cardRefs = useRef([]);
 
-  // Clear dynamic array refs on each render pass
   cardRefs.current = [];
 
   const addToCardRefs = (el) => {
@@ -183,7 +319,6 @@ export default function Projects() {
   };
 
   useEffect(() => {
-    // Refresh ScrollTrigger instances upon mount/resize for sticky consistency
     ScrollTrigger.refresh();
   }, []);
 
@@ -193,7 +328,6 @@ export default function Projects() {
       id="projects" 
       className="relative bg-[var(--bg-dark)] w-full select-none pb-0"
     >
-      {/* Style block for floating and glass reflection animations */}
       <style>{`
         @keyframes floatMockup {
           0%, 100% {
@@ -222,8 +356,6 @@ export default function Projects() {
         }
       `}</style>
       
-      {/* Pinned Sticky Section Header (outside cards stack, relative z-5) */}
-      {/* Changing to "relative" allows the header to naturally scroll up and pass *behind* the sticky stack */}
       <div 
         ref={headerRef}
         className="relative w-full z-5 bg-[var(--bg-dark)] pt-6 pb-2"
@@ -235,80 +367,20 @@ export default function Projects() {
         />
       </div>
 
-      {/* Cards stack list (direct siblings in a block container) */}
       <div className="relative w-full block px-4 md:px-8">
         {projectsData.map((project, idx) => (
-          <div
+          <ProjectCard
             key={project.id}
-            ref={addToCardRefs}
-            className="sticky top-[120px] w-[94vw] h-[80vh] bg-[var(--card-bg-alt)] border border-[rgba(var(--accent-rgb),0.2)] rounded-3xl shadow-[0_0_50px_rgba(var(--accent-rgb),0.15)] overflow-hidden flex flex-col justify-between mx-auto projects-card-item"
-            style={{
-              zIndex: idx + 10,
-              marginBottom: '40vh', // Critical: Apply exact same margin-bottom to ALL cards (including last card)
-              willChange: 'transform'
-            }}
-          >
-            {/* Top margin buffer */}
-            <div className="h-10 flex-none w-full" />
-
-            {/* Layer 1: Project Slide Layout */}
-            <div className="flex-1 w-full relative overflow-hidden max-w-7xl mx-auto px-4 sm:px-8 lg:px-16 flex items-center justify-center z-10">
-              <div className="w-full h-full flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-4 sm:py-8 z-10">
-                
-                {/* Left Column (Project Info - 35% width, clean background area) */}
-                <div className="w-full lg:w-[35%] lg:max-w-[35%] flex-shrink-0 flex flex-col justify-center items-start text-left gap-2 sm:gap-4 md:gap-5 order-2 lg:order-1 projects-info-column">
-                  <div className="flex flex-col gap-1 md:gap-2">
-                    <span className="font-mono text-cyan-400 text-xs md:text-sm font-bold tracking-[0.25em]">
-                      {project.number} / 03
-                    </span>
-                    <span className="font-mono text-zinc-500 text-[10px] md:text-xs tracking-[0.2em] uppercase">
-                      {project.category}
-                    </span>
-                  </div>
-                  
-                  <h3 className="font-display text-2xl sm:text-3xl md:text-5xl lg:text-6xl text-white font-black leading-[1.1] uppercase tracking-wide">
-                    {project.title}
-                  </h3>
-                  
-                  <p className="font-sans text-xs md:text-sm text-zinc-400 leading-relaxed max-w-sm">
-                    {project.description}
-                  </p>
-
-                  {/* Tech Badges */}
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {project.technologies.map((t, idx) => (
-                      <span key={idx} className="font-mono text-[9px] md:text-[10px] text-cyan-400/80 bg-cyan-950/20 border border-[rgba(var(--accent-rgb),0.1)] px-2 py-0.5 rounded uppercase">
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="pt-2 md:pt-4">
-                    <VisitButton url={project.url} />
-                  </div>
-                </div>
-
-                {/* Right Column (Screenshot Media - 65% width) */}
-                <div className="w-full lg:w-[65%] lg:max-w-[65%] flex-shrink-0 flex items-center justify-center order-1 lg:order-2 projects-media-column">
-                  <BrowserMockup project={project} />
-                </div>
-
-              </div>
-            </div>
-
-            {/* Bottom panel margin buffer */}
-            <div className="h-8 flex-none w-full" />
-          </div>
+            project={project}
+            idx={idx}
+            addToCardRefs={addToCardRefs}
+          />
         ))}
 
-        {/* Dummy spacer inside cards list wrapper to preserve Card 3 sticky scroll space */}
         <div className="h-[20vh] w-full" />
 
-        {/* Premium System Status Teaser Section (Floats absolutely within the spacer flow) */}
-        {/* absolute bottom-8 places it perfectly centered inside the 20vh whitespace gap without changing heights */}
         <div className="absolute bottom-8 inset-x-0 flex flex-col items-center justify-center text-center px-6 select-none pointer-events-none">
           <div className="flex flex-col items-center gap-4 pointer-events-auto">
-            {/* Small Glowing Status Indicator */}
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/20 border border-[rgba(var(--accent-rgb),0.3)] backdrop-blur-md">
               <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(var(--accent-rgb),0.8)]" />
               <span className="font-mono text-[9px] tracking-[0.25em] text-cyan-400 font-bold uppercase">SYSTEM STATUS</span>

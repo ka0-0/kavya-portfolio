@@ -349,9 +349,9 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                   <a
                     href="#home"
                     onClick={(e) => handleRestartClick(e, 'kavya')}
-                    className="font-display text-sm tracking-widest text-zinc-900 leading-none hover:text-cyan-600 transition-colors"
+                    className="font-display text-sm tracking-widest text-zinc-900 leading-none theme-hover-accent transition-colors"
                   >
-                    KAVYA<span className="text-cyan-500 font-extrabold font-sans">.</span>
+                    KAVYA<span className="theme-text-accent font-extrabold font-sans">.</span>
                   </a>
                 </div>
               </div>
@@ -392,7 +392,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                             {isActive && (
                               <motion.div
                                 layoutId="active-pill"
-                                className="absolute inset-0 bg-[#ebf5ff]/65 backdrop-blur-[18px] border border-[rgba(100,200,255,0.4)] rounded-full -z-10 shadow-[inset_0_1.5px_0_rgba(255,255,255,0.9),_0_0_24px_rgba(0,170,255,0.18),_0_4px_12px_rgba(59,130,246,0.12)]"
+                                className="absolute inset-0 backdrop-blur-[18px] rounded-full -z-10 theme-active-capsule-desktop"
                                 style={{ 
                                   willChange: 'transform, opacity',
                                   transform: 'translateZ(0)',
@@ -475,7 +475,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                             {isActive && (
                               <motion.div
                                 layoutId="active-mobile-pill"
-                                className="absolute inset-0 bg-[#ebf5ff]/65 backdrop-blur-[18px] border border-[rgba(100,200,255,0.4)] rounded-full -z-10 shadow-[inset_0_1.5px_0_rgba(255,255,255,0.9),_0_0_24px_rgba(0,170,255,0.18),_0_2px_8px_rgba(59,130,246,0.12)]"
+                                className="absolute inset-0 backdrop-blur-[18px] rounded-full -z-10 theme-active-capsule-mobile"
                                 transition={{
                                   type: 'spring',
                                   stiffness: 700,
@@ -524,7 +524,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                 }`} />
 
                 <div className="w-full h-full bg-white/95 backdrop-blur-[18px] rounded-full flex items-center justify-center gap-2 px-4">
-                  <FileText className="w-4 h-4 text-cyan-500" />
+                  <FileText className="w-4 h-4 theme-text-accent" />
                   <span className="font-sans font-bold text-xs uppercase tracking-wider text-zinc-900">
                     Resume
                   </span>
@@ -554,7 +554,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                       }}
                       className="flex items-center gap-3 px-4 py-3 rounded-[12px] cursor-pointer hover:bg-zinc-100/90 text-zinc-700 hover:text-black font-sans text-xs font-semibold select-none transition-colors"
                     >
-                      <Eye className="w-4 h-4 text-cyan-500" />
+                      <Eye className="w-4 h-4 theme-text-accent" />
                       <span>View Resume</span>
                     </button>
 
@@ -572,7 +572,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                             exit={{ opacity: 0, scale: 0.8 }}
                             className="w-4 h-4 flex-shrink-0"
                           >
-                            <Download className="w-4 h-4 text-cyan-500" />
+                            <Download className="w-4 h-4 theme-text-accent" />
                           </motion.div>
                         )}
                         {downloadState === 'downloading' && (
@@ -583,7 +583,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                             exit={{ opacity: 0, scale: 0.8 }}
                             className="w-4 h-4 flex-shrink-0"
                           >
-                            <Loader2 className="w-4 h-4 text-cyan-500 animate-spin" />
+                            <Loader2 className="w-4 h-4 theme-text-accent animate-spin" />
                           </motion.div>
                         )}
                         {downloadState === 'completed' && (
@@ -609,7 +609,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                       onClick={handlePrintResume}
                       className="flex items-center gap-3 px-4 py-3 rounded-[12px] cursor-pointer hover:bg-zinc-100/90 text-zinc-700 hover:text-black font-sans text-xs font-semibold select-none transition-colors"
                     >
-                      <Printer className="w-4 h-4 text-cyan-500" />
+                      <Printer className="w-4 h-4 theme-text-accent" />
                       <span>Print Resume</span>
                     </button>
 
@@ -617,7 +617,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                       onClick={handleCopySummary}
                       className="flex items-center gap-3 px-4 py-3 rounded-[12px] cursor-pointer hover:bg-zinc-100/90 text-zinc-700 hover:text-black font-sans text-xs font-semibold select-none transition-colors"
                     >
-                      <Copy className="w-4 h-4 text-cyan-500" />
+                      <Copy className="w-4 h-4 theme-text-accent" />
                       <span>Copy Summary</span>
                     </button>
 
@@ -642,7 +642,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
           >
             <div className="relative p-[1px] rounded-2xl animate-neon-border shadow-[0_15px_40px_-10px_rgba(0,0,0,0.35),_0_4px_12px_rgba(59,130,246,0.15)]">
               <div className="bg-white/95 backdrop-blur-[12px] px-5 py-3.5 rounded-[15px] border border-white/80 flex items-center gap-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.85)]">
-                <div className="w-5 h-5 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-600 font-extrabold text-xs select-none">
+                <div className="w-5 h-5 rounded-full theme-bg-accent-tint flex items-center justify-center theme-text-accent-dark font-extrabold text-xs select-none">
                   ✓
                 </div>
                 <span className="font-sans text-xs font-bold text-zinc-800 tracking-wide uppercase select-none">
@@ -679,7 +679,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
               <div className="h-16 border-b border-zinc-800/75 px-6 flex items-center justify-between bg-zinc-950/60 backdrop-blur-[10px] modal-toolbar">
                 {/* Left side: Document Name */}
                 <div className="flex items-center gap-3">
-                  <FileText className="w-5 h-5 text-cyan-400" />
+                  <FileText className="w-5 h-5 theme-text-accent" />
                   <span className="font-mono text-xs font-bold uppercase tracking-wider text-zinc-400">
                     KAVYA_MAKHAN_CV.pdf
                   </span>
@@ -780,7 +780,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                         <h1 className="text-4xl font-display font-black tracking-tight text-zinc-900 leading-none">
                           KAVYA MAKHAN
                         </h1>
-                        <p className="text-xs font-mono font-bold tracking-[0.15em] text-cyan-600 uppercase mt-2">
+                        <p className="text-xs font-mono font-bold tracking-[0.15em] theme-text-accent-dark uppercase mt-2">
                           Mechanical Engineer & AI Algorithms Developer
                         </p>
                         
@@ -789,7 +789,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                           <span>•</span>
                           <a 
                             href="mailto:kavya.makhan@example.com" 
-                            className="hover:text-cyan-600 transition-colors pointer-events-auto cursor-pointer"
+                            className="theme-hover-accent transition-colors pointer-events-auto cursor-pointer"
                             onClick={() => trackEmailClick('Resume Modal')}
                           >
                             kavya.makhan@example.com
@@ -799,7 +799,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                             href="https://github.com/kavya-makhan" 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="hover:text-cyan-600 transition-colors pointer-events-auto cursor-pointer"
+                            className="theme-hover-accent transition-colors pointer-events-auto cursor-pointer"
                             onClick={() => trackGitHubClick('Resume Modal')}
                           >
                             github.com/kavya-makhan
@@ -809,7 +809,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                             href="https://linkedin.com/in/kavya-makhan" 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="hover:text-cyan-600 transition-colors pointer-events-auto cursor-pointer"
+                            className="theme-hover-accent transition-colors pointer-events-auto cursor-pointer"
                             onClick={() => trackLinkedInClick('Resume Modal')}
                           >
                             linkedin.com/in/kavya-makhan
@@ -819,7 +819,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
 
                       {/* 01. EDUCATION */}
                       <div className="mb-6">
-                        <h2 className="text-xs font-mono font-bold tracking-[0.2em] text-cyan-600 uppercase mb-2">
+                        <h2 className="text-xs font-mono font-bold tracking-[0.2em] theme-text-accent-dark uppercase mb-2">
                           01 / Education
                         </h2>
                         <div className="border-t border-zinc-300 pt-2 flex justify-between items-start">
@@ -839,7 +839,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
 
                       {/* 02. TECHNICAL SKILLS */}
                       <div className="mb-6">
-                        <h2 className="text-xs font-mono font-bold tracking-[0.2em] text-cyan-600 uppercase mb-2">
+                        <h2 className="text-xs font-mono font-bold tracking-[0.2em] theme-text-accent-dark uppercase mb-2">
                           02 / Technical Skills
                         </h2>
                         <div className="border-t border-zinc-300 pt-2 grid grid-cols-2 gap-x-8 gap-y-2 text-[11px]">
@@ -856,7 +856,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
 
                       {/* 03. PROJECTS LOGS */}
                       <div className="mb-6">
-                        <h2 className="text-xs font-mono font-bold tracking-[0.2em] text-cyan-600 uppercase mb-2">
+                        <h2 className="text-xs font-mono font-bold tracking-[0.2em] theme-text-accent-dark uppercase mb-2">
                           03 / Selected Projects
                         </h2>
                         <div className="border-t border-zinc-300 pt-2 space-y-4">
@@ -864,14 +864,14 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                           <div>
                             <div className="flex justify-between items-baseline">
                               <h3 
-                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto select-none"
+                                className="text-xs font-bold uppercase text-zinc-800 theme-hover-accent transition-colors cursor-pointer pointer-events-auto select-none"
                                 onClick={() => trackProjectClick('Cybernetic Neural Robotic Controller', 'Open')}
                               >
                                 Cybernetic Neural Robotic Controller
                               </h3>
                               <span className="text-[10px] font-mono text-zinc-400 font-bold">PyTorch, ROS2, SolidWorks</span>
                             </div>
-                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1 pointer-events-auto">
+                            <div className="flex gap-3 text-[9px] font-mono theme-text-accent-dark mt-1 pointer-events-auto">
                               <a 
                                 href="https://github.com/kavya-makhan/robotic-controller" 
                                 target="_blank" 
@@ -899,14 +899,14 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                           <div>
                             <div className="flex justify-between items-baseline">
                               <h3 
-                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto select-none"
+                                className="text-xs font-bold uppercase text-zinc-800 theme-hover-accent transition-colors cursor-pointer pointer-events-auto select-none"
                                 onClick={() => trackProjectClick('Thermally-Optimized Computing Chassis', 'Open')}
                               >
                                 Thermally-Optimized Computing Chassis
                               </h3>
                               <span className="text-[10px] font-mono text-zinc-400 font-bold">SolidWorks FEA & CFD, Matlab</span>
                             </div>
-                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1 pointer-events-auto">
+                            <div className="flex gap-3 text-[9px] font-mono theme-text-accent-dark mt-1 pointer-events-auto">
                               <a 
                                 href="https://github.com/kavya-makhan/thermal-chassis" 
                                 target="_blank" 
@@ -934,14 +934,14 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                           <div>
                             <div className="flex justify-between items-baseline">
                               <h3 
-                                className="text-xs font-bold uppercase text-zinc-800 hover:text-cyan-600 transition-colors cursor-pointer pointer-events-auto select-none"
+                                className="text-xs font-bold uppercase text-zinc-800 theme-hover-accent transition-colors cursor-pointer pointer-events-auto select-none"
                                 onClick={() => trackProjectClick('Autonomous Pathfinder Obstacle Avoidance UAV', 'Open')}
                               >
                                 Autonomous Pathfinder Obstacle Avoidance UAV
                               </h3>
                               <span className="text-[10px] font-mono text-zinc-400 font-bold">Python, ARM Microcontrollers, OpenCV</span>
                             </div>
-                            <div className="flex gap-3 text-[9px] font-mono text-cyan-600 mt-1 pointer-events-auto">
+                            <div className="flex gap-3 text-[9px] font-mono theme-text-accent-dark mt-1 pointer-events-auto">
                               <a 
                                 href="https://github.com/kavya-makhan/obstacle-avoidance-uav" 
                                 target="_blank" 
@@ -971,7 +971,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
 
                       {/* 04. CERTIFICATIONS & AWARDS */}
                       <div className="mb-6">
-                        <h2 className="text-xs font-mono font-bold tracking-[0.2em] text-cyan-600 uppercase mb-2">
+                        <h2 className="text-xs font-mono font-bold tracking-[0.2em] theme-text-accent-dark uppercase mb-2">
                           04 / Credentials & Achievements
                         </h2>
                         <div className="border-t border-zinc-300 pt-2 space-y-2 text-[11px] text-zinc-600">

@@ -1,0 +1,553 @@
+/* Holographic Projection System Stylesheet */
+
+/* Smooth color transition for theme variables */
+.projection-beam-container,
+.projection-beam-triangle,
+.hologram-hud,
+.hologram-glass,
+.hologram-grid,
+.hologram-scanlines,
+.hologram-sweep,
+.hologram-corner,
+.hologram-signature,
+.hologram-text-content,
+.hologram-cursor {
+  transition-property: background, background-color, border-color, color, box-shadow, filter, text-shadow;
+  transition-duration: 0.25s;
+  transition-timing-function: ease;
+}
+
+/* Central wrapper for the projection overlays */
+.hologram-projection-wrapper {
+  position: absolute;
+  left: 50%;
+  bottom: 70px;
+  /* Aligns with the center of the AI core */
+  transform: translate3d(-50%, 0, 0);
+  width: 320px;
+  height: 245px;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 30;
+}
+
+/* ==========================================================================
+   VOLUMETRIC BEAM LAYERS
+   ========================================================================== */
+
+/* ==========================================================================
+   VOLUMETRIC TRIANGULAR PROJECTION BEAM
+   ========================================================================== */
+
+.projection-beam-container {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 115px; /* Distance from dialogue panel bottom to orb eye center */
+  pointer-events: none;
+  overflow: visible;
+  z-index: -3; /* Positioned behind HUD frame, glass, and grid */
+  opacity: 0;
+  transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.projection-beam-container.active {
+  opacity: 1;
+  animation: beam-gentle-pulse 4s ease-in-out infinite;
+}
+
+@keyframes beam-gentle-pulse {
+  0%, 100% {
+    opacity: 0.92;
+  }
+  50% {
+    opacity: 1.0;
+  }
+}
+
+.projection-beam-triangle {
+  position: absolute;
+  inset: 0;
+  
+  /* Subtle cyan/blue holographic glow with 10–15% opacity (brighter at emitter base) */
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.10) 0%,
+    rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.15) 100%
+  );
+  
+  /* Futuristic outer glow edge bloom */
+  filter: drop-shadow(0 -4px 12px rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.35));
+}
+
+/* Very faint upward-moving scan-line texture */
+.projection-beam-triangle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  
+  /* Scanline texture */
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 6px,
+    rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.08) 6px,
+    rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.08) 8px
+  );
+  background-size: 100% 24px;
+  
+  /* Animation moves lines upward */
+  animation: beam-scanlines-up 4s linear infinite;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+@keyframes beam-scanlines-up {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 -24px;
+  }
+}
+
+.projection-particles-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.projection-particles-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* ==========================================================================
+   CONTINUOUS PARTICLE SYSTEM
+   ========================================================================== */
+
+@keyframes rise-particle {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.3);
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 0.85;
+  }
+
+  60% {
+    transform: translate3d(calc(var(--tx) * 0.12), -94px, 0) scale(0.65);
+    opacity: 0.85;
+  }
+
+  85% {
+    opacity: 0.85;
+  }
+
+  100% {
+    transform: translate3d(var(--tx), -157px, 0) scale(1.25);
+    opacity: 0;
+  }
+}
+
+.beam-particle {
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: rise-particle var(--duration) linear infinite;
+  animation-delay: var(--delay);
+}
+
+/* ==========================================================================
+   HOLOGRAPHIC HUD CONTAINER
+   ========================================================================== */
+
+.hologram-hud {
+  position: absolute;
+  left: 50%;
+  bottom: 115px;
+  /* Floats above the orb, beam extends through it to y=80px */
+  transform: translate3d(-50%, 0, 0) scale(0.95);
+  width: max-content;
+  max-width: 320px;
+  min-width: 220px;
+  padding: 16px 20px;
+  box-sizing: border-box;
+  opacity: 0;
+  pointer-events: none;
+  transition: 
+    opacity 0.3s cubic-bezier(0.215, 0.61, 0.355, 1),
+    transform 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
+  z-index: 20;
+}
+
+/* Pop-in active state */
+.hologram-hud.active {
+  opacity: 1;
+  transform: translate3d(-50%, 0, 0) scale(1);
+  animation: hologram-flicker 9s infinite;
+}
+
+.hologram-hud.state-concluding {
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+}
+
+/* Transparent Glass Panel */
+.hologram-glass {
+  position: absolute;
+  inset: 0;
+  background: var(--holo-bg-gradient, radial-gradient(circle at center, rgba(var(--accent-rgb), 0.06) 0%, rgba(var(--accent-rgb), 0.02) 100%));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.18);
+  box-shadow:
+    0 0 25px rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.15),
+    inset 0 0 20px rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.10);
+  opacity: 0;
+  z-index: -2;
+}
+
+/* Grid overlay */
+.hologram-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(var(--holo-accent-rgb, var(--accent-rgb)), var(--holo-grid-opacity, 0.12)) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--holo-accent-rgb, var(--accent-rgb)), var(--holo-grid-opacity, 0.12)) 1px, transparent 1px);
+  background-size: 8px 8px;
+  opacity: 0;
+  z-index: -1;
+}
+
+/* Moving scanline sweep overlays */
+.hologram-scanlines {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(255, 255, 255, 0.02) 50%, transparent 50%);
+  background-size: 100% 4px;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.hologram-sweep {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.6), transparent);
+  box-shadow: 0 0 10px rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.8);
+  opacity: 0;
+  top: 0;
+  pointer-events: none;
+}
+
+/* Corner bracket shapes */
+.hologram-corner {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.85);
+  border-style: solid;
+  opacity: 0;
+  filter: drop-shadow(0 0 2.5px rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.6));
+  pointer-events: none;
+}
+
+.hologram-corner-tl {
+  top: -2px;
+  left: -2px;
+  border-width: 1.5px 0 0 1.5px;
+}
+
+.hologram-corner-tr {
+  top: -2px;
+  right: -2px;
+  border-width: 1.5px 1.5px 0 0;
+}
+
+.hologram-corner-bl {
+  bottom: -2px;
+  left: -2px;
+  border-width: 0 0 1.5px 1.5px;
+}
+
+.hologram-corner-br {
+  bottom: -2px;
+  right: -2px;
+  border-width: 0 1.5px 1.5px 0;
+}
+
+/* 5-Stage Materialization Animation Trigger */
+.hologram-hud.materialize .hologram-sweep {
+  animation: sweep-line-continuous 4s linear infinite;
+}
+
+.hologram-hud.materialize .hologram-corner {
+  animation: fade-in-layer 0.2s ease-out 0.1s forwards;
+}
+
+.hologram-hud.materialize .hologram-grid {
+  animation: fade-in-layer 0.3s ease-out 0.2s forwards;
+}
+
+.hologram-hud.materialize .hologram-glass {
+  animation: glass-fade-in 0.3s ease-out 0.3s forwards;
+}
+
+@keyframes sweep-line-continuous {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.8;
+  }
+
+  90% {
+    opacity: 0.8;
+  }
+
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in-layer {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes glass-fade-in {
+  from {
+    opacity: 0;
+    box-shadow: 0 0 0px rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0);
+  }
+
+  to {
+    opacity: 1;
+    box-shadow:
+      0 0 25px rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.18),
+      inset 0 0 15px rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.10);
+  }
+}
+
+/* Floating sine-wave effect */
+@keyframes hologram-float {
+  0% {
+    transform: translate3d(-50%, 4px, 0);
+  }
+
+  100% {
+    transform: translate3d(-50%, -4px, 0);
+  }
+}
+
+/* Sci-fi HUD Flicker */
+@keyframes hologram-flicker {
+
+  0%,
+  100% {
+    opacity: 0.98;
+  }
+
+  31% {
+    opacity: 0.98;
+  }
+
+  32% {
+    opacity: 0.91;
+  }
+
+  33% {
+    opacity: 0.98;
+  }
+
+  72% {
+    opacity: 0.98;
+  }
+
+  73% {
+    opacity: 0.86;
+  }
+
+  74% {
+    opacity: 0.94;
+  }
+
+  75% {
+    opacity: 0.98;
+  }
+}
+
+/* ==========================================================================
+   TYPEWRITER & TEXT FORMATTING
+   ========================================================================== */
+
+.hologram-signature {
+  font-family: 'Space Grotesk', 'Outfit', sans-serif;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--holo-accent-color, var(--accent-color));
+  text-shadow: 0 0 4px rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.15);
+  opacity: 0.4;
+  margin-bottom: 7px;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.hologram-text-content {
+  color: var(--holo-text-color, #e2f9fc);
+  font-family: 'Space Grotesk', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: 0.05em;
+  margin: 0;
+  padding: 0;
+  white-space: pre-line;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  text-shadow: 0 0 4px rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.15);
+}
+
+@keyframes char-appear-glow {
+  from {
+    opacity: 0;
+    color: #ffffff;
+    text-shadow: 0 0 10px var(--holo-accent-color, var(--accent-color)), 0 0 20px var(--holo-accent-color, var(--accent-color));
+  }
+
+  to {
+    opacity: 1;
+    color: var(--holo-text-color, #e2f9fc);
+    text-shadow: 0 0 4px rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.15);
+  }
+}
+
+.char-newest {
+  animation: char-appear-glow 0.15s ease-out forwards;
+}
+
+.char-normal {
+  opacity: 1;
+}
+
+/* Blinking terminal cursor */
+.hologram-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 13px;
+  background: var(--holo-accent-color, var(--accent-color));
+  margin-left: 3px;
+  vertical-align: middle;
+  box-shadow: 0 0 6px rgba(var(--holo-accent-rgb, var(--accent-rgb)), 0.85);
+  animation: cursor-blink-kf 1s step-end infinite;
+}
+
+@keyframes cursor-blink-kf {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   AI CORE TARGETING OVERRIDES
+   ========================================================================== */
+
+/* Contract pupil slightly during charge-up */
+.aikav-core-wrapper.state-charging .aikav-pupil,
+.aikav-core-wrapper.state-charging .orange-eye,
+.aikav-core-wrapper.state-charging .eye-pupil {
+  transform: scale(0.68) !important;
+  transition: transform 300ms ease-out !important;
+}
+
+/* Increase iris glow during charge-up */
+.aikav-core-wrapper.state-charging .aikav-pupil-emitter,
+.aikav-core-wrapper.state-charging .orange-eye,
+.aikav-core-wrapper.state-charging .eye-pupil-emitter {
+  filter: brightness(1.75) !important;
+  box-shadow:
+    0 0 12px var(--accent-color),
+    0 0 22px var(--accent-color) !important;
+  transition: filter 300ms ease, box-shadow 300ms ease !important;
+}
+
+/* Pulse glow during active projection state */
+.aikav-core-wrapper.state-typing .aikav-pupil-emitter,
+.aikav-core-wrapper.state-typing .orange-eye,
+.aikav-core-wrapper.state-typing .eye-pupil-emitter {
+  animation: iris-projecting-pulse 0.28s infinite alternate !important;
+}
+
+@keyframes iris-projecting-pulse {
+  0% {
+    filter: brightness(1.15) contrast(1.1);
+    box-shadow: 0 0 8px var(--accent-color), 0 0 16px var(--accent-color);
+  }
+
+  100% {
+    filter: brightness(1.5) contrast(1.35);
+    box-shadow: 0 0 18px var(--accent-color), 0 0 28px var(--accent-color);
+  }
+}
+
+/* ==========================================================================
+   ACCESSIBILITY: RESPECT PREFERS-REDUCED-MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+  /* Disable float movement */
+  .hologram-hud.active {
+    animation: hologram-flicker 9s infinite !important;
+  }
+
+  /* Disable beam shimmer and particle movement */
+  .beam-bloom,
+  .beam-glow,
+  .beam-core {
+    animation: none !important;
+  }
+
+  .beam-particle {
+    animation: none !important;
+    opacity: 0.15 !important;
+    transform: translate3d(0px, 50px, 0) scale(0.6) !important;
+  }
+
+  /* Disable scanline sweeps and scrolling noise */
+  .hologram-sweep,
+  .scroll-pattern {
+    animation: none !important;
+    display: none !important;
+  }
+
+  .hologram-scanlines {
+    opacity: 0.1 !important;
+  }
+
+  /* Simple fast fade-in for typewriter elements */
+  .char-newest {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}

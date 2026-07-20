@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, useAnimationFrame } from 'framer-motion';
 import AIKAVCore from '../effects/AIKAVCore';
 import { useTheme } from '../theme/ThemeContext';
+import { KAVAI_DIALOGUE_POOL } from '../../data/kavaiDialogue';
+import HolographicProjection from './HolographicProjection';
+import '../../styles/holographicProjection.css';
 
 const THEME_DETAILS = [
   { code: 'blue', name: 'Blue', color: '#22d3ee', shadow: '0 0 16px rgba(34, 211, 238, 0.75)' },
@@ -265,7 +268,8 @@ function PortfolioHeader() {
   return (
     <div
       ref={headingRef}
-      className="mb-2 md:mb-3 flex items-center gap-4 select-none pointer-events-auto cursor-default filter drop-shadow-[0_0_25px_rgba(34,211,238,0.45)]"
+      className="mb-2 md:mb-3 flex items-center gap-4 select-none pointer-events-auto cursor-default"
+      style={{ filter: 'drop-shadow(0 0 25px rgba(var(--title-glow-rgb), 0.45))' }}
     >
       {/* PORTFOLIO */}
       <div className="flex">
@@ -367,8 +371,11 @@ const ParticlesBackground = () => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
 
-        ctx.fillStyle = `rgba(34, 211, 238, ${Math.max(0.02, Math.min(currentOpacity, 0.7))})`;
-        ctx.shadowColor = '#22d3ee';
+        const computedStyle = getComputedStyle(document.documentElement);
+        const rgb = computedStyle.getPropertyValue('--accent-rgb').trim() || '34, 211, 238';
+        const color = computedStyle.getPropertyValue('--accent-color').trim() || '#22d3ee';
+        ctx.fillStyle = `rgba(${rgb}, ${Math.max(0.02, Math.min(currentOpacity, 0.7))})`;
+        ctx.shadowColor = color;
         ctx.shadowBlur = p.radius * 2.5;
         ctx.fill();
       }
@@ -397,146 +404,43 @@ function HeaderContainer() {
   );
 }
 
-const LANDING_MESSAGES = [
-  "New visitor detected.",
-  "Don't worry...",
-  "I only judge bad UI.",
-  "Everything's ready.",
-  "Press ENTER or click below\nwhen you're ready."
-];
-
-const LandingDialogueBubble = React.forwardRef((props, ref) => {
-  const [msgIndex, setMsgIndex] = useState(0);
-  const [currentMsg, setCurrentMsg] = useState(LANDING_MESSAGES[0]);
-  const [charIndex, setCharIndex] = useState(0);
-  const [isTyping, setIsTyping] = useState(true);
-  const [isFadingText, setIsFadingText] = useState(false);
-
-  useEffect(() => {
-    // 1. Typewriter Character Typing Loop
-    if (isTyping && !isFadingText) {
-      if (charIndex < currentMsg.length) {
-        const charTimer = setTimeout(() => {
-          setCharIndex((prev) => prev + 1);
-        }, 20);
-        return () => clearTimeout(charTimer);
-      } else {
-        setIsTyping(false);
-      }
-    }
-
-    // 2. Message Hold Easing Before Next Transition
-    if (!isTyping && !isFadingText) {
-      if (msgIndex < LANDING_MESSAGES.length - 1) {
-        // Pause for approximately 2 seconds after the final line of Dialogue 1 (msgIndex === 2)
-        const pauseDuration = msgIndex === 2 ? 2000 : 900;
-        const pauseTimer = setTimeout(() => {
-          setIsFadingText(true);
-        }, pauseDuration);
-        return () => clearTimeout(pauseTimer);
-      }
-      // Keep Dialogue 2 visible until visitor enters the portfolio
-    }
-
-    // 3. Smooth Fade Out Transition
-    if (isFadingText) {
-      const fadeTimer = setTimeout(() => {
-        const nextIdx = msgIndex + 1;
-        if (nextIdx < LANDING_MESSAGES.length) {
-          setMsgIndex(nextIdx);
-          setCurrentMsg(LANDING_MESSAGES[nextIdx]);
-          setCharIndex(0);
-          setIsFadingText(false);
-          setIsTyping(true);
-        }
-      }, 200);
-      return () => clearTimeout(fadeTimer);
-    }
-  }, [msgIndex, currentMsg, charIndex, isTyping, isFadingText]);
-
-  return (
-    <div className="absolute left-1/2 bottom-[calc(100%+40px)] -translate-x-1/2 z-30 pointer-events-none select-none">
-      <div
-        className="relative rounded-[16px]"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          maxWidth: '320px',
-          width: 'max-content',
-          height: 'auto',
-          overflow: 'visible',
-          background: 'var(--aikav-bubble-bg, rgba(8, 12, 18, 0.92))',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid var(--aikav-bubble-border, rgba(var(--aikav-primary-rgb, 56, 189, 248), 0.25))',
-          boxShadow: '0 0 16px var(--aikav-bubble-glow, rgba(var(--aikav-primary-rgb, 56, 189, 248), 0.15))',
-          padding: '10px 14px',
-          boxSizing: 'border-box',
-          pointerEvents: 'none',
-          transition: 'border-color 400ms ease-in-out, box-shadow 400ms ease-in-out',
-        }}
-      >
-        <p
-          className={`text-white font-medium text-[13.5px] leading-[1.4] tracking-wide m-0 transition-opacity duration-200 ${isFadingText ? 'opacity-0' : 'opacity-100'
-            }`}
-          style={{
-            margin: 0,
-            padding: 0,
-            whiteSpace: 'pre-line',
-            wordBreak: 'break-word',
-            overflowWrap: 'break-word',
-          }}
-        >
-          {currentMsg.slice(0, charIndex)}
-          {isTyping && (
-            <span
-              style={{
-                display: 'inline-block',
-                width: '2px',
-                height: '14px',
-                background: 'var(--aikav-primary, #38BDF8)',
-                marginLeft: '2px',
-                verticalAlign: 'middle',
-                animation: 'landing-cursor-blink 1s step-end infinite',
-                transition: 'background-color 400ms ease-in-out',
-              }}
-            />
-          )}
-        </p>
-      </div>
-      <style>{`
-        @keyframes landing-cursor-blink {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0; }
-        }
-      `}</style>
-    </div>
-  );
-});
+const KAVAI_DIALOGUES = KAVAI_DIALOGUE_POOL; // local alias
 
 export default function LandingPage({ onBegin }) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const frameRef = useRef(null);
   const coreWrapperRef = useRef(null);
-  const bubbleRef = useRef(null);
+
+  const [projectionState, setProjectionState] = useState('typing'); // 'typing', 'holding'
+  const [selectedDialogue, setSelectedDialogue] = useState(() => {
+    const landingDialogues = KAVAI_DIALOGUE_POOL.filter(d => d.category === 'landing');
+    if (landingDialogues && landingDialogues.length > 0) {
+      return landingDialogues[Math.floor(Math.random() * landingDialogues.length)].text;
+    }
+    return "Welcome.\nI've been expecting you.";
+  });
 
   useEffect(() => {
-    const logRects = () => {
-      const coreWrapper = coreWrapperRef.current;
-      const bubble = bubbleRef.current;
-      if (coreWrapper) {
-        const svg = coreWrapper.querySelector('svg');
-        console.log("ALIGNMENT DEBUG:", {
-          wrapper: coreWrapper.getBoundingClientRect(),
-          svg: svg ? svg.getBoundingClientRect() : null,
-          bubble: bubble ? bubble.getBoundingClientRect() : null,
-        });
-      }
+    let timerId = null;
+
+    if (projectionState === 'holding') {
+      timerId = setTimeout(() => {
+        const landingDialogues = KAVAI_DIALOGUE_POOL.filter(d => d.category === 'landing');
+        if (landingDialogues && landingDialogues.length > 0) {
+          let nextDialogue = selectedDialogue;
+          while (nextDialogue === selectedDialogue && landingDialogues.length > 1) {
+            nextDialogue = landingDialogues[Math.floor(Math.random() * landingDialogues.length)].text;
+          }
+          setSelectedDialogue(nextDialogue);
+        }
+        setProjectionState('typing');
+      }, 4000); // Wait 4 seconds on holding state before showing next message
+    }
+
+    return () => {
+      if (timerId) clearTimeout(timerId);
     };
-    logRects();
-    window.addEventListener('resize', logRects);
-    return () => window.removeEventListener('resize', logRects);
-  }, []);
+  }, [projectionState, selectedDialogue]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -587,13 +491,13 @@ export default function LandingPage({ onBegin }) {
             className="w-full h-full"
             style={{
               overflow: 'visible',
-              filter: 'drop-shadow(0 0 1.5px rgba(34, 211, 238, 0.12))'
+              filter: 'drop-shadow(0 0 1.5px rgba(var(--accent-rgb), 0.12))'
             }}
             width="100%"
             height="100%"
           >
             {/* 1. Main borders (most subtle: 7% opacity) */}
-            <g stroke="rgba(34, 211, 238, 0.07)" strokeWidth="1" fill="none">
+            <g stroke="rgba(var(--accent-rgb), 0.07)" strokeWidth="1" fill="none">
               {/* Top border */}
               <line x1={C + 1} y1={1} x2={W - C - 1} y2={1} />
               {/* Right border */}
@@ -605,7 +509,7 @@ export default function LandingPage({ onBegin }) {
             </g>
 
             {/* 2. Corner chamfers (high visibility: 42% opacity matching plus markers) */}
-            <g stroke="rgba(34, 211, 238, 0.42)" strokeWidth="1" fill="none">
+            <g stroke="rgba(var(--accent-rgb), 0.42)" strokeWidth="1" fill="none">
               {/* Top-Left */}
               <line x1={1} y1={C + 1} x2={C + 1} y2={1} />
               {/* Top-Right */}
@@ -617,7 +521,7 @@ export default function LandingPage({ onBegin }) {
             </g>
 
             {/* 3. Cross (+) markers (most visible: 42% opacity) */}
-            <g stroke="rgba(34, 211, 238, 0.42)" strokeWidth="1">
+            <g stroke="rgba(var(--accent-rgb), 0.42)" strokeWidth="1">
               {/* Left top marker (20% from top) */}
               <line x1={-5} y1={H * 0.2} x2={7} y2={H * 0.2} />
               <line x1={1} y1={H * 0.2 - 6} x2={1} y2={H * 0.2 + 6} />
@@ -648,12 +552,29 @@ export default function LandingPage({ onBegin }) {
         ref={coreWrapperRef}
         className="absolute left-[calc(50%-40px)] top-[calc(50%+50px)] -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-auto"
         style={{
-          filter: 'drop-shadow(0 0 30px rgba(var(--aikav-primary-rgb, 34, 211, 238), 0.5))',
+          filter: 'drop-shadow(0 0 30px rgba(var(--accent-rgb), 0.5))',
           transition: 'filter 400ms ease-in-out',
         }}
       >
-        <LandingDialogueBubble ref={bubbleRef} />
-        <AIKAVCore size={140} />
+        {/* Holographic Projection Overlays */}
+        {projectionState !== 'idle' && (
+          <div className="hologram-projection-wrapper">
+            <HolographicProjection
+              text={selectedDialogue}
+              state={projectionState}
+              onTypewriterComplete={() => setProjectionState('holding')}
+            />
+          </div>
+        )}
+        <AIKAVCore
+          size={140}
+          lookDirection={
+            (projectionState !== 'idle' && projectionState !== 'concluding')
+              ? { x: 0, y: -6.5 }
+              : null
+          }
+          className={`state-${projectionState}`}
+        />
       </div>
 
 

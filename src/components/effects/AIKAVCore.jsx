@@ -1605,12 +1605,12 @@ const CORE_STYLES = `
           transition: background 0.3s ease, box-shadow 0.3s ease;
         }
 
-        /* Cyan/blue accent color highlight on active hover */
+        /* Soft white/gray accent color highlight on active hover */
         .aikav-theme-black.aikav-active-hover .eye-pupil-emitter {
-          background: radial-gradient(circle at 35% 35%, #ffffff 0%, #00ffff 50%, #0088cc 100%);
+          background: radial-gradient(circle at 35% 35%, #ffffff 0%, #e4e4e7 50%, #a1a1aa 100%);
           box-shadow: 
-            0 0 6px rgba(0, 243, 255, 0.85),
-            0 0 12px rgba(0, 243, 255, 0.45);
+            0 0 8px rgba(255, 255, 255, 0.85),
+            0 0 16px rgba(255, 255, 255, 0.45);
         }
 
         .aikav-capsule-eye-hud .eye-specular {
