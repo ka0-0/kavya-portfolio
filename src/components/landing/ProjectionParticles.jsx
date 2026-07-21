@@ -22,7 +22,7 @@ export default function ProjectionParticles({ active }) {
           cx="160"
           cy="107"
           r={p.r}
-          fill="#00ffff"
+          fill="var(--holo-accent-color, var(--accent-color))"
           className="beam-particle"
           style={{
             '--tx': p.tx,

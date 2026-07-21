@@ -33,18 +33,18 @@
     /* Glow/Shadow scaling transition variable */
     --glow-opacity: 1;
 
-    /* Theme-specific custom accent color mappings */
-    --accent-color: #22d3ee;
-    --accent-light: #67e8f9;
-    --accent-dark: #0891b2;
-    --accent-rgb: 34, 211, 238;
-    --title-glow-rgb: 34, 211, 238;
+    /* Theme-specific custom accent color mappings - Default Matrix Green Hacker Theme */
+    --accent-color: #00FF88;
+    --accent-light: #76FF03;
+    --accent-dark: #00ab5b;
+    --accent-rgb: 0, 255, 136;
+    --title-glow-rgb: 0, 255, 136;
 
-    --holo-accent-rgb: 34, 211, 238;
-    --holo-accent-color: #22d3ee;
-    --holo-bg-gradient: radial-gradient(circle at center, rgba(34, 211, 238, 0.06) 0%, rgba(34, 211, 238, 0.02) 100%);
-    --holo-text-color: #e2f9fc;
-    --holo-grid-opacity: 0.12;
+    --holo-accent-rgb: 0, 255, 136;
+    --holo-accent-color: #00FF88;
+    --holo-bg-gradient: radial-gradient(circle at center, rgba(0, 255, 136, 0.08) 0%, rgba(0, 255, 136, 0.02) 100%);
+    --holo-text-color: #e2fef0;
+    --holo-grid-opacity: 0.15;
 
     --accent-gradient: linear-gradient(135deg, var(--accent-dark) 0%, var(--accent-color) 50%, var(--accent-light) 100%);
   }

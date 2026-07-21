@@ -1,0 +1,496 @@
+/* Cyber Intelligence Laboratory / AI Research Facility Landing Page Styling */
+
+:root {
+  --cyber-emerald: var(--accent-color, #00FF88);
+  --cyber-emerald-rgb: var(--accent-rgb, 0, 255, 136);
+  --cyber-lime: var(--accent-light, #76FF03);
+  --cyber-lime-rgb: var(--accent-rgb, 118, 255, 3);
+  --cyber-dark-emerald: var(--accent-dark, #002b18);
+  --cyber-graphite: #0b1410;
+  --cyber-glass-bg: rgba(6, 18, 12, 0.72);
+  --cyber-glass-border: rgba(var(--accent-rgb, 0, 255, 136), 0.22);
+  --cyber-glass-glow: rgba(var(--accent-rgb, 0, 255, 136), 0.12);
+  --cyber-red-alert: #ff3366;
+  --cyber-cyan: var(--accent-color, #00f0ff);
+}
+
+/* Base HUD Container & Grid */
+.cyber-hud-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 10;
+}
+
+/* Faint Animated Matrix Holographic Grid */
+.cyber-matrix-grid {
+  position: absolute;
+  inset: -50px;
+  background-image:
+    linear-gradient(to right, rgba(var(--accent-rgb, 0, 255, 136), 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(var(--accent-rgb, 0, 255, 136), 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: grid-drift 40s linear infinite;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+@keyframes grid-drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(48px, 48px, 0);
+  }
+}
+
+/* Glassmorphism Floating Holographic Panel Styling */
+.cyber-holo-panel {
+  position: absolute;
+  background: var(--cyber-glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--cyber-glass-border);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.65),
+    inset 0 0 15px rgba(var(--accent-rgb, 0, 255, 136), 0.04),
+    0 0 20px var(--cyber-glass-glow);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #e2fef0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  pointer-events: auto;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.cyber-holo-panel:hover {
+  border-color: rgba(var(--accent-rgb, 0, 255, 136), 0.55);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.8),
+    inset 0 0 25px rgba(var(--accent-rgb, 0, 255, 136), 0.08),
+    0 0 30px rgba(var(--accent-rgb, 0, 255, 136), 0.25);
+  transform: translateY(-2px) scale(1.01);
+}
+
+/* Tactical Corner Brackets for Glass Panels */
+.cyber-corner {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: rgba(var(--accent-rgb, 0, 255, 136), 0.7);
+  pointer-events: none;
+}
+
+.cyber-corner-tl {
+  top: 3px;
+  left: 3px;
+  border-top: 1.5px solid;
+  border-left: 1.5px solid;
+}
+
+.cyber-corner-tr {
+  top: 3px;
+  right: 3px;
+  border-top: 1.5px solid;
+  border-right: 1.5px solid;
+}
+
+.cyber-corner-bl {
+  bottom: 3px;
+  left: 3px;
+  border-bottom: 1.5px solid;
+  border-left: 1.5px solid;
+}
+
+.cyber-corner-br {
+  bottom: 3px;
+  right: 3px;
+  border-bottom: 1.5px solid;
+  border-right: 1.5px solid;
+}
+
+/* Holographic Panel Header Bar */
+.cyber-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(var(--accent-rgb, 0, 255, 136), 0.15);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cyber-emerald);
+  font-weight: 700;
+  user-select: none;
+}
+
+.cyber-panel-header .title-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cyber-panel-header .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--cyber-emerald);
+  box-shadow: 0 0 8px var(--cyber-emerald);
+  animation: led-pulse 2s ease-in-out infinite;
+}
+
+@keyframes led-pulse {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+/* Subtle Vertical Scanlines Texture inside panels */
+.cyber-scanline-overlay {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 3px,
+      rgba(var(--accent-rgb, 0, 255, 136), 0.02) 3px,
+      rgba(var(--accent-rgb, 0, 255, 136), 0.02) 4px);
+  pointer-events: none;
+}
+
+/* Holographic Laser Sweep Effect */
+.cyber-laser-sweep {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(var(--accent-rgb, 0, 255, 136), 0.05) 50%,
+      transparent 100%);
+  animation: laser-sweep-anim 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes laser-sweep-anim {
+  0% {
+    left: -100%;
+  }
+
+  30% {
+    left: 200%;
+  }
+
+  100% {
+    left: 200%;
+  }
+}
+
+/* Fingerprint Laser Beam Scan */
+@keyframes fingerprint-scan {
+  0% {
+    top: 0%;
+    opacity: 0.9;
+  }
+
+  50% {
+    top: 92%;
+    opacity: 0.9;
+  }
+
+  100% {
+    top: 0%;
+    opacity: 0.9;
+  }
+}
+
+.fingerprint-scan-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--cyber-emerald);
+  box-shadow: 0 0 12px var(--cyber-emerald), 0 0 20px #ffffff;
+  animation: fingerprint-scan 3s ease-in-out infinite;
+}
+
+/* Radar Sweep Animation */
+@keyframes radar-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.radar-sweep-line {
+  transform-origin: center;
+  animation: radar-rotate 4s linear infinite;
+}
+
+/* Blinking Cursor for Terminal & Code Panels */
+.cyber-cursor-blink {
+  display: inline-block;
+  width: 6px;
+  height: 14px;
+  background-color: var(--cyber-emerald);
+  box-shadow: 0 0 8px var(--cyber-emerald);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: cursor-blink-anim 1s step-end infinite;
+}
+
+@keyframes cursor-blink-anim {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Tactical Notifications Container */
+.cyber-notification-toast {
+  background: rgba(4, 16, 10, 0.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(var(--accent-rgb, 0, 255, 136), 0.4);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.75), 0 0 20px rgba(var(--accent-rgb, 0, 255, 136), 0.2);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--accent-color, #00ff88);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Enhanced Enter Button Hover Glow Effect */
+.cyber-enter-btn-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.cyber-enter-btn-glow::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(var(--accent-rgb, 0, 255, 136), 0.3) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.cyber-enter-btn-glow:hover::before {
+  opacity: 1;
+}
+
+/* Custom Scrollbar for floating panels */
+.cyber-scrollbar::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+
+.cyber-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.cyber-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(var(--accent-rgb, 0, 255, 136), 0.3);
+  border-radius: 2px;
+}
+
+.cyber-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--accent-rgb, 0, 255, 136), 0.7);
+}
+
+/* Security Vault Shake Animation */
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  20% {
+    transform: translate(-6px, 0);
+  }
+
+  40% {
+    transform: translate(6px, 0);
+  }
+
+  60% {
+    transform: translate(-4px, 0);
+  }
+
+  80% {
+    transform: translate(4px, 0);
+  }
+}
+
+/* Micro Shake for Vault Struggle Phase (Attempt 3) */
+@keyframes micro-shake {
+
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+
+  25% {
+    transform: translate(-2px, 1px) rotate(-0.5deg);
+  }
+
+  50% {
+    transform: translate(2px, -1px) rotate(0.5deg);
+  }
+
+  75% {
+    transform: translate(-1px, -1px) rotate(-0.25deg);
+  }
+}
+
+.animate-micro-shake {
+  animation: micro-shake 0.08s ease-in-out infinite;
+}
+
+/* Scanning Sweep Downwards */
+@keyframes scanline-down {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  30% {
+    opacity: 0.8;
+  }
+
+  70% {
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.animate-scanline-down {
+  animation: scanline-down 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Glitch Text Jitter for Attempt 3 Struggle */
+@keyframes glitch-text-anim {
+  0% {
+    transform: translate(0);
+    text-shadow: none;
+  }
+
+  20% {
+    transform: translate(-2px, 1px);
+    text-shadow: 2px 0 #ef4444, -2px 0 #00ffff;
+  }
+
+  40% {
+    transform: translate(2px, -1px);
+    text-shadow: -2px 0 #ef4444, 2px 0 #00ffff;
+  }
+
+  60% {
+    transform: translate(-1px, 2px);
+    text-shadow: 1px 0 #ef4444, -1px 0 #00ffff;
+  }
+
+  80% {
+    transform: translate(1px, -2px);
+    text-shadow: -1px 0 #ef4444, 1px 0 #00ffff;
+  }
+
+  100% {
+    transform: translate(0);
+    text-shadow: none;
+  }
+}
+
+.animate-glitch-text {
+  animation: glitch-text-anim 0.25s step-end infinite;
+}
+
+/* Data Packet Orbital Movement */
+@keyframes packet-orbit {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-packet-orbit {
+  transform-origin: center;
+  animation: packet-orbit 3s linear infinite;
+}
+
+.animate-packet-orbit-fast {
+  transform-origin: center;
+  animation: packet-orbit 1.2s linear infinite;
+}
+
+/* Red Alert Pulse for Attempt 2 - GPU Composited */
+@keyframes warning-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(0.99) translateZ(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.01) translateZ(0);
+  }
+}
+
+.animate-warning-pulse {
+  will-change: transform, opacity;
+  animation: warning-pulse 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Unlock Cyan Energy Burst Pulse */
+@keyframes cyan-energy-flood {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.95);
+  }
+
+  50% {
+    opacity: 0.95;
+    transform: scale(1.05);
+  }
+
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+}
+
+.animate-cyan-flood {
+  animation: cyan-energy-flood 1.4s ease-out infinite alternate;
+}

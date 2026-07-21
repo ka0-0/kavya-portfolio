@@ -1,0 +1,249 @@
+/* AICoreStatusPanel.module.css */
+
+.panelContainer {
+  position: absolute;
+  width: 270px;
+  height: 170px;
+  background: rgba(8, 14, 20, 0.25);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(var(--accent-rgb, 0, 240, 255), 0.45);
+  border-radius: 8px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.6),
+    inset 0 0 20px rgba(var(--accent-rgb, 0, 240, 255), 0.1),
+    0 0 25px rgba(var(--accent-rgb, 0, 240, 255), 0.2);
+  padding: 10px 12px;
+  color: #e2fef0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  pointer-events: auto;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  user-select: none;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  animation: subtleGlitch 10s ease-in-out infinite, holoFlicker 7s ease-in-out infinite;
+}
+
+.panelContainer.hovered {
+  transform: translateY(-3px) scale(1.01) translateZ(0);
+  border-color: rgba(var(--accent-rgb, 0, 240, 255), 0.75);
+  box-shadow:
+    0 16px 45px rgba(0, 0, 0, 0.85),
+    inset 0 0 30px rgba(var(--accent-rgb, 0, 240, 255), 0.18),
+    0 0 35px rgba(var(--accent-rgb, 0, 240, 255), 0.35);
+}
+
+/* Zoomed Monitoring Feed Video inside panel - GPU Promoted */
+.videoBg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.9;
+  will-change: transform;
+  transform: scale(1.25) translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.videoOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 12, 18, 0.3);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Background Moving Grid Overlay */
+.gridOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(var(--accent-rgb, 0, 240, 255), 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(var(--accent-rgb, 0, 240, 255), 0.05) 1px, transparent 1px);
+  background-size: 16px 16px;
+  animation: gridDrift 25s linear infinite;
+  opacity: 0.45;
+  z-index: 2;
+}
+
+@keyframes gridDrift {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(16px, 16px, 0); }
+}
+
+/* Vertical Moving Scan Line */
+.verticalScanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(var(--accent-rgb, 0, 240, 255), 0.6) 50%, 
+    transparent 100%
+  );
+  box-shadow: 0 0 8px rgba(var(--accent-rgb, 0, 240, 255), 0.8);
+  pointer-events: none;
+  opacity: 0.7;
+  animation: scanlineSweep 4.5s linear infinite;
+  z-index: 3;
+}
+
+@keyframes scanlineSweep {
+  0% { top: -2px; opacity: 0; }
+  5% { opacity: 0.7; }
+  95% { opacity: 0.7; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* Scanlines texture overlay */
+.scanlineTexture {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.2) 50%
+  );
+  background-size: 100% 4px;
+  opacity: 0.3;
+  z-index: 3;
+}
+
+/* Corner Brackets */
+.corner {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: rgba(var(--accent-rgb, 0, 240, 255), 0.85);
+  pointer-events: none;
+  z-index: 5;
+  transition: border-color 0.3s ease, filter 0.3s ease;
+}
+
+.cornerTL {
+  top: 4px;
+  left: 4px;
+  border-top: 1.5px solid;
+  border-left: 1.5px solid;
+}
+
+.cornerTR {
+  top: 4px;
+  right: 4px;
+  border-top: 1.5px solid;
+  border-right: 1.5px solid;
+}
+
+.cornerBL {
+  bottom: 4px;
+  left: 4px;
+  border-bottom: 1.5px solid;
+  border-left: 1.5px solid;
+}
+
+.cornerBR {
+  bottom: 4px;
+  right: 4px;
+  border-bottom: 1.5px solid;
+  border-right: 1.5px solid;
+}
+
+.hovered .corner {
+  border-color: var(--accent-color, #00f0ff);
+  filter: drop-shadow(0 0 5px var(--accent-color, #00f0ff));
+}
+
+/* Header Section */
+.header {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(var(--accent-rgb, 0, 240, 255), 0.25);
+  padding-bottom: 5px;
+}
+
+.headerTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.statusDot {
+  width: 5.5px;
+  height: 5.5px;
+  border-radius: 50%;
+  background-color: var(--accent-color, #00f0ff);
+  box-shadow: 0 0 8px var(--accent-color, #00f0ff);
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.headerTitle {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  text-shadow: 0 0 6px rgba(var(--accent-rgb, 0, 240, 255), 0.6);
+}
+
+.onlineBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(var(--accent-rgb, 0, 240, 255), 0.15);
+  border: 1px solid rgba(var(--accent-rgb, 0, 240, 255), 0.45);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent-light, #76FF03);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb, 0, 240, 255), 0.25);
+  animation: badgePulse 3s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(var(--accent-rgb, 0, 240, 255), 0.2); border-color: rgba(var(--accent-rgb, 0, 240, 255), 0.4); }
+  50% { box-shadow: 0 0 14px rgba(var(--accent-rgb, 0, 240, 255), 0.5); border-color: var(--accent-color, #00f0ff); }
+}
+
+@keyframes subtleGlitch {
+  0%, 94%, 100% { transform: translate(0, 0); opacity: 1; }
+  95% { transform: translate(-1px, 1px); opacity: 0.95; }
+  96% { transform: translate(1px, -1px); opacity: 0.98; }
+  97% { transform: translate(0, 0); opacity: 1; }
+}
+
+@keyframes holoFlicker {
+  0%, 100% { filter: brightness(1); }
+  42% { filter: brightness(0.97); }
+  43% { filter: brightness(1.05); }
+  44% { filter: brightness(1); }
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  .gridOverlay, .verticalScanline, .panelContainer {
+    animation: none !important;
+  }
+}

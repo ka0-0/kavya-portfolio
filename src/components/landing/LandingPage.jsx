@@ -1,10 +1,27 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, useAnimationFrame } from 'framer-motion';
+import { motion, useAnimationFrame, AnimatePresence } from 'framer-motion';
 import AIKAVCore from '../effects/AIKAVCore';
 import { useTheme } from '../theme/ThemeContext';
 import { KAVAI_DIALOGUE_POOL } from '../../data/kavaiDialogue';
 import HolographicProjection from './HolographicProjection';
 import '../../styles/holographicProjection.css';
+import '../../styles/cyberLabLanding.css';
+
+// Cyber Intelligence Laboratory Background using custom generated bg, Vault Lock & Laser Connectors
+import CyberLabImageBackground from './CyberLabImageBackground';
+import CyberVaultLockMechanism from './CyberVaultLockMechanism';
+import HoloLaserConnectors from './HoloLaserConnectors';
+import TacticalNotifications from './TacticalNotifications';
+
+// 7 Ultra-Crisp Hacker HUD Panels
+import FingerprintPanel from './panels/FingerprintPanel';
+import AISecurityVaultPanel from './panels/AISecurityVaultPanel';
+import KavyaIdentityPanel from './panels/KavyaIdentityPanel';
+import SatelliteTrackingPanel from './panels/SatelliteTrackingPanel';
+import ThreatDetectionPanel from './panels/ThreatDetectionPanel';
+import DataStreamPanel from './panels/DataStreamPanel';
+import SystemDiagnosticsPanel from './panels/SystemDiagnosticsPanel';
+import AICoreStatusPanel from './panels/AICoreStatusPanel';
 
 const THEME_DETAILS = [
   { code: 'blue', name: 'Blue', color: '#22d3ee', shadow: '0 0 16px rgba(34, 211, 238, 0.75)' },
@@ -13,7 +30,7 @@ const THEME_DETAILS = [
   { code: 'purple', name: 'Purple', color: '#a855f7', shadow: '0 0 16px rgba(168, 85, 247, 0.75)' },
   { code: 'orange', name: 'Orange', color: '#FF8C00', shadow: '0 0 16px rgba(255, 140, 0, 0.75)' },
   { code: 'red', name: 'Red', color: '#ef4444', shadow: '0 0 16px rgba(239, 68, 68, 0.75)' },
-  { code: 'green', name: 'Green', color: '#22c55e', shadow: '0 0 16px rgba(34, 197, 94, 0.75)' }
+  { code: 'green', name: 'Green', color: '#00FF88', shadow: '0 0 16px rgba(0, 255, 136, 0.75)' }
 ];
 
 const ThemeIcons = {
@@ -76,7 +93,7 @@ const ThemeIcons = {
     </svg>
   ),
   green: (
-    <svg className="w-4 h-4 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg className="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(-25 12 12)" />
       <circle cx="12" cy="12" r="3" fill="currentColor" />
     </svg>
@@ -85,13 +102,12 @@ const ThemeIcons = {
 
 function LandingPillDock({ onBegin }) {
   const { currentThemeIndex, setTheme, nextTheme, previousTheme } = useTheme();
-  const activeColor = THEME_DETAILS[currentThemeIndex]?.color || '#22d3ee';
+  const activeColor = THEME_DETAILS[currentThemeIndex]?.color || '#00FF88';
 
   return (
     <div className="fixed bottom-[68px] md:bottom-[80px] left-1/2 -translate-x-1/2 z-30 select-none pointer-events-auto">
-      <div className="flex items-center gap-2 sm:gap-3 bg-black/90 backdrop-blur-xl border border-white/10 rounded-full px-3 py-2 shadow-[0_10px_35px_rgba(0,0,0,0.85),0_0_25px_rgba(34,211,238,0.15)] transition-all duration-300">
+      <div className="flex items-center gap-2 sm:gap-3 bg-black/90 backdrop-blur-xl border border-[var(--accent-color)]/30 rounded-full px-3 py-2 shadow-[0_10px_35px_rgba(0,0,0,0.85),0_0_25px_rgba(var(--accent-rgb),0.2)] transition-all duration-300">
 
-        {/* Previous Theme Button */}
         <button
           onClick={previousTheme}
           aria-label="Previous Theme"
@@ -100,7 +116,6 @@ function LandingPillDock({ onBegin }) {
           ‹
         </button>
 
-        {/* Theme Dots / Circles */}
         <div className="flex items-center gap-1.5 sm:gap-2 px-1">
           {THEME_DETAILS.map((t, idx) => {
             const isActive = idx === currentThemeIndex;
@@ -121,7 +136,6 @@ function LandingPillDock({ onBegin }) {
                 }}
               >
                 {t.code === 'black' ? (
-                  /* Dual Googly Eyes for White/Black Theme */
                   <div className="flex items-center gap-[2.5px] select-none pointer-events-none">
                     <div className={`rounded-full bg-black flex items-center justify-center ${isActive ? 'w-2 h-2' : 'w-1.5 h-1.5'}`}>
                       <div className="w-0.5 h-0.5 rounded-full bg-white" />
@@ -131,7 +145,6 @@ function LandingPillDock({ onBegin }) {
                     </div>
                   </div>
                 ) : (
-                  /* Theme Icon (Dark contrast when active, Accent color when inactive) */
                   <div className={isActive ? 'text-black/85 filter drop-shadow-sm' : ''}>
                     {ThemeIcons[t.code]}
                   </div>
@@ -141,7 +154,6 @@ function LandingPillDock({ onBegin }) {
           })}
         </div>
 
-        {/* Next Theme Button */}
         <button
           onClick={nextTheme}
           aria-label="Next Theme"
@@ -150,19 +162,18 @@ function LandingPillDock({ onBegin }) {
           ›
         </button>
 
-        {/* Vertical Divider */}
         <div className="w-[1px] h-6 bg-white/20 mx-1 sm:mx-1.5" />
 
-        {/* Enter Portfolio Action Button */}
         <button
           onClick={onBegin}
-          className="group relative px-5 py-2.5 rounded-full font-sans text-xs sm:text-[13px] font-semibold tracking-wide text-black transition-all duration-300 cursor-pointer shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] hover:scale-[1.03] active:scale-[0.98] border-0 whitespace-nowrap flex items-center gap-1.5"
+          className="group relative px-5 py-2.5 rounded-full font-sans text-xs sm:text-[13px] font-semibold tracking-wide text-black transition-all duration-300 cursor-pointer shadow-[0_0_18px_rgba(var(--accent-rgb),0.35)] hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.7)] hover:scale-[1.04] active:scale-[0.98] border border-[var(--accent-color)]/40 whitespace-nowrap flex items-center gap-1.5 overflow-hidden cyber-enter-btn-glow"
           style={{
             backgroundColor: activeColor,
           }}
         >
-          <span>Enter Portfolio</span>
-          <span className="group-hover:translate-x-0.5 transition-transform duration-200">&rarr;</span>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none" />
+          <span className="relative z-10 font-bold">Enter Portfolio</span>
+          <span className="relative z-10 group-hover:translate-x-1 transition-transform duration-200 font-bold">&rarr;</span>
         </button>
 
       </div>
@@ -269,9 +280,8 @@ function PortfolioHeader() {
     <div
       ref={headingRef}
       className="mb-2 md:mb-3 flex items-center gap-4 select-none pointer-events-auto cursor-default"
-      style={{ filter: 'drop-shadow(0 0 25px rgba(var(--title-glow-rgb), 0.45))' }}
+      style={{ filter: 'drop-shadow(0 0 25px rgba(var(--accent-rgb), 0.45))' }}
     >
-      {/* PORTFOLIO */}
       <div className="flex">
         {word1.map((char, idx) => (
           <span key={idx} className="relative inline-flex flex-col items-start select-none">
@@ -292,7 +302,6 @@ function PortfolioHeader() {
         ))}
       </div>
 
-      {/* 2026 */}
       <div className="flex">
         {word2.map((char, idx) => (
           <span key={idx} className="relative inline-flex flex-col items-start select-none">
@@ -316,225 +325,267 @@ function PortfolioHeader() {
   );
 }
 
-// High-performance Canvas Particles Background
-const ParticlesBackground = () => {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let animationFrameId;
-    let particles = [];
-    const count = 60; // 60 particles for visual richness
-
-    const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-
-    window.addEventListener('resize', handleResize, { passive: true });
-    handleResize();
-
-    // Create particles
-    for (let i = 0; i < count; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 1.2 + 0.4, // ultra-fine particles
-        speedY: -(Math.random() * 0.25 + 0.08), // slow, elegant ascension
-        opacity: Math.random() * 0.4 + 0.05,
-        pulseSpeed: Math.random() * 0.015 + 0.005,
-        pulseVal: Math.random() * Math.PI
-      });
-    }
-
-    // Animation loop
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      for (let i = 0; i < count; i++) {
-        const p = particles[i];
-        p.y += p.speedY;
-        p.pulseVal += p.pulseSpeed;
-
-        if (p.y < -10) {
-          p.y = canvas.height + 10;
-          p.x = Math.random() * canvas.width;
-        }
-
-        const currentOpacity = p.opacity + Math.sin(p.pulseVal) * 0.12;
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-
-        const computedStyle = getComputedStyle(document.documentElement);
-        const rgb = computedStyle.getPropertyValue('--accent-rgb').trim() || '34, 211, 238';
-        const color = computedStyle.getPropertyValue('--accent-color').trim() || '#22d3ee';
-        ctx.fillStyle = `rgba(${rgb}, ${Math.max(0.02, Math.min(currentOpacity, 0.7))})`;
-        ctx.shadowColor = color;
-        ctx.shadowBlur = p.radius * 2.5;
-        ctx.fill();
-      }
-
-      ctx.shadowBlur = 0;
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, []);
-
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-0" />;
-};
-
 function HeaderContainer() {
   return (
-    <div className="hidden md:flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-[8%] md:top-[10%] z-10 select-none pointer-events-none">
-      {/* PORTFOLIO 2026 HEADING (WITH HOME PAGE HOVER & PROXIMITY WEIGHT EFFECT) */}
+    <div className="hidden md:flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-[8%] md:top-[10%] z-20 select-none pointer-events-none">
       <PortfolioHeader />
+      <div className="text-[10px] sm:text-xs font-mono tracking-[0.2em] text-[var(--accent-color)]/90 font-semibold uppercase bg-black/60 border border-[var(--accent-color)]/30 px-3.5 py-1 rounded-full backdrop-blur-md shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)]">
+        // AI ENGINEER • MECHANICAL ENGINEER • INNOVATOR
+      </div>
     </div>
   );
 }
-
-const KAVAI_DIALOGUES = KAVAI_DIALOGUE_POOL; // local alias
 
 export default function LandingPage({ onBegin }) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const frameRef = useRef(null);
   const coreWrapperRef = useRef(null);
 
-  const [projectionState, setProjectionState] = useState('typing'); // 'typing', 'holding'
-  const [selectedDialogue, setSelectedDialogue] = useState(() => {
-    const landingDialogues = KAVAI_DIALOGUE_POOL.filter(d => d.category === 'landing');
-    if (landingDialogues && landingDialogues.length > 0) {
-      return landingDialogues[Math.floor(Math.random() * landingDialogues.length)].text;
+  // Decryption Loader Progress (0% to 100%) & Sequential Beam Target Step (0 -> 6)
+  const [decryptProgress, setDecryptProgress] = useState(0);
+  const [activeScanStep, setActiveScanStep] = useState(0);
+  const [isAccessGranted, setIsAccessGranted] = useState(false);
+  const [vaultPhase, setVaultPhase] = useState('idle');
+
+  const [projectionState, setProjectionState] = useState('typing');
+  const [selectedDialogue, setSelectedDialogue] = useState(
+    "Target 1/7: Biometric Fingerprint Verification."
+  );
+
+  // Refs for smooth 60 FPS animation loop without stale closure issues
+  const currentProgressRef = useRef(0);
+  const targetProgressRef = useRef(0);
+  const activeScanStepRef = useRef(0);
+  const isAccessGrantedRef = useRef(false);
+  const lastProgressIntRef = useRef(-1);
+
+  const handleVaultPhaseChange = React.useCallback((phaseName, targetPercent) => {
+    setVaultPhase(phaseName || 'IDLE');
+
+    if (phaseName === 'HACKING') {
+      targetProgressRef.current = targetPercent || 0;
+    } else if (phaseName === 'FAILED') {
+      targetProgressRef.current = 0;
+      currentProgressRef.current = 0;
+      setDecryptProgress(0);
     }
-    return "Welcome.\nI've been expecting you.";
-  });
-
-  useEffect(() => {
-    let timerId = null;
-
-    if (projectionState === 'holding') {
-      timerId = setTimeout(() => {
-        const landingDialogues = KAVAI_DIALOGUE_POOL.filter(d => d.category === 'landing');
-        if (landingDialogues && landingDialogues.length > 0) {
-          let nextDialogue = selectedDialogue;
-          while (nextDialogue === selectedDialogue && landingDialogues.length > 1) {
-            nextDialogue = landingDialogues[Math.floor(Math.random() * landingDialogues.length)].text;
-          }
-          setSelectedDialogue(nextDialogue);
-        }
-        setProjectionState('typing');
-      }, 4000); // Wait 4 seconds on holding state before showing next message
-    }
-
-    return () => {
-      if (timerId) clearTimeout(timerId);
-    };
-  }, [projectionState, selectedDialogue]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (frameRef.current) {
-        setSize({
-          width: frameRef.current.clientWidth,
-          height: frameRef.current.clientHeight
-        });
-      }
-    };
-    window.addEventListener('resize', handleResize, { passive: true });
-    handleResize();
-    const timer = setTimeout(handleResize, 100);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(timer);
-    };
   }, []);
 
+  const handleVaultUnlock = React.useCallback(() => {
+    isAccessGrantedRef.current = true;
+    targetProgressRef.current = 100;
+    currentProgressRef.current = 100;
+    setDecryptProgress(100);
+    setIsAccessGranted(true);
+    setVaultPhase('SUCCESS');
+    setSelectedDialogue("YOU ARE ENTERING INTO KAVYA'S PORTFOLIO.\nVAULT DECRYPTED // HACKING COMPLETE // ACCESS GRANTED");
+    setProjectionState('typing');
+  }, []);
+
+  // 60 FPS Frame-Rate-Independent Continuous Boot Loading Engine
+  useEffect(() => {
+    const SCAN_MESSAGES = [
+      "Target 1/7: Biometric Fingerprint Verification.",
+      "Target 2/7: Injecting AI Payload & Live Code Feed.",
+      "Target 3/7: Authenticating Kavya Makhan Core Identity.",
+      "Target 4/7: Encrypting Satellite GPS Location Link.",
+      "Target 5/7: Scanning Cyber SOC Defense & Firewall.",
+      "Target 6/7: Streaming Raw Memory Hex Buffer.",
+      "Target 7/7: Verifying AI Telemetry & Hardware Cores.",
+    ];
+
+    let animFrameId;
+    let lastTime = performance.now();
+    let accumulatedTime = 0;
+    const TOTAL_BOOT_DURATION = 12.0; // 12 seconds synchronized with 3-attempt AI Security Vault sequence
+
+    // Non-linear continuous progress generator:
+    const calculateTargetProgress = (timeSec) => {
+      const u = Math.min(1.0, Math.max(0, timeSec / TOTAL_BOOT_DURATION));
+      if (u <= 0) return 0;
+      if (u >= 1.0) return 95; // Hold at 95% until Vault Attempt 3 unlocks!
+
+      let p;
+      if (u < 0.25) {
+        // Fast start (0% to 35%) using easeOutCubic
+        const t = u / 0.25;
+        const eased = 1 - Math.pow(1 - t, 3);
+        p = eased * 35;
+      } else if (u < 0.80) {
+        // Detailed diagnostic scanning (35% to 80%)
+        const t = (u - 0.25) / 0.55;
+        const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; // easeInOutQuad
+        p = 35 + eased * 45;
+      } else {
+        // Smooth finish to 95% (80% to 95%) using easeOutQuad
+        const t = (u - 0.80) / 0.20;
+        const eased = 1 - Math.pow(1 - t, 2);
+        p = 80 + eased * 15;
+      }
+      return p;
+    };
+
+    const animate = (now) => {
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      if (!isAccessGrantedRef.current) {
+        accumulatedTime += dt;
+        const calcP = calculateTargetProgress(accumulatedTime);
+        if (calcP > targetProgressRef.current) {
+          targetProgressRef.current = calcP;
+        }
+
+        const lerpFactor = 1 - Math.exp(-dt * 14);
+        currentProgressRef.current += (targetProgressRef.current - currentProgressRef.current) * lerpFactor;
+
+        const currentP = currentProgressRef.current;
+        const roundedP = Math.floor(currentP);
+        if (roundedP !== lastProgressIntRef.current) {
+          lastProgressIntRef.current = roundedP;
+          setDecryptProgress(roundedP);
+        }
+
+        const stepIndex = Math.min(6, Math.floor((currentP / 100) * 7));
+        if (stepIndex !== activeScanStepRef.current && stepIndex <= 6) {
+          activeScanStepRef.current = stepIndex;
+          setActiveScanStep(stepIndex);
+          setSelectedDialogue(SCAN_MESSAGES[stepIndex]);
+          setProjectionState('typing');
+        }
+      }
+
+      animFrameId = requestAnimationFrame(animate);
+    };
+
+    animFrameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animFrameId);
+  }, []);
+
+  // AUTO-ENTER MAIN SITE ONCE DECRYPTION IS COMPLETE (100% / ACCESS GRANTED)
+  useEffect(() => {
+    if (isAccessGranted) {
+      const autoEnterTimer = setTimeout(() => {
+        onBegin();
+      }, 1400); // Wait 1.4s after "VAULT DECRYPTED // ACCESS GRANTED" banner appears, then auto-enter
+      return () => clearTimeout(autoEnterTimer);
+    }
+  }, [isAccessGranted, onBegin]);
+
+  // ENTER MAIN SITE ONLY ON ENTER KEYPRESS (ONLY IF ACCESS ALREADY GRANTED)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' && isAccessGrantedRef.current) {
         onBegin();
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [onBegin]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const W = size.width;
   const H = size.height;
-  const C = 16; // Diagonal chamfer cut size
+  const C = 16;
+
+  // Anchors for 7 HUD Panels (Targeting exact top-left corner brackets)
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+  const panelAnchors = isDesktop && size.width && size.height ? [
+    { x: size.width * 0.03 + 12, y: size.height * 0.15 + 12 },          // Box 0: Fingerprint
+    { x: size.width * 0.97 - 320 + 12, y: size.height * 0.08 + 12 },    // Box 1: AI Security Vault
+    { x: size.width * 0.03 + 12, y: size.height * 0.58 + 12 },          // Box 2: Kavya Identity
+    { x: size.width * 0.97 - 593, y: size.height * 0.71 + 12 },         // Box 3: Visual Processor Panel (AICoreStatusPanel)
+    { x: size.width * 0.97 - 258, y: size.height * 0.64 + 12 },         // Box 7: Satellite Tracking Panel
+    { x: size.width * 0.26 + 12, y: size.height * 0.20 + 12 },          // Box 4: Threat SOC
+    { x: size.width * 0.74 - 280 + 12, y: size.height * 0.20 + 12 },    // Box 5: Data Stream
+    { x: size.width * 0.36 - 123, y: size.height * 0.63 + 12 },         // Box 6: System Diagnostics
+  ] : [];
+
+  // Derived Lock Mechanism Flags
+  const isLockScanning = vaultPhase === 'HACKING';
+  const isLockFrozen = vaultPhase === 'FAILED';
+  const isLockFailure = vaultPhase === 'FAILED';
+  const isLockStruggling = vaultPhase === 'HACKING';
+  const lockAttemptCount = vaultPhase === 'FAILED' ? 2 : 0;
 
   return (
     <motion.div
       initial={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 0.8, ease: 'easeInOut' } }}
-      className="fixed inset-0 w-full h-full bg-[#000000] text-white flex flex-col justify-between p-8 md:p-10 z-[1000] overflow-hidden select-none"
+      className="fixed inset-0 w-full h-full bg-[#020704] text-white flex flex-col justify-between p-8 md:p-10 z-[1000] overflow-hidden select-none"
     >
-      {/* Background visual layers */}
-      <ParticlesBackground />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.015)_0%,transparent_75%)] pointer-events-none z-0" />
+      {/* 1. Cyber Laboratory Image Background */}
+      <CyberLabImageBackground />
 
-      {/* Futuristic Chamfered HUD border frame with vertical crosses */}
+      {/* 2. Central Cyber Vault Locker Mechanism (0% to 100% Loader) */}
+      <CyberVaultLockMechanism
+        progress={isLockFailure ? 0 : decryptProgress}
+        isUnlocked={isAccessGranted}
+        isScanning={isLockScanning}
+        isFrozen={isLockFrozen}
+        isFailure={isLockFailure}
+        isStruggling={isLockStruggling}
+        attemptCount={lockAttemptCount}
+      />
+
+      {/* 3. Single Scanning Laser Beam Targeting Active Box */}
+      {isDesktop && (
+        <HoloLaserConnectors
+          panels={panelAnchors}
+          activeStep={activeScanStep}
+          isAccessGranted={isAccessGranted}
+        />
+      )}
+
+      {/* 4. Dynamic Micro-Notifications Toast Queue */}
+      <TacticalNotifications />
+
+      {/* 5. Futuristic HUD Chamfer Frame */}
       <div ref={frameRef} className="absolute inset-6 md:inset-8 pointer-events-none z-10">
         {W && H && (
           <svg
             className="w-full h-full"
             style={{
               overflow: 'visible',
-              filter: 'drop-shadow(0 0 1.5px rgba(var(--accent-rgb), 0.12))'
+              filter: 'drop-shadow(0 0 3px rgba(var(--accent-rgb), 0.3))'
             }}
             width="100%"
             height="100%"
           >
-            {/* 1. Main borders (most subtle: 7% opacity) */}
-            <g stroke="rgba(var(--accent-rgb), 0.07)" strokeWidth="1" fill="none">
-              {/* Top border */}
+            <g stroke="rgba(var(--accent-rgb), 0.15)" strokeWidth="1" fill="none">
               <line x1={C + 1} y1={1} x2={W - C - 1} y2={1} />
-              {/* Right border */}
               <line x1={W - 1} y1={C + 1} x2={W - 1} y2={H - C - 1} />
-              {/* Bottom border */}
               <line x1={C + 1} y1={H - 1} x2={W - C - 1} y2={H - 1} />
-              {/* Left border */}
               <line x1={1} y1={C + 1} x2={1} y2={H - C - 1} />
             </g>
-
-            {/* 2. Corner chamfers (high visibility: 42% opacity matching plus markers) */}
-            <g stroke="rgba(var(--accent-rgb), 0.42)" strokeWidth="1" fill="none">
-              {/* Top-Left */}
+            <g stroke="rgba(var(--accent-rgb), 0.65)" strokeWidth="1.5" fill="none">
               <line x1={1} y1={C + 1} x2={C + 1} y2={1} />
-              {/* Top-Right */}
               <line x1={W - C - 1} y1={1} x2={W - 1} y2={C + 1} />
-              {/* Bottom-Right */}
               <line x1={W - 1} y1={H - C - 1} x2={W - C - 1} y2={H - 1} />
-              {/* Bottom-Left */}
               <line x1={C + 1} y1={H - 1} x2={1} y2={H - C - 1} />
             </g>
-
-            {/* 3. Cross (+) markers (most visible: 42% opacity) */}
-            <g stroke="rgba(var(--accent-rgb), 0.42)" strokeWidth="1">
-              {/* Left top marker (20% from top) */}
+            <g stroke="rgba(var(--accent-rgb), 0.65)" strokeWidth="1">
               <line x1={-5} y1={H * 0.2} x2={7} y2={H * 0.2} />
               <line x1={1} y1={H * 0.2 - 6} x2={1} y2={H * 0.2 + 6} />
-
-              {/* Left bottom marker (20% from bottom) */}
               <line x1={-5} y1={H * 0.8} x2={7} y2={H * 0.8} />
               <line x1={1} y1={H * 0.8 - 6} x2={1} y2={H * 0.8 + 6} />
-
-              {/* Right top marker (20% from top) */}
               <line x1={W - 7} y1={H * 0.2} x2={W + 5} y2={H * 0.2} />
               <line x1={W - 1} y1={H * 0.2 - 6} x2={W - 1} y2={H * 0.2 + 6} />
-
-              {/* Right bottom marker (20% from bottom) */}
               <line x1={W - 7} y1={H * 0.8} x2={W + 5} y2={H * 0.8} />
               <line x1={W - 1} y1={H * 0.8 - 6} x2={W - 1} y2={H * 0.8 + 6} />
             </g>
@@ -542,21 +593,125 @@ export default function LandingPage({ onBegin }) {
         )}
       </div>
 
-      {/* HEADER SPACE FOR PERSISTENT THEME BUTTON */}
-      <header className="relative w-full h-[38px] z-20 pointer-events-none">
-        {/* Persistent ThemeToggle is positioned at bottom-center of landing page */}
-      </header>
+      {/* HEADER SPACE */}
+      <header className="relative w-full h-[38px] z-20 pointer-events-none" />
 
-      {/* KAV AI CORE AT LANDING PAGE POSITION */}
+      {/* 6. DRAMATIC "VAULT DECRYPTED // ACCESS GRANTED" BANNER */}
+      <AnimatePresence>
+        {isAccessGranted && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.5, type: 'spring' }}
+            className="fixed top-[25%] left-1/2 -translate-x-1/2 z-40 pointer-events-none flex flex-col items-center"
+          >
+            <div className="bg-[var(--accent-color)]/20 border-2 border-[var(--accent-color)] backdrop-blur-xl px-6 py-2 rounded-xl shadow-[0_0_40px_rgba(var(--accent-rgb),0.6)] text-center">
+              <div className="text-xl sm:text-2xl font-mono font-extrabold text-[var(--accent-light)] tracking-widest drop-shadow-[0_0_15px_var(--accent-color)]">
+                VAULT DECRYPTED // ACCESS GRANTED
+              </div>
+              <div className="text-xs font-mono text-white/80 tracking-wider mt-0.5">
+                ENTERING KAVYA MAKHAN'S PORTFOLIO...
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 7. 7 PRO HACKER HUD SCREENS (DESKTOP LAYOUT) */}
+      <div className="hidden lg:block absolute inset-0 z-20 pointer-events-none">
+        {/* Box 0 (Step 0): Biometric Fingerprint Sensing */}
+        <FingerprintPanel
+          isScanning={activeScanStep === 0}
+          isComplete={isAccessGranted || activeScanStep > 0}
+          style={{ left: '3%', top: '15%' }}
+        />
+
+        {/* Box 1 (Step 1): AI Security Vault Terminal */}
+        <AISecurityVaultPanel
+          isScanning={activeScanStep === 1}
+          isComplete={isAccessGranted}
+          progress={decryptProgress}
+          onPhaseChange={handleVaultPhaseChange}
+          onAttemptSubmit={handleVaultPhaseChange}
+          onUnlock={handleVaultUnlock}
+          style={{ right: '3%', top: '8%' }}
+        />
+
+        {/* Box 2 (Step 2): Kavya Personal Details & Credentials */}
+        <KavyaIdentityPanel
+          isScanning={activeScanStep === 2}
+          isComplete={isAccessGranted || activeScanStep > 2}
+          style={{ left: '3%', top: '58%' }}
+        />
+
+        {/* Box 3 (Step 3): Satellite Location Map Trace */}
+        <SatelliteTrackingPanel
+          isScanning={activeScanStep === 3}
+          isComplete={isAccessGranted || activeScanStep > 3}
+          style={{ right: '3%', top: '64%' }}
+        />
+
+        {/* AI Core Status Panel (Positioned directly LEFT of Satellite Location Map) */}
+        <AICoreStatusPanel
+          isComplete={isAccessGranted}
+          style={{ right: 'calc(3% + 335px)', top: '71%' }}
+        />
+
+        {/* Box 4 (Step 4): Threat Detection SOC Defense */}
+        <ThreatDetectionPanel
+          isScanning={activeScanStep === 4}
+          isComplete={isAccessGranted || activeScanStep > 4}
+          style={{ left: '26%', top: '20%' }}
+        />
+
+        {/* Box 5 (Step 5): Raw Hex Data Stream */}
+        <DataStreamPanel
+          isScanning={activeScanStep === 5}
+          isComplete={isAccessGranted || activeScanStep > 5}
+          style={{ right: '26%', top: '20%' }}
+        />
+
+        {/* Box 6 (Step 6): System Telemetry & AI Core Diagnostics */}
+        <SystemDiagnosticsPanel
+          isScanning={activeScanStep === 6}
+          isComplete={isAccessGranted || activeScanStep > 6}
+          style={{ left: '36%', top: '63%', transform: 'translateX(-50%)' }}
+        />
+      </div>
+
+      {/* MOBILE / TABLET CAROUSEL LAYOUT */}
+      {!isDesktop && (
+        <div className="block lg:hidden absolute bottom-[140px] left-4 right-4 z-20 overflow-x-auto cyber-scrollbar pointer-events-auto">
+          <div className="flex gap-3 w-max pb-2">
+            <FingerprintPanel isComplete={true} />
+            <AISecurityVaultPanel
+              isScanning={activeScanStep === 1}
+              isComplete={isAccessGranted}
+              progress={decryptProgress}
+              onPhaseChange={handleVaultPhaseChange}
+              onAttemptSubmit={handleVaultPhaseChange}
+              onUnlock={handleVaultUnlock}
+            />
+            <KavyaIdentityPanel isComplete={true} />
+            <AICoreStatusPanel isComplete={true} />
+            <SatelliteTrackingPanel isComplete={true} />
+            <ThreatDetectionPanel isComplete={true} />
+            <DataStreamPanel isComplete={true} />
+            <SystemDiagnosticsPanel isComplete={true} />
+          </div>
+        </div>
+      )}
+
+      {/* 8. CENTRAL AI CORE ORB & DIALOGUE SYSTEM */}
       <div
         ref={coreWrapperRef}
-        className="absolute left-[calc(50%-40px)] top-[calc(50%+50px)] -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-auto"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-auto"
         style={{
-          filter: 'drop-shadow(0 0 30px rgba(var(--accent-rgb), 0.5))',
+          filter: 'drop-shadow(0 0 35px rgba(var(--accent-rgb), 0.65))',
           transition: 'filter 400ms ease-in-out',
         }}
       >
-        {/* Holographic Projection Overlays */}
         {projectionState !== 'idle' && (
           <div className="hologram-projection-wrapper">
             <HolographicProjection
@@ -577,15 +732,8 @@ export default function LandingPage({ onBegin }) {
         />
       </div>
 
-
-
-      {/* PORTFOLIO 2026 HEADER */}
+      {/* 9. PORTFOLIO 2026 HERO HEADER */}
       <HeaderContainer />
-
-      {/* HORIZONTAL THEME DOCK & ENTER PORTFOLIO PILL */}
-      <LandingPillDock onBegin={onBegin} />
-
-
 
       {/* FOOTER SPACE */}
       <footer className="relative w-full h-[20px] z-20 pointer-events-none" />
