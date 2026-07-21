@@ -509,7 +509,7 @@ export default function LandingPage({ onBegin }) {
     { x: size.width * 0.03 + 12, y: size.height * 0.15 + 12 },          // Box 0: Fingerprint
     { x: size.width * 0.97 - 320 + 12, y: size.height * 0.08 + 12 },    // Box 1: AI Security Vault
     { x: size.width * 0.03 + 12, y: size.height * 0.58 + 12 },          // Box 2: Kavya Identity
-    { x: size.width * 0.97 - 593, y: size.height * 0.71 + 12 },         // Box 3: Visual Processor Panel (AICoreStatusPanel)
+    { x: size.width * 0.97 - 593, y: size.height * 0.675 + 12 },        // Box 3: Visual Processor Panel (AICoreStatusPanel)
     { x: size.width * 0.97 - 258, y: size.height * 0.64 + 12 },         // Box 7: Satellite Tracking Panel
     { x: size.width * 0.26 + 12, y: size.height * 0.20 + 12 },          // Box 4: Threat SOC
     { x: size.width * 0.74 - 280 + 12, y: size.height * 0.20 + 12 },    // Box 5: Data Stream
@@ -655,7 +655,7 @@ export default function LandingPage({ onBegin }) {
         {/* AI Core Status Panel (Positioned directly LEFT of Satellite Location Map) */}
         <AICoreStatusPanel
           isComplete={isAccessGranted}
-          style={{ right: 'calc(3% + 335px)', top: '71%' }}
+          style={{ right: 'calc(3% + 335px)', top: '67.5%' }}
         />
 
         {/* Box 4 (Step 4): Threat Detection SOC Defense */}

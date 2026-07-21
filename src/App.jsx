@@ -578,148 +578,148 @@ export default function App() {
   return (
     <ThemeProvider>
       <div className="relative min-h-screen bg-[var(--bg-dark)] text-[var(--text-main)] selection:bg-[var(--accent-color)] selection:text-black font-sans overflow-x-clip transition-colors duration-300">
-          {/* Custom cursor and click effects are always active and render above the landing page overlay */}
-          <CustomCursor />
-          <MouseEffects />
-          <ThemeToggle isLanding={showLanding} onClick={() => console.log('Theme toggle clicked!')} />
-          <CursorTelemetry activeSection={showLanding ? 'landing page' : activeSection} />
+        {/* Custom cursor and click effects are always active and render above the landing page overlay */}
+        <CustomCursor />
+        <MouseEffects />
+        <ThemeToggle isLanding={showLanding} onClick={() => console.log('Theme toggle clicked!')} />
+        <CursorTelemetry activeSection={showLanding ? 'landing page' : activeSection} />
 
-          <AnimatePresence>
-            {showLanding && (
-              <LandingPage onBegin={() => setShowLanding(false)} />
-            )}
-          </AnimatePresence>
-
-          {!showLanding && (
-            <>
-              <Navbar
-                activeSection={activeSection}
-                handleNavClick={handleNavClick}
-                showEmblem={activeSection !== 'home' && !isTransitioning}
-              />
-              <main>
-                <section id="home">
-                  <Hero showRobot={isTransitionComplete} glanceAtAIKAV={glanceAtAIKAV} activeSection={activeSection} />
-                </section>
-
-                {isTransitionComplete && (
-                  <>
-                    <SectionNavigator activeSection={activeSection} handleNavClick={handleNavClick} />
-                    {isMobile && (
-                      <Suspense fallback={null}>
-                        <MobileNavbar activeSection={activeSection} handleNavClick={handleNavClick} />
-                      </Suspense>
-                    )}
-                    <AboutSection isTransitionComplete={isTransitionComplete} activeSection={activeSection} />
-                    <Skills />
-
-                    <Projects />
-
-                    <Certificates />
-
-                    <section
-                      id="contact"
-                      className="relative flex flex-col justify-center border-t border-[var(--border-color)] bg-[var(--bg-dark)] overflow-hidden pt-6 md:pt-8 pb-12 md:pb-16"
-                    >
-                      {/* Blueprint grid and radial glow */}
-                      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(6,182,212,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(6,182,212,0.02)_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30 pointer-events-none z-0" />
-                      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.03),transparent_70%)] pointer-events-none z-0" />
-
-                      <div className="relative z-10 w-full">
-                        <SectionHeader
-                          number="05"
-                          title="LET'S TALK"
-                          rightLabel="COMMUNICATION NODE"
-                        />
-                        <div className="px-6">
-                          <ContactSection />
-                        </div>
-                      </div>
-                    </section>
-
-                    <SpaceBoiScene />
-                  </>
-                )}
-
-                {/* Stationary Dock Placeholder for other sections */}
-                <div
-                  id="aikav-placeholder-dock"
-                  className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 lg:bottom-8 lg:right-8 z-[999] pointer-events-none"
-                  style={{
-                    width: coreSize,
-                    height: coreSize,
-                  }}
-                />
-
-                {/* Unified single AIKAVCore instance with dynamic positioning */}
-                {isTransitionComplete && coords[activeSection] && (
-                  <>
-                    <motion.div
-                      initial={false}
-                      animate={{
-                        x: (coords[activeSection]?.centerX ?? 0) - (coords[activeSection]?.size ?? 120) / 2,
-                        y: (coords[activeSection]?.centerY ?? 0) - (coords[activeSection]?.size ?? 120) / 2,
-                        scale: (coords[activeSection]?.size ?? 120) / 300,
-                        rotate: activeSection === 'home' ? 0 : 2,
-                        opacity: 1,
-                      }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 180,
-                        damping: 24,
-                        mass: 0.8,
-                      }}
-                      style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        width: 300,
-                        height: 300,
-                        transformOrigin: 'top left',
-                        zIndex: 999,
-                        pointerEvents: coords[activeSection] ? 'auto' : 'none',
-                        filter: 'drop-shadow(0 0 20px rgba(var(--aikav-primary-rgb, 0, 255, 255), 0.15))',
-                        transition: 'filter 400ms ease-in-out',
-                        opacity: coords[activeSection] ? 1 : 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        willChange: 'transform',
-                      }}
-                    >
-                      <AIKAVCore
-                        size={300}
-                        lookAway={lookAway}
-                        forceBlink={forceBlink}
-                        lookDirection={lookDirection}
-                        isMoving={isMoving}
-                        ringSpeedBoost={ringSpeedBoost}
-                        thrusterActive={thrusterActive}
-                        thrusterAngle={thrusterAngle}
-                        glowBoost={glowBoost}
-                        isSpeaking={isSpeaking}
-                      />
-                    </motion.div>
-
-                    {/* AI.KAV Home Introduction Dialogue Bubble */}
-                    <AIKAVDialogueBubble
-                      homeCoords={coords['home']}
-                      skillsCoords={coords['skills']}
-                      projectsCoords={coords['projects']}
-                      certificatesCoords={coords['certificates']}
-                      contactCoords={coords['contact']}
-                      resumeCoords={coords['resume']}
-                      activeSection={activeSection}
-                      isTransitioning={isTransitioning}
-                      onRobotGlance={setGlanceAtAIKAV}
-                      onAIKAVLookAway={setLookAway}
-                      onSpeakingChange={setIsSpeaking}
-                    />
-                  </>
-                )}
-              </main>
-            </>
+        <AnimatePresence>
+          {showLanding && (
+            <LandingPage onBegin={() => setShowLanding(false)} />
           )}
+        </AnimatePresence>
+
+        {!showLanding && (
+          <>
+            <Navbar
+              activeSection={activeSection}
+              handleNavClick={handleNavClick}
+              showEmblem={activeSection !== 'home' && !isTransitioning}
+            />
+            <main>
+              <section id="home">
+                <Hero showRobot={isTransitionComplete} glanceAtAIKAV={glanceAtAIKAV} activeSection={activeSection} />
+              </section>
+
+              {isTransitionComplete && (
+                <>
+                  <SectionNavigator activeSection={activeSection} handleNavClick={handleNavClick} />
+                  {isMobile && (
+                    <Suspense fallback={null}>
+                      <MobileNavbar activeSection={activeSection} handleNavClick={handleNavClick} />
+                    </Suspense>
+                  )}
+                  <AboutSection isTransitionComplete={isTransitionComplete} activeSection={activeSection} />
+                  <Skills />
+
+                  <Projects />
+
+                  <Certificates />
+
+                  <section
+                    id="contact"
+                    className="relative flex flex-col justify-center border-t border-[var(--border-color)] bg-[var(--bg-dark)] overflow-hidden pt-6 md:pt-8 pb-12 md:pb-16"
+                  >
+                    {/* Blueprint grid and radial glow */}
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(6,182,212,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(6,182,212,0.02)_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30 pointer-events-none z-0" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.03),transparent_70%)] pointer-events-none z-0" />
+
+                    <div className="relative z-10 w-full">
+                      <SectionHeader
+                        number="05"
+                        title="LET'S TALK"
+                        rightLabel="COMMUNICATION NODE"
+                      />
+                      <div className="px-6">
+                        <ContactSection />
+                      </div>
+                    </div>
+                  </section>
+
+                  <SpaceBoiScene />
+                </>
+              )}
+
+              {/* Stationary Dock Placeholder for other sections */}
+              <div
+                id="aikav-placeholder-dock"
+                className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 lg:bottom-8 lg:right-8 z-[999] pointer-events-none"
+                style={{
+                  width: coreSize,
+                  height: coreSize,
+                }}
+              />
+
+              {/* Unified single AIKAVCore instance with dynamic positioning */}
+              {isTransitionComplete && coords[activeSection] && (
+                <>
+                  <motion.div
+                    initial={false}
+                    animate={{
+                      x: (coords[activeSection]?.centerX ?? 0) - (coords[activeSection]?.size ?? 120) / 2,
+                      y: (coords[activeSection]?.centerY ?? 0) - (coords[activeSection]?.size ?? 120) / 2,
+                      scale: (coords[activeSection]?.size ?? 120) / 300,
+                      rotate: activeSection === 'home' ? 0 : 2,
+                      opacity: 1,
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 180,
+                      damping: 24,
+                      mass: 0.8,
+                    }}
+                    style={{
+                      position: 'fixed',
+                      top: 0,
+                      left: 0,
+                      width: 300,
+                      height: 300,
+                      transformOrigin: 'top left',
+                      zIndex: 999,
+                      pointerEvents: coords[activeSection] ? 'auto' : 'none',
+                      filter: 'drop-shadow(0 0 20px rgba(var(--aikav-primary-rgb, 0, 255, 255), 0.15))',
+                      transition: 'filter 400ms ease-in-out',
+                      opacity: coords[activeSection] ? 1 : 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      willChange: 'transform',
+                    }}
+                  >
+                    <AIKAVCore
+                      size={300}
+                      lookAway={lookAway}
+                      forceBlink={forceBlink}
+                      lookDirection={lookDirection}
+                      isMoving={isMoving}
+                      ringSpeedBoost={ringSpeedBoost}
+                      thrusterActive={thrusterActive}
+                      thrusterAngle={thrusterAngle}
+                      glowBoost={glowBoost}
+                      isSpeaking={isSpeaking}
+                    />
+                  </motion.div>
+
+                  {/* AI.KAV Home Introduction Dialogue Bubble */}
+                  <AIKAVDialogueBubble
+                    homeCoords={coords['home']}
+                    skillsCoords={coords['skills']}
+                    projectsCoords={coords['projects']}
+                    certificatesCoords={coords['certificates']}
+                    contactCoords={coords['contact']}
+                    resumeCoords={coords['resume']}
+                    activeSection={activeSection}
+                    isTransitioning={isTransitioning}
+                    onRobotGlance={setGlanceAtAIKAV}
+                    onAIKAVLookAway={setLookAway}
+                    onSpeakingChange={setIsSpeaking}
+                  />
+                </>
+              )}
+            </main>
+          </>
+        )}
       </div>
     </ThemeProvider>
   );

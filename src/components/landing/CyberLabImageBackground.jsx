@@ -13,7 +13,7 @@ const CyberLabImageBackground = memo(
 
       const playVideo = () => {
         if (video.paused) {
-          video.play().catch(() => {});
+          video.play().catch(() => { });
         }
       };
 
@@ -29,7 +29,7 @@ const CyberLabImageBackground = memo(
 
       const handleEnded = () => {
         video.currentTime = 0.001;
-        video.play().catch(() => {});
+        video.play().catch(() => { });
       };
 
       video.addEventListener('timeupdate', handleTimeUpdate);

@@ -60,7 +60,7 @@ function Hero({ showRobot, glanceAtAIKAV, activeSection }) {
 
     window.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseleave", handleMouseLeave);
-    
+
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseleave", handleMouseLeave);
@@ -138,7 +138,7 @@ function Hero({ showRobot, glanceAtAIKAV, activeSection }) {
 
       {/* Main 2-Column Hero Grid (Text 45% | Hero 3D Model 55%) */}
       <div className="w-full max-w-7xl mx-auto my-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-12 lg:gap-8 items-center z-[5] relative py-8">
-        
+
         {/* LEFT SIDE: Text & CTA Buttons (45% width -> 5 cols on lg) */}
         <div className="lg:col-span-5 flex flex-col items-start text-left space-y-6 translate-x-4 translate-y-0 md:-translate-y-20 lg:-translate-y-28">
           {/* HI, I'M */}
@@ -170,7 +170,7 @@ function Hero({ showRobot, glanceAtAIKAV, activeSection }) {
                       {char}
                     </span>
                     {/* Hidden Bold Width Reserve */}
-                    <span 
+                    <span
                       className="hero-name-typography invisible select-none h-0 pointer-events-none text-[2.6rem] sm:text-[3.3rem] md:text-[4rem] lg:text-[4rem]"
                       style={{ fontWeight: 900, fontVariationSettings: '"wght" 900' }}
                     >
@@ -203,7 +203,7 @@ function Hero({ showRobot, glanceAtAIKAV, activeSection }) {
                       {char}
                     </span>
                     {/* Hidden Bold Width Reserve */}
-                    <span 
+                    <span
                       className="hero-name-typography invisible select-none h-0 pointer-events-none text-[3.12rem] sm:text-[3.96rem] md:text-[4.8rem] lg:text-[4.8rem]"
                       style={{ fontWeight: 900, fontVariationSettings: '"wght" 900' }}
                     >

@@ -93,9 +93,6 @@ const AICoreStatusPanel = memo(
         {/* Background Moving Grid Overlay */}
         <div className={styles.gridOverlay} />
 
-        {/* Moving Vertical Scanline Beam */}
-        <div className={styles.verticalScanline} />
-
         {/* Scanline Texture Overlay */}
         <div className={styles.scanlineTexture} />
 
