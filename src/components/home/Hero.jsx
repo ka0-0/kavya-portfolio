@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, memo } from 'react';
 import { motion, useAnimationFrame } from 'framer-motion';
 import RobotModel from './RobotModel';
+import HeroCircuitBackground from './HeroCircuitBackground';
 
 function Hero({ showRobot, glanceAtAIKAV, activeSection }) {
   const heroRef = useRef(null);
@@ -133,6 +134,9 @@ function Hero({ showRobot, glanceAtAIKAV, activeSection }) {
       ref={heroRef}
       className="relative min-h-screen flex flex-col justify-between pt-[110px] md:pt-24 pb-12 px-6 md:px-12 lg:px-20 bg-[var(--bg-dark)] text-[var(--text-main)] overflow-hidden select-none z-[1] isolate transition-colors duration-300"
     >
+      {/* Code-Generated Motherboard Circuit Background Layer */}
+      <HeroCircuitBackground />
+
       {/* Background Ambient Radial Glow */}
       <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.1)_0%,transparent_70%)] rounded-full pointer-events-none z-0" />
 

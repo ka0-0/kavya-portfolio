@@ -1,47 +1,19 @@
 import React, { useRef, useState, useEffect, memo } from 'react';
-import { downloadResume } from '../../utils/resume';
 import LoadingPlanet from '../loading/LoadingPlanet';
+import CursorImageTrail from './CursorImageTrail';
 
 function SpaceBoiScene() {
   const containerRef = useRef(null);
   const [isInView, setIsInView] = useState(false);
-  const [downloadState, setDownloadState] = useState('idle');
   const [animate, setAnimate] = useState(false);
 
-  // handleDownload is used to download the resume
-  const handleDownload = (e) => {
-    e.preventDefault();
-    if (downloadState !== 'idle') return;
-    setDownloadState('downloading');
-
-    setTimeout(() => {
-      downloadResume();
-      setDownloadState('completed');
-      setTimeout(() => setDownloadState('idle'), 1500);
-    }, 600);
-  };
-
-  const handleBackToTop = (e) => {
-    e.preventDefault();
-    if (window.lenis) {
-      window.lenis.scrollTo('#home', {
-        duration: 1.5,
-      });
-    } else {
-      const heroSection = document.getElementById('home');
-      if (heroSection) {
-        heroSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  };
-
-  // Viewport Intersection Observer to freeze Canvas rendering when out of view
+  // Viewport Intersection Observer for triggering sequence animations
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsInView(entry.isIntersecting);
       },
-      { rootMargin: '200px' }
+      { rootMargin: '100px' }
     );
     if (containerRef.current) {
       observer.observe(containerRef.current);
@@ -58,189 +30,100 @@ function SpaceBoiScene() {
   return (
     <section
       id="resume"
-      className="relative w-full bg-[var(--bg-dark)] flex flex-col items-center justify-center pt-20 md:pt-28 pb-0 overflow-hidden z-10 select-none transition-colors duration-300"
+      ref={containerRef}
+      className="relative w-full h-screen min-h-[650px] bg-[var(--bg-dark)] flex flex-col items-center justify-between py-10 sm:py-16 md:py-20 overflow-hidden select-none z-10 transition-colors duration-300"
     >
-      {/* Background Ambient Blue Radial Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(var(--accent-rgb),0.20)_0%,rgba(var(--accent-rgb),0.05)_50%,transparent_75%)] pointer-events-none z-0" />
+      {/* Ambient Blue Light Glow (Larger & positioned slightly lower behind heading) */}
+      <div className="absolute top-0 left-0 w-full h-[48vh] bg-[radial-gradient(ellipse_at_50%_15%,rgba(var(--accent-rgb),0.20)_0%,rgba(34,211,238,0.08)_45%,transparent_80%)] pointer-events-none z-0" />
 
-      <div ref={containerRef} className="w-full h-[650px] sm:h-[750px] md:h-[850px] lg:h-[100vh] relative z-10">
-        <LoadingPlanet />
-
-        {/* Style block for cinematic transitions and animation timing sequence */}
-        <style dangerouslySetInnerHTML={{
-          __html: `
-          @keyframes finalFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          @keyframes finalFadeUp {
-            from {
-              opacity: 0;
-              transform: translateY(15px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          .final-animate-fade-in {
+      {/* Animation keyframes for sequence transitions */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @keyframes cinematicHeadingFadeUp {
+          from {
             opacity: 0;
-            will-change: opacity;
+            transform: translateY(25px);
           }
-          .final-animate-fade-up {
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes cinematicCopyrightFadeUp {
+          from {
             opacity: 0;
-            transform: translateY(15px);
-            will-change: opacity, transform;
+            transform: translateY(20px);
           }
-          .animate-sequence .final-animate-fade-in {
-            animation: finalFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          to {
+            opacity: 1;
+            transform: translateY(0);
           }
-          .animate-sequence .final-animate-fade-up {
-            animation: finalFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes cinematicWatermarkFadeUp {
+          from {
+            opacity: 0;
+            transform: translateY(25px);
           }
-          .delay-step-1 { animation-delay: 0.1s; }
-          .delay-step-2 { animation-delay: 0.4s; }
-          .delay-step-3 { animation-delay: 0.7s; }
-          .delay-step-4 { animation-delay: 1.0s; }
-          .delay-step-5 { animation-delay: 1.3s; }
-          .delay-step-6 { animation-delay: 1.6s; }
-          .delay-step-7 { animation-delay: 1.9s; }
-          .delay-step-8 { animation-delay: 2.2s; }
-          .delay-step-9 { animation-delay: 2.5s; }
-        `}} />
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
 
-        {/* HTML Content Overlay */}
-        <div className={`absolute inset-0 flex flex-col justify-between items-center z-20 pointer-events-none px-6 pt-12 md:pt-0 pb-16 md:pb-[33vh] md:-translate-y-[10vh] ${animate ? 'animate-sequence' : ''}`}>
-          
-          {/* Top Block: Status Indicators, Heading, and Subtitle */}
-          <div className="flex flex-col items-center text-center pointer-events-auto w-full">
-            {/* Status Indicators */}
-            <div className="flex flex-col items-center w-full">
-              <span className="final-animate-fade-in delay-step-1 text-[10px] md:text-xs font-mono tracking-[0.3em] text-cyan-400 font-bold uppercase drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">
-                SYSTEM STATUS
-              </span>
-              
-              {/* gap 20px */}
-              <div className="h-[20px]" />
-              
-              <div className="text-[10px] md:text-xs font-mono text-zinc-400 space-y-1 text-center font-medium leading-relaxed">
-                <div className="final-animate-fade-in delay-step-2">
-                  Portfolio ........ COMPLETE ✓
-                </div>
-                <div className="final-animate-fade-in delay-step-3">
-                  Connection ...... ESTABLISHED ✓
-                </div>
-              </div>
-            </div>
+        .cinematic-heading-initial {
+          opacity: 0;
+          transform: translateY(25px);
+          will-change: opacity, transform;
+        }
+        .cinematic-copyright-initial {
+          opacity: 0;
+          transform: translateY(20px);
+          will-change: opacity, transform;
+        }
+        .cinematic-watermark-initial {
+          opacity: 0;
+          transform: translateY(25px);
+          will-change: opacity, transform;
+        }
 
-            {/* gap 36px */}
-            <div className="h-[36px]" />
+        .animate-cinematic .cinematic-heading-animate {
+          animation: cinematicHeadingFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0s forwards;
+        }
+        .animate-cinematic .cinematic-copyright-animate {
+          animation: cinematicCopyrightFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+        }
+        .animate-cinematic .cinematic-watermark-animate {
+          animation: cinematicWatermarkFadeUp 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+        }
+      `}} />
 
-            {/* Heading */}
-            <h2 className="final-animate-fade-up delay-step-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tight text-white uppercase leading-[1.1] w-full">
-              THANK YOU<br />
-              FOR EXPLORING<br />
-              MY UNIVERSE
-            </h2>
+      {/* LAYER 1 (z-10): 3D Model Canvas (SpaceBoi) */}
+      <div className="absolute inset-0 z-10 pointer-events-none">
+        <LoadingPlanet scale={1.15} yOffset={0.05} />
+      </div>
 
-            {/* gap 24px */}
-            <div className="h-[24px]" />
+      {/* LAYER 2 (z-20): Solid Text Watermark KAVYA (In front of 3D ground plane) with Cursor Image Trail */}
+      <div
+        className={`absolute bottom-[6vh] sm:bottom-[10vh] left-0 w-full flex justify-center items-center pointer-events-none z-20 ${animate ? 'animate-cinematic' : ''}`}
+      >
+        <CursorImageTrail animate={animate} />
+      </div>
 
-            {/* Subtitle */}
-            <p className="final-animate-fade-in delay-step-5 text-[10px] sm:text-xs font-mono tracking-[0.2em] text-cyan-400/90 font-bold uppercase drop-shadow-[0_0_6px_rgba(34,211,238,0.2)]">
-              Mechanical Engineer × AI Developer
-            </p>
-          </div>
+      {/* LAYER 3 (z-30): Main Content Overlay (Heading + Copyright) */}
+      <div
+        className={`relative z-30 flex flex-col items-center text-center pointer-events-none px-4 pt-2 sm:pt-4 md:pt-6 w-full max-w-4xl mx-auto mt-2 sm:mt-4 md:mt-6 lg:mt-8 mb-auto -translate-y-12 sm:-translate-y-18 md:-translate-y-24 lg:-translate-y-28 ${animate ? 'animate-cinematic' : ''}`}
+      >
+        {/* Main Heading */}
+        <h2 className="cinematic-heading-initial cinematic-heading-animate font-display font-black text-white uppercase text-center tracking-tight leading-[1.0] text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl drop-shadow-2xl">
+          THANK YOU<br />
+          FOR VISITING<br />
+          MY UNIVERSE
+        </h2>
 
-          {/* Flexible Spacer for the 3D Character Silhouette (visually divides the layout) */}
-          <div className="flex-grow min-h-[40px] md:min-h-[120px] lg:min-h-[180px]" />
-
-          {/* Bottom Block: Body Text, Button, Social Links, and Footer */}
-          <div className="flex flex-col items-center text-center pointer-events-auto w-full max-w-2xl">
-            {/* Body Text */}
-            <p className="final-animate-fade-in delay-step-6 text-zinc-200 text-xs sm:text-sm max-w-md mx-auto leading-relaxed tracking-wide font-sans">
-              Building intelligent products,<br className="hidden sm:inline" /> one idea at a time.<br />
-              Let's build something together.
-            </p>
-
-            {/* gap 36px */}
-            <div className="h-[36px]" />
-
-            {/* Primary Button */}
-            <div className="final-animate-fade-up delay-step-7">
-              <a
-                href="#"
-                onClick={handleDownload}
-                className="inline-flex items-center justify-center px-8 py-3 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white border border-[rgba(var(--accent-rgb),0.3)] hover:border-cyan-400 hover:text-cyan-300 bg-[var(--bg-dark)]/60 hover:bg-cyan-500/5 transition-all duration-300 shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)] hover:shadow-[0_0_25px_rgba(var(--accent-rgb),0.4)] cursor-pointer select-none"
-                data-interactive="true"
-              >
-                {downloadState === 'idle' && 'Download Resume'}
-                {downloadState === 'downloading' && 'Downloading...'}
-                {downloadState === 'completed' && 'Download Completed'}
-              </a>
-            </div>
-
-            {/* gap 32px */}
-            <div className="h-[32px]" />
-
-            {/* Secondary Links */}
-            <div className="final-animate-fade-in delay-step-8 flex items-center justify-center gap-4 text-[10px] sm:text-xs font-mono tracking-widest text-zinc-500">
-              <a 
-                href="https://github.com/ka0-0" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="text-zinc-400 hover:text-cyan-400 transition-colors duration-300"
-                data-interactive="true"
-              >
-                GitHub
-              </a>
-              <span className="text-zinc-700 select-none">•</span>
-              <a 
-                href="https://www.linkedin.com/in/kavya-makhan-800451370/" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="text-zinc-400 hover:text-cyan-400 transition-colors duration-300"
-                data-interactive="true"
-              >
-                LinkedIn
-              </a>
-              <span className="text-zinc-700 select-none">•</span>
-              <a 
-                href="mailto:kav.1609.ya@gmail.com" 
-                className="text-zinc-400 hover:text-cyan-400 transition-colors duration-300"
-                data-interactive="true"
-              >
-                Email
-              </a>
-            </div>
-
-            {/* gap 36px */}
-            <div className="h-[36px]" />
-
-            {/* Bottom: Footer */}
-            <div className="final-animate-fade-in delay-step-9 flex flex-col items-center w-full">
-              <div className="text-zinc-800 select-none text-[8px] sm:text-[10px] tracking-tight mb-4 opacity-50">
-                ────────────────────────
-              </div>
-              <div className="flex flex-col items-center text-[10px] font-mono tracking-[0.2em] text-zinc-500">
-                <span>© 2026 Kavya Makhan</span>
-                
-                {/* gap 12px */}
-                <div className="h-[12px]" />
-
-                <button
-                  onClick={handleBackToTop}
-                  className="group flex flex-col items-center gap-1 text-zinc-400 hover:text-cyan-400 transition-colors duration-300 focus:outline-none"
-                  data-interactive="true"
-                >
-                  <span className="text-sm font-bold transition-transform duration-300 group-hover:-translate-y-1">↑</span>
-                  <span className="text-[9px] uppercase tracking-[0.15em] font-semibold mt-0.5">Back to Top</span>
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
+        {/* Single Centered Copyright Line */}
+        <p className="cinematic-copyright-initial cinematic-copyright-animate text-xs sm:text-sm md:text-base font-mono font-bold tracking-[0.35em] text-white uppercase text-center mt-4 sm:mt-5 drop-shadow-[0_2px_10px_rgba(0,0,0,1)]">
+          © 2026 — ALL RIGHTS RESERVED
+        </p>
       </div>
     </section>
   );

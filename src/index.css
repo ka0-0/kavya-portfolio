@@ -611,3 +611,31 @@
     0 0 4px rgba(255, 255, 255, 0.25), 
     0 0 16px rgba(var(--title-glow-rgb), 0.45) !important;
 }
+
+/* Reference Footer Styling (Image 1 & 2) */
+.footer-letter {
+  display: inline-block;
+}
+
+.footer-copyright {
+  font-family: 'Outfit', 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: clamp(14px, 1.25vw, 18px);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffffff;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.footer-copyright span.footer-author-name,
+.footer-author-name {
+  font-family: 'Clash Display', 'Outfit', 'Syne', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent-color);
+  -webkit-text-fill-color: var(--accent-color);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--accent-color) 50%, transparent);
+}
+
+

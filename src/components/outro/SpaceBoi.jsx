@@ -6,7 +6,7 @@ import * as THREE from 'three';
 // Preload the SpaceBoi GLB model asset
 useGLTF.preload('/models/space_boi.glb');
 
-export const SpaceBoi = memo(function SpaceBoi({ onModelLoaded, rotationSpeedMultiplier = 1.0 }) {
+export const SpaceBoi = memo(function SpaceBoi({ onModelLoaded, rotationSpeedMultiplier = 1.0, scale = 0.38, yOffset = -0.18 }) {
   const { scene } = useGLTF('/models/space_boi.glb');
   const meshRef = useRef();
 
@@ -43,11 +43,11 @@ export const SpaceBoi = memo(function SpaceBoi({ onModelLoaded, rotationSpeedMul
       // Rotate 360 degrees (2 * Math.PI) over 25 seconds, scaled by rotationSpeedMultiplier
       meshRef.current.rotation.y = (elapsed * (2 * Math.PI) * rotationSpeedMultiplier) / 25;
 
-      // Calculate dynamic vertical offset (16% of viewport height down)
+      // Calculate dynamic vertical offset
       const fovRad = (state.camera.fov * Math.PI) / 180;
       const distance = state.camera.position.z;
       const viewportHeight = 2 * distance * Math.tan(fovRad / 2);
-      const baseSpace = -viewportHeight * 0.04;
+      const baseSpace = viewportHeight * yOffset;
 
       // Floating oscillation (amplitude: ~0.04 units, period: 10s)
       const floatOffset = Math.sin((elapsed * (2 * Math.PI)) / 10) * 0.04;
@@ -57,7 +57,7 @@ export const SpaceBoi = memo(function SpaceBoi({ onModelLoaded, rotationSpeedMul
   });
 
   return (
-    <group ref={meshRef}>
+    <group ref={meshRef} scale={[scale, scale, scale]}>
       <primitive object={scene} />
     </group>
   );
