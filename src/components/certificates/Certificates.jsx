@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, useMotionValue, useSpring, useTransform, useMotionValueEvent, useMotionTemplate, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { X, FileText, ZoomIn, ZoomOut, RotateCcw, Download } from 'lucide-react';
+import { X, FileText, ZoomIn, ZoomOut, RotateCcw, Download, Pause, Play } from 'lucide-react';
 import SectionHeader from '../navigation/SectionHeader';
 
 function getPdfFilename(title) {
@@ -410,8 +410,13 @@ function CertificateViewerModal({ selectedCert, onClose }) {
   );
 }
 
-function CylinderItem({ cert, i, activeIdx, radius, angleStep, activeIndex, handleClickItem }) {
-  const diff = useTransform(activeIdx, (val) => i - val);
+function CylinderItem({ cert, i, rotIndexMotion, radius, angleStep, activeIndex, handleClickItem, totalItems }) {
+  const diff = useTransform(rotIndexMotion, (rotVal) => {
+    let d = (i - (rotVal % totalItems)) % totalItems;
+    if (d < -totalItems / 2) d += totalItems;
+    if (d > totalItems / 2) d -= totalItems;
+    return d;
+  });
   const absDiff = useTransform(diff, (val) => Math.abs(val));
 
   // Radian angle based on index step
@@ -487,26 +492,83 @@ function CylinderItem({ cert, i, activeIdx, radius, angleStep, activeIndex, hand
 
 export default function Certificates() {
   const sectionRef = useRef(null);
-  const pinContainerRef = useRef(null);
   const timelineRef = useRef(null);
-  const scrollTriggerInstanceRef = useRef(null);
 
-  const [activeIndex, setActiveIndex] = useState(0);
-  const activeIndexRef = useRef(0);
-  const galleryCompletedRef = useRef(false);
-  const replayPromptShownRef = useRef(false);
-  const isCarouselLockedRef = useRef(false);
-
+  const [virtualIndex, setVirtualIndex] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
   const [selectedViewerCert, setSelectedViewerCert] = useState(null);
 
-  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const totalItems = certificatesData.length;
+  const activeIndex = ((virtualIndex % totalItems) + totalItems) % totalItems;
+
+  // Spring animation for smooth continuous cylinder rotation
+  const rotIndexMotion = useSpring(virtualIndex, {
+    stiffness: 90,
+    damping: 18,
+  });
+
+  // Keep spring updated when virtualIndex changes
+  useEffect(() => {
+    rotIndexMotion.set(virtualIndex);
+  }, [virtualIndex, rotIndexMotion]);
+
+  // Timeline progress dot
+  const timelineProgress = useMotionValue(0);
+  useEffect(() => {
+    timelineProgress.set(activeIndex / (totalItems - 1));
+  }, [activeIndex, totalItems, timelineProgress]);
+
+  const smoothTimelineProgress = useSpring(timelineProgress, {
+    stiffness: 90,
+    damping: 18,
+  });
+  const timelineDotLeft = useTransform(smoothTimelineProgress, [0, 1], ["0%", "100%"]);
+
+  // Auto advance loop every 1 second (1000ms)
+  useEffect(() => {
+    if (!isAutoPlaying || isHovered) return;
+
+    const timer = setInterval(() => {
+      setVirtualIndex((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isAutoPlaying, isHovered]);
+
+  const toggleAutoPlay = () => {
+    setIsAutoPlaying((prev) => !prev);
+  };
+
+  const handleClickItem = (targetIdx) => {
+    setVirtualIndex((prev) => {
+      const currentModulo = ((prev % totalItems) + totalItems) % totalItems;
+      let diff = targetIdx - currentModulo;
+      if (diff <= 0) diff += totalItems;
+      return prev + diff;
+    });
+  };
+
+  // Compact responsive radius & angleStep
+  const [radius, setRadius] = useState(250);
+  const [angleStep, setAngleStep] = useState(0.26);
 
   useEffect(() => {
-    const media = window.matchMedia('(max-width: 767px)');
-    const listener = (e) => setIsMobileViewport(e.matches);
-    setIsMobileViewport(media.matches);
-    media.addEventListener('change', listener);
-    return () => media.removeEventListener('change', listener);
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setRadius(120);
+        setAngleStep(0.42);
+      } else if (window.innerWidth < 1024) {
+        setRadius(200);
+        setAngleStep(0.28);
+      } else {
+        setRadius(250);
+        setAngleStep(0.26);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleOpenViewer = (image, title) => {
@@ -525,209 +587,13 @@ export default function Certificates() {
     }
   }, [selectedViewerCert]);
 
-  // Compact radius (35-45% smaller) to keep cylinder subtle and on the left edge
-  const [radius, setRadius] = useState(250);
-  const [angleStep, setAngleStep] = useState(0.26);
-
-  // Handle responsive compact wheel geometry parameters
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setRadius(120); // reduced by 25% on mobile to tighten the cylinder
-        setAngleStep(0.42); // compensated angle step to preserve physical label spacing
-      } else if (window.innerWidth < 1024) {
-        setRadius(200); // compact radius for tablet
-        setAngleStep(0.28);
-      } else {
-        setRadius(250); // 44% smaller standard radius for desktop (was 450)
-        setAngleStep(0.26);
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize, { passive: true });
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Motion value for independent timeline entry progress
-  const timelineDotProgress = useMotionValue(0);
-
-  // Motion value for dedicated pinned carousel progress
-  const rotationProgress = useMotionValue(0);
-
-  // 1. Independent Timeline Progress: Starts at 2023 (0%) when timeline appears in viewport,
-  // finishes smoothly at 2026 (100%) BEFORE certificate preview card becomes fully visible at pin start.
-  const timelineDotLeft = useTransform(timelineDotProgress, [0, 1], ["0%", "100%"]);
-
-  // Spring smoothing applied EXCLUSIVELY to pinned carousel progress for silky inertia wheel rotation
-  const smoothCarouselProgress = useSpring(rotationProgress, {
-    stiffness: 60,
-    damping: 26,
-    mass: 0.8
-  });
-
-  // 2. Pinned Carousel Rotation: Carousel rotates ONLY after section pins (when dot is already resting on 2026)
-  const activeIdx = useTransform(smoothCarouselProgress, [0, 0.85], [0, certificatesData.length - 1]);
-
-  // Update active index state for details & previews changes during carousel pinning
-  useMotionValueEvent(rotationProgress, "change", (latest) => {
-    const totalItems = certificatesData.length;
-    let currentIdx = 0;
-    if (latest > 0 && latest < 0.85) {
-      const normalizedProgress = latest / 0.85;
-      currentIdx = Math.round(normalizedProgress * (totalItems - 1));
-    } else if (latest >= 0.85) {
-      currentIdx = totalItems - 1;
-    }
-    const clampedIdx = Math.max(0, Math.min(totalItems - 1, currentIdx));
-    if (clampedIdx !== activeIndexRef.current) {
-      activeIndexRef.current = clampedIdx;
-      setActiveIndex(clampedIdx);
-    }
-  });
-
-  // Synchronized Dual ScrollTrigger setup
-  useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
-
-    const ctx = gsap.context(() => {
-      // Trigger A (Timeline Dot): Begins moving as timeline enters viewport (top 85%),
-      // completes travel to 2026 BEFORE the certificate preview cards become the main focus (at top 70%)
-      ScrollTrigger.create({
-        trigger: timelineRef.current,
-        start: "top 85%",
-        endTrigger: pinContainerRef.current,
-        end: "top 70%",
-        scrub: 0.5,
-        onUpdate: (self) => {
-          const progress = gsap.utils.clamp(0, 1, self.progress);
-          timelineDotProgress.set(progress);
-        }
-      });
-
-      // Trigger B (Carousel Showcase): Begins rotating ONLY after section pins, while dot remains fixed at 2026
-      scrollTriggerInstanceRef.current = ScrollTrigger.create({
-        trigger: pinContainerRef.current,
-        start: "top top",
-        end: "+=220%",
-        pin: true,
-        pinSpacing: true,
-        scrub: 1,
-        onLeave: () => {
-          if (activeIndexRef.current === certificatesData.length - 1) {
-            galleryCompletedRef.current = true;
-          }
-        },
-        onEnterBack: () => {
-          if (galleryCompletedRef.current && !replayPromptShownRef.current) {
-            isCarouselLockedRef.current = true;
-            replayPromptShownRef.current = true;
-            rotationProgress.set(0.85); // Lock display at final index
-            window.dispatchEvent(new CustomEvent('certificates-replay-request'));
-          }
-        },
-        onLeaveBack: () => {
-          galleryCompletedRef.current = false;
-          replayPromptShownRef.current = false;
-          isCarouselLockedRef.current = false;
-        },
-        onUpdate: (self) => {
-          if (isCarouselLockedRef.current) {
-            rotationProgress.set(0.85);
-          } else {
-            rotationProgress.set(self.progress);
-          }
-        }
-      });
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, [timelineDotProgress, rotationProgress]);
-
-  // Handle Yes/No replay prompt choices
-  useEffect(() => {
-    const handleReplayResponse = (e) => {
-      const { action } = e.detail || {};
-      if (action === 'yes') {
-        isCarouselLockedRef.current = false;
-        galleryCompletedRef.current = false;
-        replayPromptShownRef.current = false;
-
-        const trigger = scrollTriggerInstanceRef.current;
-        if (trigger) {
-          const targetScroll = trigger.start + 0.85 * (trigger.end - trigger.start);
-          if (window.lenis) {
-            window.lenis.scrollTo(targetScroll, { duration: 0.5 });
-          } else {
-            window.scrollTo({
-              top: targetScroll,
-              behavior: 'smooth'
-            });
-          }
-          rotationProgress.set(0.85);
-        }
-      } else if (action === 'no') {
-        isCarouselLockedRef.current = true;
-        galleryCompletedRef.current = false;
-        
-        const projectCards = document.querySelectorAll('.projects-card-item');
-        const targetCard = projectCards[2] || projectCards[projectCards.length - 1];
-        if (targetCard) {
-          if (window.lenis) {
-            window.lenis.scrollTo(targetCard, { offset: -120, duration: 1.0 });
-          } else {
-            const targetY = targetCard.getBoundingClientRect().top + window.scrollY - 120;
-            window.scrollTo({
-              top: targetY,
-              behavior: 'smooth'
-            });
-          }
-        } else {
-          if (window.lenis) {
-            window.lenis.scrollTo('#projects');
-          } else {
-            const projectsEl = document.getElementById('projects');
-            if (projectsEl) {
-              const targetY = projectsEl.getBoundingClientRect().top + window.scrollY - 150;
-              window.scrollTo({
-                top: targetY,
-                behavior: 'smooth'
-              });
-            }
-          }
-        }
-      }
-    };
-
-    window.addEventListener('certificates-replay-response', handleReplayResponse);
-    return () => {
-      window.removeEventListener('certificates-replay-response', handleReplayResponse);
-    };
-  }, [rotationProgress]);
-
-  // Click title: smooth scroll & cylinder rotation
-  const handleClickItem = (i) => {
-    const trigger = scrollTriggerInstanceRef.current;
-    if (!trigger) return;
-    const progress = (i / (certificatesData.length - 1)) * 0.85;
-    const targetScroll = trigger.start + progress * (trigger.end - trigger.start);
-    
-    if (window.lenis) {
-      window.lenis.scrollTo(targetScroll, { duration: 0.8 });
-    } else {
-      window.scrollTo({
-        top: targetScroll,
-        behavior: 'smooth'
-      });
-    }
-  };
-
   const activeCert = certificatesData[activeIndex];
 
   return (
     <section
       ref={sectionRef}
       id="certificates"
-      className="relative w-full bg-[var(--bg-dark)] border-t border-[var(--border-color)] overflow-hidden z-20 select-none"
+      className="relative w-full min-h-screen flex flex-col justify-center bg-[var(--bg-dark)] border-t border-[var(--border-color)] overflow-hidden z-20 select-none py-6 md:py-10"
     >
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
@@ -753,31 +619,29 @@ export default function Certificates() {
         }
       `}</style>
 
-      {/* 1. Header Area: Scrolls in naturally and leaves top of screen before pin activates */}
-      <div className="w-full flex-none z-10 pt-12 md:pt-16 pb-4 md:pb-6">
+      {/* 1. Header Area */}
+      <div className="w-full flex-none z-10 pb-2 md:pb-4">
         <SectionHeader
           number="04"
           title="RECENT CERTIFICATES"
           rightLabel="CREDENTIAL LOGS"
         />
 
-        {/* Minimalist Premium Timeline with Side Anchors (FOUNDATION and EVOLUTION) */}
+        {/* Minimalist Premium Timeline */}
         <motion.div
           ref={timelineRef}
           initial={{ opacity: 0, y: 8 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="w-full max-w-xl md:max-w-3xl mx-auto mt-6 md:mt-8 flex flex-col items-center pointer-events-none select-none overflow-visible relative z-20"
+          className="w-full max-w-xl md:max-w-3xl mx-auto mt-3 md:mt-4 flex flex-col items-center pointer-events-none select-none overflow-visible relative z-20"
         >
           {/* Top Row: FOUNDATION   2023 ------- ● ------- 2026   EVOLUTION */}
           <div className="w-full flex items-center justify-center gap-2 sm:gap-6 md:gap-10 lg:gap-14 overflow-visible">
-            {/* Left Anchor Label: FOUNDATION */}
             <span className="font-mono text-[9px] min-[380px]:text-[11px] sm:text-[12px] md:text-[13px] font-semibold uppercase tracking-[0.4em] text-white/70 drop-shadow-[0_0_8px_rgba(255,255,255,0.15)] shrink-0 select-none">
               FOUNDATION
             </span>
 
-            {/* Inner Timeline: 2023 ------- ● ------- 2026 */}
             <div className="w-full max-w-[120px] xs:max-w-[180px] sm:max-w-sm md:max-w-md flex items-center justify-between gap-4 overflow-visible">
               <span className="font-mono text-[11px] sm:text-[13px] md:text-sm font-medium text-white/70 tracking-wider shrink-0 leading-none py-1">
                 2023
@@ -796,14 +660,13 @@ export default function Certificates() {
               </span>
             </div>
 
-            {/* Right Anchor Label: EVOLUTION */}
             <span className="font-mono text-[9px] min-[380px]:text-[11px] sm:text-[12px] md:text-[13px] font-semibold uppercase tracking-[0.4em] text-white/70 drop-shadow-[0_0_8px_rgba(255,255,255,0.15)] shrink-0 select-none">
               EVOLUTION
             </span>
           </div>
 
           {/* Bottom Row: Learning | Building | Growing */}
-          <div className="w-full max-w-xs sm:max-w-sm md:max-w-md flex items-center justify-between mt-2 px-1 text-[11px] md:text-xs font-mono font-medium text-zinc-400 uppercase tracking-widest leading-none py-1">
+          <div className="w-full max-w-xs sm:max-w-sm md:max-w-md flex items-center justify-between mt-1.5 px-1 text-[11px] md:text-xs font-mono font-medium text-zinc-400 uppercase tracking-widest leading-none py-1">
             <span>Learning</span>
             <span>Building</span>
             <span>Growing</span>
@@ -811,78 +674,83 @@ export default function Certificates() {
         </motion.div>
       </div>
 
-      {/* 2. Pinned Interactive Display: Centers hero certificate vertically in viewport & pins */}
-      <div
-        ref={pinContainerRef}
-        className="w-full h-screen relative flex items-center justify-center overflow-hidden bg-[var(--bg-dark)]"
-      >
+      {/* 2. Interactive Certificate Display */}
+      <div className="w-full flex-1 relative flex items-center justify-center overflow-hidden bg-[var(--bg-dark)] py-2 md:py-4">
         {/* Blueprint grid and radial glow */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(6,182,212,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(6,182,212,0.02)_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30 pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.03),transparent_70%)] pointer-events-none" />
 
         {/* Grid Layout Container */}
-        <div className="w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16 z-10">
-          <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-16 items-center">
+        <div className="w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16 z-10 flex items-center justify-center">
+          <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-12 items-center">
             
-            {/* Left Column (Subtle compact rotating wheel navigation) */}
-            <div 
-              className="col-span-1 md:col-span-5 h-[170px] sm:h-[190px] md:h-[360px] relative flex items-center justify-center md:justify-start select-none"
-              style={{ 
-                perspective: "1200px", 
-                transformStyle: "preserve-3d" 
-              }}
-            >
-              <div
-                style={{
-                  transformStyle: 'preserve-3d',
+            {/* Left Column (3D Cylinder Wheel Navigation) */}
+            <div className="col-span-1 md:col-span-5 flex flex-col items-center md:items-start justify-center">
+              {/* 3D Cylinder Wheel Container */}
+              <div 
+                className="w-full h-[150px] sm:h-[170px] md:h-[280px] lg:h-[300px] relative flex items-center justify-center md:justify-start select-none"
+                style={{ 
+                  perspective: "1200px", 
+                  transformStyle: "preserve-3d" 
                 }}
-                className="relative w-full h-[60px] flex items-center justify-center md:justify-start pl-0 md:pl-6"
               >
-                {certificatesData.map((cert, i) => (
-                  <CylinderItem
-                    key={cert.id}
-                    cert={cert}
-                    i={i}
-                    activeIdx={activeIdx}
-                    radius={radius}
-                    angleStep={angleStep}
-                    activeIndex={activeIndex}
-                    handleClickItem={handleClickItem}
-                  />
-                ))}
+                <div
+                  style={{
+                    transformStyle: 'preserve-3d',
+                  }}
+                  className="relative w-full h-[60px] flex items-center justify-center md:justify-start pl-0 md:pl-6"
+                >
+                  {certificatesData.map((cert, i) => (
+                    <CylinderItem
+                      key={cert.id}
+                      cert={cert}
+                      i={i}
+                      rotIndexMotion={rotIndexMotion}
+                      radius={radius}
+                      angleStep={angleStep}
+                      activeIndex={activeIndex}
+                      handleClickItem={handleClickItem}
+                      totalItems={totalItems}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Right Column (Hero certificate preview - shifted downward by 60-80px for generous top breathing room) */}
-            <div className="col-span-1 md:col-span-7 flex flex-col justify-center items-center md:items-start pt-6 md:pt-16 lg:pt-20 md:pl-12">
-              <div className="relative w-full min-h-[420px] max-[374px]:min-h-[390px] xs:min-h-[450px] sm:min-h-[500px] md:min-h-[480px] lg:min-h-[520px] xl:min-h-[580px]">
+            {/* Right Column (Hero certificate preview with 1s auto-transition) */}
+            <div 
+              className="col-span-1 md:col-span-7 flex flex-col justify-center items-center md:items-start md:pl-6"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+            >
+              <div className="relative w-full min-h-[380px] xs:min-h-[410px] sm:min-h-[440px] md:min-h-[440px] lg:min-h-[460px]">
                 <AnimatePresence mode="popLayout" initial={false}>
                   <motion.div
                     key={activeIndex}
-                    initial={{ opacity: 0, scale: 0.97, z: -30 }}
-                    animate={{ opacity: 1, scale: 1, z: 0 }}
-                    exit={{ opacity: 0, scale: 0.97, z: -30 }}
-                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    initial={{ opacity: 0, scale: 0.97, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.97, y: -10 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                     className="absolute inset-0 w-full h-full flex flex-col justify-center items-center md:items-start"
                     style={{ transformStyle: 'preserve-3d' }}
                   >
-                    {/* Ambient Floating Glass Card */}
+                    {/* Floating Glass Card */}
                     <div className="w-full flex justify-center md:justify-start px-4 md:px-1">
                       <TiltCard image={activeCert.image} title={activeCert.title} onOpenViewer={handleOpenViewer} />
                     </div>
 
-                    {/* Detail Text Logs (Unified positioning directly below preview) */}
-                    <div className="w-full text-center md:text-left mt-5 md:mt-6 px-4 md:px-1">
+                    {/* Detail Text Logs */}
+                    <div className="w-full text-center md:text-left mt-3 md:mt-4 px-4 md:px-1">
                       <span className="font-mono text-[9px] tracking-[0.25em] text-cyan-400 font-bold uppercase block">
                         {activeCert.organization}
                       </span>
-                      <h3 className="font-display text-lg sm:text-xl md:text-2xl text-white font-black tracking-wide uppercase leading-tight mt-1">
+                      <h3 className="font-display text-base sm:text-lg md:text-xl text-white font-black tracking-wide uppercase leading-tight mt-1">
                         {activeCert.title}
                       </h3>
                       <span className="font-mono text-[10px] text-zinc-500 tracking-wider block mt-1">
                         ISSUED: {activeCert.date}
                       </span>
-                      <p className="font-sans text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-xl mx-auto md:mx-0 mt-3">
+                      <p className="font-sans text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-xl mx-auto md:mx-0 mt-2">
                         {activeCert.description}
                       </p>
                     </div>
@@ -896,7 +764,7 @@ export default function Certificates() {
         </div>
       </div>
 
-      {/* Premium Fullscreen Certificate Viewer Modal */}
+      {/* Fullscreen Certificate Viewer Modal */}
       <CertificateViewerModal selectedCert={selectedViewerCert} onClose={handleCloseViewer} />
     </section>
   );

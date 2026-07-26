@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Menu, X, FileText, Eye, Download, Printer, Copy, 
-  ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, Loader2, Check 
+import {
+  Menu, X, FileText, Eye, Download,
+  ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, Loader2, Check
 } from 'lucide-react';
-import { 
-  trackResumeViewed, 
+import {
+  trackResumeViewed,
   trackProjectClick,
   trackEmailClick,
   trackLinkedInClick,
@@ -50,7 +50,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
         setIsDropdownOpen(false);
       }
     };
-    
+
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         setIsDropdownOpen(false);
@@ -62,7 +62,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
       document.addEventListener('mousedown', handleOutsideClick);
       document.addEventListener('keydown', handleKeyDown);
     }
-    
+
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
       document.removeEventListener('keydown', handleKeyDown);
@@ -79,7 +79,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
       const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
       document.body.style.paddingRight = `${scrollBarWidth}px`;
-      
+
       // 2. Prevent iOS overscroll / rubber-band effect by blocking touchmove on body
       const preventTouchMove = (e) => {
         if (e.target.closest('.modal-scroll-container')) return;
@@ -205,33 +205,17 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
       window.location.reload();
     }, 350);
   };
-  // Action: Copy Summary
-  const handleCopySummary = () => {
-    const summaryText = "Kavya Makhan — AI Developer & Mechanical Engineering Student specializing in Python, React, FastAPI, Artificial Intelligence and Desktop AI Systems.";
-    navigator.clipboard.writeText(summaryText).then(() => {
-      setToast({ show: true, message: "Summary copied" });
-      setIsDropdownOpen(false);
-      setTimeout(() => setToast({ show: false, message: "" }), 2500);
-    });
-  };
 
-  // Action: Print Resume
-  const handlePrintResume = () => {
-    setIsDropdownOpen(false);
-    setTimeout(() => {
-      window.print();
-    }, 150);
-  };
 
   // Action: Download PDF (Mock animation & file download)
   const handleDownloadResume = () => {
     if (downloadState !== 'idle') return;
     setDownloadState('downloading');
-    
+
     setTimeout(() => {
       downloadResume();
       setDownloadState('completed');
-      
+
       // Reset button state
       setTimeout(() => {
         setDownloadState('idle');
@@ -249,7 +233,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
       setIsFullscreen(true);
     } else {
       if (document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
+        document.exitFullscreen().catch(() => { });
       }
       setIsFullscreen(false);
     }
@@ -267,17 +251,16 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
   return (
     <>
       {/* Page transition overlay for restart click */}
-      <div 
-        className={`fixed inset-0 bg-black z-[9999] transition-opacity duration-[350ms] ease-in-out ${
-          isRestarting ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
+      <div
+        className={`fixed inset-0 bg-black z-[9999] transition-opacity duration-[350ms] ease-in-out ${isRestarting ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
       />
       <header className="fixed top-0 left-0 right-0 z-[100] pointer-events-none w-full px-6 md:px-12 lg:px-20">
         {/* Outer content boundary matching the max-w-7xl grid alignment of the page */}
-        <div 
+        <div
           className="max-w-7xl mx-auto h-24 relative w-full mobile-header-container"
         >
-          
+
           {/* Column 1: Brand Logo & Emblem - Far Left */}
           <div className="pointer-events-auto select-none mobile-contents-column relative">
             {/* Permanent emblem position container */}
@@ -302,11 +285,10 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                       transition: { type: 'spring', stiffness: 300, damping: 20 }
                     }
                   }}
-                  className={`relative w-[58px] h-[58px] flex items-center justify-center transition-all duration-300 cursor-pointer group flex-shrink-0 rounded-full bg-[var(--bg-dark)]/95 border-[1.5px] backdrop-blur-md overflow-hidden ${
-                    clickedLogo === 'emblem'
+                  className={`relative w-[58px] h-[58px] flex items-center justify-center transition-all duration-300 cursor-pointer group flex-shrink-0 rounded-full bg-[var(--bg-dark)]/95 border-[1.5px] backdrop-blur-md overflow-hidden ${clickedLogo === 'emblem'
                       ? 'border-[var(--accent-color)] shadow-[0_0_30px_rgba(var(--accent-rgb),0.8),_inset_0_1.5px_1.5px_rgba(255,255,255,0.2)]'
                       : 'border-[rgba(var(--accent-rgb),0.8)] shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.15),_0_8px_20px_rgba(0,0,0,0.4),_0_0_12px_rgba(var(--accent-rgb),0.2)] hover:border-[var(--accent-light)] hover:shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.2),_0_8px_20px_rgba(0,0,0,0.5),_0_0_20px_rgba(var(--accent-rgb),0.4)]'
-                  }`}
+                    }`}
                   style={{ willChange: 'transform' }}
                 >
                   {/* Subtle purple/cyan gradient glow around edge */}
@@ -338,9 +320,8 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
               className="cursor-pointer"
             >
               <div
-                className={`relative p-[1.5px] rounded-full animate-neon-border w-[125px] h-[58px] transition-all duration-500 ease-in-out shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.85),_inset_0_-1px_1px_rgba(0,0,0,0.03),_0_12px_30px_-10px_rgba(0,0,0,0.25)] ${
-                  clickedLogo === 'kavya' ? 'shadow-[0_0_calc(var(--glow-opacity)*30px)_rgba(var(--accent-rgb),calc(var(--glow-opacity)*0.8))] border-[var(--accent-color)]' : ''
-                }`}
+                className={`relative p-[1.5px] rounded-full animate-neon-border w-[125px] h-[58px] transition-all duration-500 ease-in-out shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.85),_inset_0_-1px_1px_rgba(0,0,0,0.03),_0_12px_30px_-10px_rgba(0,0,0,0.25)] ${clickedLogo === 'kavya' ? 'shadow-[0_0_calc(var(--glow-opacity)*30px)_rgba(var(--accent-rgb),calc(var(--glow-opacity)*0.8))] border-[var(--accent-color)]' : ''
+                  }`}
               >
                 <div className="absolute inset-0 rounded-full animate-neon-border blur-[8px] opacity-15 pointer-events-none" />
 
@@ -387,13 +368,13 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                         >
                           {/* Inner padded container centering active pill & text */}
                           <div className="relative px-[14px] py-[6px] md:px-[16px] md:py-[8px] lg:px-[20px] lg:py-[10px] flex items-center justify-center">
-                            
+
                             {/* Single Shared Layout Capsule */}
                             {isActive && (
                               <motion.div
                                 layoutId="active-pill"
                                 className="absolute inset-0 backdrop-blur-[18px] rounded-full -z-10 theme-active-capsule-desktop"
-                                style={{ 
+                                style={{
                                   willChange: 'transform, opacity',
                                   transform: 'translateZ(0)',
                                   backfaceVisibility: 'hidden',
@@ -408,9 +389,8 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                             )}
 
                             <span
-                              className={`relative z-10 block font-sans font-bold text-[10px] lg:text-xs uppercase tracking-[0.15em] select-none transition-[color,transform] duration-300 ease-out group-hover:-translate-y-[2px] ${
-                                isActive ? 'text-black' : 'text-zinc-500 group-hover:text-zinc-950'
-                              }`}
+                              className={`relative z-10 block font-sans font-bold text-[10px] lg:text-xs uppercase tracking-[0.15em] select-none transition-[color,transform] duration-300 ease-out group-hover:-translate-y-[2px] ${isActive ? 'text-black' : 'text-zinc-500 group-hover:text-zinc-950'
+                                }`}
                             >
                               {link.name}
                             </span>
@@ -435,9 +415,8 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                 borderRadius: isOpen ? 24 : 9999,
               }}
               transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-              className={`relative p-[1.5px] animate-neon-border shadow-[0_12px_30px_-10px_rgba(0,0,0,0.22)] ${
-                isScrolled ? 'top-1' : 'top-0'
-              }`}
+              className={`relative p-[1.5px] animate-neon-border shadow-[0_12px_30px_-10px_rgba(0,0,0,0.22)] ${isScrolled ? 'top-1' : 'top-0'
+                }`}
             >
               <div className="absolute inset-0 rounded-[inherit] animate-neon-border blur-[8px] opacity-15 pointer-events-none" />
 
@@ -485,9 +464,8 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                               />
                             )}
                             <span
-                              className={`relative z-10 transition-transform duration-300 group-hover:-translate-y-[1px] font-sans font-bold text-[10px] uppercase tracking-[0.12em] select-none ${
-                                isActive ? 'text-black font-extrabold' : 'text-zinc-500 group-hover:text-zinc-950'
-                              }`}
+                              className={`relative z-10 transition-transform duration-300 group-hover:-translate-y-[1px] font-sans font-bold text-[10px] uppercase tracking-[0.12em] select-none ${isActive ? 'text-black font-extrabold' : 'text-zinc-500 group-hover:text-zinc-950'
+                                }`}
                             >
                               {link.name}
                             </span>
@@ -514,14 +492,12 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 onMouseEnter={() => setIsHoveringResume(true)}
                 onMouseLeave={() => setIsHoveringResume(false)}
-                className={`relative p-[1.5px] rounded-full animate-neon-border w-[125px] h-[58px] transition-all duration-500 ease-in-out cursor-pointer hover:-translate-y-[2px] active:scale-98 shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.85),_inset_0_-1px_1px_rgba(0,0,0,0.03),_0_12px_30px_-10px_rgba(0,0,0,0.25)] flex items-center justify-center ${
-                  isHoveringResume ? 'shadow-[0_15px_35px_-8px_rgba(59,130,246,0.3)] brightness-[1.02]' : ''
-                }`}
+                className={`relative p-[1.5px] rounded-full animate-neon-border w-[125px] h-[58px] transition-all duration-500 ease-in-out cursor-pointer hover:-translate-y-[2px] active:scale-98 shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.85),_inset_0_-1px_1px_rgba(0,0,0,0.03),_0_12px_30px_-10px_rgba(0,0,0,0.25)] flex items-center justify-center ${isHoveringResume ? 'shadow-[0_15px_35px_-8px_rgba(59,130,246,0.3)] brightness-[1.02]' : ''
+                  }`}
                 style={{ transitionDuration: '180ms' }}
               >
-                <div className={`absolute inset-0 rounded-full animate-neon-border blur-[8px] opacity-15 pointer-events-none transition-opacity duration-300 ${
-                  isHoveringResume ? 'opacity-30' : ''
-                }`} />
+                <div className={`absolute inset-0 rounded-full animate-neon-border blur-[8px] opacity-15 pointer-events-none transition-opacity duration-300 ${isHoveringResume ? 'opacity-30' : ''
+                  }`} />
 
                 <div className="w-full h-full bg-white/95 backdrop-blur-[18px] rounded-full flex items-center justify-center gap-2 px-4">
                   <FileText className="w-4 h-4 theme-text-accent" />
@@ -546,7 +522,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
 
                   {/* Dropdown Inner Glass Grid */}
                   <div className="w-full bg-white/95 backdrop-blur-[18px] rounded-[18px] p-2 flex flex-col gap-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.85)]">
-                    
+
                     <button
                       onClick={() => {
                         setIsModalOpen(true);
@@ -605,21 +581,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                       </span>
                     </button>
 
-                    <button
-                      onClick={handlePrintResume}
-                      className="flex items-center gap-3 px-4 py-3 rounded-[12px] cursor-pointer hover:bg-zinc-100/90 text-zinc-700 hover:text-black font-sans text-xs font-semibold select-none transition-colors"
-                    >
-                      <Printer className="w-4 h-4 theme-text-accent" />
-                      <span>Print Resume</span>
-                    </button>
 
-                    <button
-                      onClick={handleCopySummary}
-                      className="flex items-center gap-3 px-4 py-3 rounded-[12px] cursor-pointer hover:bg-zinc-100/90 text-zinc-700 hover:text-black font-sans text-xs font-semibold select-none transition-colors"
-                    >
-                      <Copy className="w-4 h-4 theme-text-accent" />
-                      <span>Copy Summary</span>
-                    </button>
 
                   </div>
                 </motion.div>
@@ -687,7 +649,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
 
                 {/* Right side: Operations Menu Bar */}
                 <div className="flex items-center gap-2 font-sans">
-                  
+
                   {/* Zoom Operations */}
                   <button
                     onClick={() => setZoomScale(prev => Math.max(prev - 0.15, 0.6))}
@@ -728,13 +690,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                     <Download className="w-4 h-4" />
                   </button>
 
-                  <button
-                    onClick={handlePrintResume}
-                    className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition-colors"
-                    title="Print Document"
-                  >
-                    <Printer className="w-4 h-4" />
-                  </button>
+
 
                   <button
                     onClick={handleFullscreenToggle}
@@ -760,239 +716,29 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
 
               {/* Document Viewing Page container */}
               <div 
-                className="flex-1 overflow-auto bg-zinc-950/70 p-10 flex items-start justify-center modal-scroll-container"
+                className="flex-1 w-full overflow-hidden bg-zinc-950/70 p-4 flex items-center justify-center modal-scroll-container"
                 style={{ overscrollBehavior: 'contain' }}
               >
                 <div 
-                  className="transition-transform duration-200 ease-out origin-top shadow-[0_20px_50px_rgba(0,0,0,0.6)]"
+                  className="w-full h-full transition-transform duration-200 ease-out origin-center shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex items-center justify-center"
                   style={{ transform: `scale(${zoomScale})` }}
                 >
-                  
-                  {/* Styled PDF Paper Page Sheet */}
-                  <div 
-                    id="resume-print-area"
-                    className="w-[812px] min-h-[1130px] bg-white text-zinc-900 p-16 font-sans relative flex flex-col justify-between"
+                  <object
+                    data="/KAVYA_MAKHAN_CV.pdf"
+                    type="application/pdf"
+                    className="w-full h-full rounded-xl border border-zinc-800 bg-white"
                   >
-                    
-                    <div>
-                      {/* CV Header details */}
-                      <div className="border-b-2 border-[var(--border-color)] pb-5 mb-8">
-                        <h1 className="text-4xl font-display font-black tracking-tight text-zinc-900 leading-none">
-                          KAVYA MAKHAN
-                        </h1>
-                        <p className="text-xs font-mono font-bold tracking-[0.15em] theme-text-accent-dark uppercase mt-2">
-                          Mechanical Engineer & AI Algorithms Developer
-                        </p>
-                        
-                        <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-[10px] font-mono text-zinc-500 mt-4 uppercase tracking-wide">
-                          <span>India</span>
-                          <span>•</span>
-                          <a 
-                            href="mailto:kavya.makhan@example.com" 
-                            className="theme-hover-accent transition-colors pointer-events-auto cursor-pointer"
-                            onClick={() => trackEmailClick('Resume Modal')}
-                          >
-                            kavya.makhan@example.com
-                          </a>
-                          <span>•</span>
-                          <a 
-                            href="https://github.com/kavya-makhan" 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="theme-hover-accent transition-colors pointer-events-auto cursor-pointer"
-                            onClick={() => trackGitHubClick('Resume Modal')}
-                          >
-                            github.com/kavya-makhan
-                          </a>
-                          <span>•</span>
-                          <a 
-                            href="https://linkedin.com/in/kavya-makhan" 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="theme-hover-accent transition-colors pointer-events-auto cursor-pointer"
-                            onClick={() => trackLinkedInClick('Resume Modal')}
-                          >
-                            linkedin.com/in/kavya-makhan
-                          </a>
-                        </div>
+                    <iframe
+                      src="/KAVYA_MAKHAN_CV.pdf"
+                      className="w-full h-full rounded-xl border border-zinc-800 bg-white"
+                      title="Kavya Makhan Resume PDF"
+                    >
+                      <div className="p-8 text-center text-white">
+                        <p>Your browser does not support inline PDF viewing.</p>
+                        <a href="/KAVYA_MAKHAN_CV.pdf" download className="text-cyan-400 underline mt-2 inline-block">Download PDF directly</a>
                       </div>
-
-                      {/* 01. EDUCATION */}
-                      <div className="mb-6">
-                        <h2 className="text-xs font-mono font-bold tracking-[0.2em] theme-text-accent-dark uppercase mb-2">
-                          01 / Education
-                        </h2>
-                        <div className="border-t border-zinc-300 pt-2 flex justify-between items-start">
-                          <div>
-                            <h3 className="text-xs font-bold uppercase text-zinc-800">
-                              Bachelor of Mechanical Engineering, Minor in Artificial Intelligence
-                            </h3>
-                            <p className="text-[11px] text-zinc-500 mt-1">
-                              Specialization: Cyber-Physical Systems, Neural Control Design, FEA Modeling
-                            </p>
-                          </div>
-                          <span className="text-[10px] font-mono text-zinc-400 font-bold uppercase">
-                            GPA: 3.9 / 4.0
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* 02. TECHNICAL SKILLS */}
-                      <div className="mb-6">
-                        <h2 className="text-xs font-mono font-bold tracking-[0.2em] theme-text-accent-dark uppercase mb-2">
-                          02 / Technical Skills
-                        </h2>
-                        <div className="border-t border-zinc-300 pt-2 grid grid-cols-2 gap-x-8 gap-y-2 text-[11px]">
-                          <div>
-                            <span className="font-bold text-zinc-800 uppercase block mb-0.5">Software & Algorithms:</span>
-                            <span className="text-zinc-600">Python, PyTorch, TensorFlow, ROS2, C++, React.js, FastAPI</span>
-                          </div>
-                          <div>
-                            <span className="font-bold text-zinc-800 uppercase block mb-0.5">Mechanical Engineering:</span>
-                            <span className="text-zinc-600">SolidWorks (CSWP), Finite Element Analysis (FEA), Fluid Dynamics (CFD)</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 03. PROJECTS LOGS */}
-                      <div className="mb-6">
-                        <h2 className="text-xs font-mono font-bold tracking-[0.2em] theme-text-accent-dark uppercase mb-2">
-                          03 / Selected Projects
-                        </h2>
-                        <div className="border-t border-zinc-300 pt-2 space-y-4">
-                          
-                          <div>
-                            <div className="flex justify-between items-baseline">
-                              <h3 
-                                className="text-xs font-bold uppercase text-zinc-800 theme-hover-accent transition-colors cursor-pointer pointer-events-auto select-none"
-                                onClick={() => trackProjectClick('Cybernetic Neural Robotic Controller', 'Open')}
-                              >
-                                Cybernetic Neural Robotic Controller
-                              </h3>
-                              <span className="text-[10px] font-mono text-zinc-400 font-bold">PyTorch, ROS2, SolidWorks</span>
-                            </div>
-                            <div className="flex gap-3 text-[9px] font-mono theme-text-accent-dark mt-1 pointer-events-auto">
-                              <a 
-                                href="https://github.com/kavya-makhan/robotic-controller" 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="hover:underline cursor-pointer animate-pulse"
-                                onClick={() => trackProjectClick('Cybernetic Neural Robotic Controller', 'GitHub Repository')}
-                              >
-                                [GITHUB REPOSITORY]
-                              </a>
-                              <a 
-                                href="https://demo.kavya-makhan.dev/robotic-controller" 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="hover:underline cursor-pointer animate-pulse"
-                                onClick={() => trackProjectClick('Cybernetic Neural Robotic Controller', 'Live Demo')}
-                              >
-                                [LIVE DEMO]
-                              </a>
-                            </div>
-                            <p className="text-[11px] text-zinc-600 mt-1.5 leading-relaxed">
-                              Designed and programmed a deep reinforcement learning model in PyTorch to optimize stability margins in a 3-DOF robot manipulator assembly. Created precise component meshes and dynamics parameters in SolidWorks, exporting directly to ROS2 nodes for real-time physics testing.
-                            </p>
-                          </div>
-
-                          <div>
-                            <div className="flex justify-between items-baseline">
-                              <h3 
-                                className="text-xs font-bold uppercase text-zinc-800 theme-hover-accent transition-colors cursor-pointer pointer-events-auto select-none"
-                                onClick={() => trackProjectClick('Thermally-Optimized Computing Chassis', 'Open')}
-                              >
-                                Thermally-Optimized Computing Chassis
-                              </h3>
-                              <span className="text-[10px] font-mono text-zinc-400 font-bold">SolidWorks FEA & CFD, Matlab</span>
-                            </div>
-                            <div className="flex gap-3 text-[9px] font-mono theme-text-accent-dark mt-1 pointer-events-auto">
-                              <a 
-                                href="https://github.com/kavya-makhan/thermal-chassis" 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="hover:underline cursor-pointer animate-pulse"
-                                onClick={() => trackProjectClick('Thermally-Optimized Computing Chassis', 'GitHub Repository')}
-                              >
-                                [GITHUB REPOSITORY]
-                              </a>
-                              <a 
-                                href="https://demo.kavya-makhan.dev/thermal-chassis" 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="hover:underline cursor-pointer animate-pulse"
-                                onClick={() => trackProjectClick('Thermally-Optimized Computing Chassis', 'Live Demo')}
-                              >
-                                [LIVE DEMO]
-                              </a>
-                            </div>
-                            <p className="text-[11px] text-zinc-600 mt-1.5 leading-relaxed">
-                              Modeled high-performance heat sink fins and optimized spatial airflow geometries for edge AI computing cards. Performed rigorous fluid-structure thermal coupling analyses, demonstrating a 14.2% reduction in junction hot spots compared to benchmark server chassis.
-                            </p>
-                          </div>
-
-                          <div>
-                            <div className="flex justify-between items-baseline">
-                              <h3 
-                                className="text-xs font-bold uppercase text-zinc-800 theme-hover-accent transition-colors cursor-pointer pointer-events-auto select-none"
-                                onClick={() => trackProjectClick('Autonomous Pathfinder Obstacle Avoidance UAV', 'Open')}
-                              >
-                                Autonomous Pathfinder Obstacle Avoidance UAV
-                              </h3>
-                              <span className="text-[10px] font-mono text-zinc-400 font-bold">Python, ARM Microcontrollers, OpenCV</span>
-                            </div>
-                            <div className="flex gap-3 text-[9px] font-mono theme-text-accent-dark mt-1 pointer-events-auto">
-                              <a 
-                                href="https://github.com/kavya-makhan/obstacle-avoidance-uav" 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="hover:underline cursor-pointer animate-pulse"
-                                onClick={() => trackProjectClick('Autonomous Pathfinder Obstacle Avoidance UAV', 'GitHub Repository')}
-                              >
-                                [GITHUB REPOSITORY]
-                              </a>
-                              <a 
-                                href="https://demo.kavya-makhan.dev/obstacle-avoidance-uav" 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="hover:underline cursor-pointer animate-pulse"
-                                onClick={() => trackProjectClick('Autonomous Pathfinder Obstacle Avoidance UAV', 'Live Demo')}
-                              >
-                                [LIVE DEMO]
-                              </a>
-                            </div>
-                            <p className="text-[11px] text-zinc-600 mt-1.5 leading-relaxed">
-                              Developed a lightweight computer vision pipeline using Python and OpenCV for obstacle detection and map routing in real-time, compiled and optimized for resource-constrained ARM Cortex flight controllers.
-                            </p>
-                          </div>
-
-                        </div>
-                      </div>
-
-                      {/* 04. CERTIFICATIONS & AWARDS */}
-                      <div className="mb-6">
-                        <h2 className="text-xs font-mono font-bold tracking-[0.2em] theme-text-accent-dark uppercase mb-2">
-                          04 / Credentials & Achievements
-                        </h2>
-                        <div className="border-t border-zinc-300 pt-2 space-y-2 text-[11px] text-zinc-600">
-                          <p>
-                            <span className="font-bold text-zinc-800 uppercase">AWS Certified Machine Learning - Specialty</span> — Credential Validation ID: AWS-ML-SPEC-2025
-                          </p>
-                          <p>
-                            <span className="font-bold text-zinc-800 uppercase">Certified SolidWorks Professional (CSWP)</span> — Dassault Systèmes Validation #C-SWPRO-2024
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* CV Footer */}
-                    <div className="border-t border-zinc-200 pt-4 flex justify-between items-center text-[9px] font-mono text-zinc-400 uppercase tracking-widest mt-12">
-                      <span>Kavya Makhan CV Portfolio</span>
-                      <span>Verified Live Document</span>
-                    </div>
-
-                  </div>
-
+                    </iframe>
+                  </object>
                 </div>
               </div>
             </motion.div>
