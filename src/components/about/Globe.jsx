@@ -85,7 +85,7 @@ const glowFragmentShader = `
 export default function Globe() {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
-  
+
   // Theme context
   const { accent } = useTheme();
 
@@ -111,7 +111,7 @@ export default function Globe() {
   const sceneRef = useRef(null);
   const cameraRef = useRef(null);
   const rendererRef = useRef(null);
-  
+
   // Material references for instant theme recoloring
   const centerMatRef = useRef(null);
   const glowMatRef = useRef(null);
@@ -358,7 +358,7 @@ export default function Globe() {
         offscreenCanvas.width = offscreenW;
         offscreenCanvas.height = offscreenH;
         const ctx = offscreenCanvas.getContext("2d", { willReadFrequently: true });
-        
+
         ctx.fillStyle = "#000000";
         ctx.fillRect(0, 0, offscreenW, offscreenH);
         ctx.fillStyle = "#ffffff";
@@ -501,12 +501,12 @@ export default function Globe() {
     const rotation = { x: initialYOffset, y: initialXOffset };
     const targetRotation = { x: initialYOffset, y: initialXOffset };
     const velocity = { x: 0, y: 0 };
-    
+
     let isDragging = false;
     let isHoveringBeacon = false;
     let lastMouseX = 0;
     let lastMouseY = 0;
-    
+
     // Auto rotation parameters
     let autoRotationWeight = 0;
     let inertiaEndTime = performance.now();
@@ -531,14 +531,14 @@ export default function Globe() {
       if (introProgress < 1.0) {
         introProgress += dt / introDuration;
         if (introProgress > 1.0) introProgress = 1.0;
-        
+
         // easeOutCubic curve
         const t = 1.0 - Math.pow(1.0 - introProgress, 3);
         camera.position.z = 4.4 + (2.35 - 4.4) * t;
-        
+
         targetRotation.x = initialYOffset + (targetYRotation - initialYOffset) * t;
         targetRotation.y = initialXOffset + (targetXRotation - initialXOffset) * t;
-        
+
         rotation.x = targetRotation.x;
         rotation.y = targetRotation.y;
       }
@@ -576,7 +576,7 @@ export default function Globe() {
         targetRotation.x += velocity.x;
         targetRotation.y += velocity.y;
         targetRotation.y = Math.max(-Math.PI / 2.5, Math.min(Math.PI / 2.5, targetRotation.y));
-        
+
         velocity.x *= decay;
         velocity.y *= decay;
 
@@ -590,7 +590,7 @@ export default function Globe() {
       const lerpFactor = prefersReduced ? 0.3 : 0.08;
       rotation.x += (targetRotation.x - rotation.x) * lerpFactor;
       rotation.y += (targetRotation.y - rotation.y) * lerpFactor;
-      
+
       globeGroup.rotation.y = rotation.x;
       globeGroup.rotation.x = rotation.y;
 
@@ -673,7 +673,7 @@ export default function Globe() {
         } else {
           // Project world coords to normalized device coords (NDC)
           const projected = beaconWorldPos.clone().project(camera);
-          
+
           // Map to pixel offset inside container
           const pixelX = (projected.x * 0.5 + 0.5) * width;
           const pixelY = (-(projected.y * 0.5) + 0.5) * height;
@@ -710,10 +710,10 @@ export default function Globe() {
           let selected = null;
 
           for (const pos of positions) {
-            const isInside = 
-              pos.left >= edgeMargin && 
-              (pos.left + W) <= width - edgeMargin && 
-              pos.top >= edgeMargin && 
+            const isInside =
+              pos.left >= edgeMargin &&
+              (pos.left + W) <= width - edgeMargin &&
+              pos.top >= edgeMargin &&
               (pos.top + H) <= height - edgeMargin;
             if (isInside) {
               selected = pos;
@@ -829,7 +829,7 @@ export default function Globe() {
       canvas.removeEventListener("mousemove", handleMouseMoveHover);
       resizeObserver.disconnect();
       renderer.dispose();
-      
+
       globeGroup.traverse((child) => {
         if (child.geometry) child.geometry.dispose();
         if (child.material) {
@@ -840,7 +840,7 @@ export default function Globe() {
           }
         }
       });
-      
+
       atmosphereGeo.dispose();
       atmosphereMat.dispose();
     };
@@ -865,9 +865,8 @@ export default function Globe() {
             {loadingLines.map((line, idx) => (
               <div
                 key={idx}
-                className={`globe-loader-line ${line.status} ${
-                  line.status === "active" ? "globe-loader-cursor" : ""
-                }`}
+                className={`globe-loader-line ${line.status} ${line.status === "active" ? "globe-loader-cursor" : ""
+                  }`}
               >
                 <span>{line.text}</span>
                 <span>

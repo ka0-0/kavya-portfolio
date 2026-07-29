@@ -248,7 +248,7 @@ function ProjectCard({ project, idx, addToCardRefs }) {
                 {project.category}
               </span>
             </div>
-            <h3 
+            <h3
               className="font-display text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black leading-[1.1] uppercase tracking-wide"
             >
               {words.map((word, wIdx) => (
@@ -323,9 +323,9 @@ export default function Projects() {
   }, []);
 
   return (
-    <section 
-      ref={sectionRef} 
-      id="projects" 
+    <section
+      ref={sectionRef}
+      id="projects"
       className="relative bg-[var(--bg-dark)] w-full select-none pb-0"
     >
       <style>{`
@@ -355,8 +355,8 @@ export default function Projects() {
           animation: glassSheen 15s ease-in-out infinite;
         }
       `}</style>
-      
-      <div 
+
+      <div
         ref={headerRef}
         className="relative w-full z-5 bg-[var(--bg-dark)] pt-6 pb-2"
       >
@@ -391,7 +391,7 @@ export default function Projects() {
               <br />
               <span className="text-zinc-400">IN PROGRESS</span>
             </h4>
-            
+
             <p className="font-sans text-xs sm:text-sm text-zinc-500 max-w-sm leading-relaxed tracking-wide mt-2">
               Currently engineering the next AI-powered experience.
               <br />

@@ -133,7 +133,7 @@ const CustomCursor = memo(function CustomCursor() {
         clearTimeout(leaveTimeout);
         leaveTimeout = null;
       }
-      
+
       // Set flag to bypass interpolation on the first animation frame
       justEnteredView = true;
 

@@ -105,11 +105,14 @@ function LandingPillDock({ onBegin }) {
   const activeColor = THEME_DETAILS[currentThemeIndex]?.color || '#00FF88';
 
   return (
-    <div className="fixed bottom-[68px] md:bottom-[80px] left-1/2 -translate-x-1/2 z-30 select-none pointer-events-auto">
+    <div className="fixed bottom-[20px] md:bottom-[32px] left-1/2 -translate-x-1/2 z-30 select-none pointer-events-auto flex flex-col items-center gap-1.5">
+      <div className="text-[10px] sm:text-xs font-mono text-[var(--accent-color)] tracking-widest uppercase bg-black/80 px-3 py-0.5 rounded-full border border-[var(--accent-color)]/30 backdrop-blur-md animate-pulse shadow-[0_0_12px_rgba(var(--accent-rgb),0.3)]">
+        ⚡ PRESS ENTER OR CLICK ANYWHERE TO ENTER FAST ⚡
+      </div>
       <div className="flex items-center gap-2 sm:gap-3 bg-black/90 backdrop-blur-xl border border-[var(--accent-color)]/30 rounded-full px-3 py-2 shadow-[0_10px_35px_rgba(0,0,0,0.85),0_0_25px_rgba(var(--accent-rgb),0.2)] transition-all duration-300">
 
         <button
-          onClick={previousTheme}
+          onClick={(e) => { e.stopPropagation(); previousTheme(); }}
           aria-label="Previous Theme"
           className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white/90 hover:text-white flex items-center justify-center text-sm font-semibold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-white/5"
         >
@@ -122,7 +125,7 @@ function LandingPillDock({ onBegin }) {
             return (
               <button
                 key={t.name}
-                onClick={() => setTheme(idx)}
+                onClick={(e) => { e.stopPropagation(); setTheme(idx); }}
                 aria-label={`Select ${t.name} Theme`}
                 title={`${t.name} Theme`}
                 className={`relative rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer ${isActive
@@ -155,7 +158,7 @@ function LandingPillDock({ onBegin }) {
         </div>
 
         <button
-          onClick={nextTheme}
+          onClick={(e) => { e.stopPropagation(); nextTheme(); }}
           aria-label="Next Theme"
           className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white/90 hover:text-white flex items-center justify-center text-sm font-semibold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-white/5"
         >
@@ -165,7 +168,7 @@ function LandingPillDock({ onBegin }) {
         <div className="w-[1px] h-6 bg-white/20 mx-1 sm:mx-1.5" />
 
         <button
-          onClick={onBegin}
+          onClick={(e) => { e.stopPropagation(); onBegin(); }}
           className="group relative px-5 py-2.5 rounded-full font-sans text-xs sm:text-[13px] font-semibold tracking-wide text-black transition-all duration-300 cursor-pointer shadow-[0_0_18px_rgba(var(--accent-rgb),0.35)] hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.7)] hover:scale-[1.04] active:scale-[0.98] border border-[var(--accent-color)]/40 whitespace-nowrap flex items-center gap-1.5 overflow-hidden cyber-enter-btn-glow"
           style={{
             backgroundColor: activeColor,
@@ -462,6 +465,23 @@ export default function LandingPage({ onBegin }) {
     return () => cancelAnimationFrame(animFrameId);
   }, []);
 
+  const fastForwardAndEnter = React.useCallback(() => {
+    if (isAccessGrantedRef.current) {
+      onBegin();
+      return;
+    }
+    isAccessGrantedRef.current = true;
+    targetProgressRef.current = 100;
+    currentProgressRef.current = 100;
+    setDecryptProgress(100);
+    setIsAccessGranted(true);
+    setVaultPhase('SUCCESS');
+    setSelectedDialogue("YOU ARE ENTERING INTO KAVYA'S PORTFOLIO.\nVAULT DECRYPTED // HACKING COMPLETE // ACCESS GRANTED");
+    setProjectionState('typing');
+
+    onBegin();
+  }, [onBegin]);
+
   // AUTO-ENTER MAIN SITE ONCE DECRYPTION IS COMPLETE (100% / ACCESS GRANTED)
   useEffect(() => {
     if (isAccessGranted) {
@@ -472,11 +492,12 @@ export default function LandingPage({ onBegin }) {
     }
   }, [isAccessGranted, onBegin]);
 
-  // ENTER MAIN SITE ONLY ON ENTER KEYPRESS (ONLY IF ACCESS ALREADY GRANTED)
+  // ENTER MAIN SITE FAST ON ENTER KEYPRESS AT ANY TIME
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Enter' && isAccessGrantedRef.current) {
-        onBegin();
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        fastForwardAndEnter();
       }
     };
 
@@ -485,7 +506,7 @@ export default function LandingPage({ onBegin }) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onBegin]);
+  }, [fastForwardAndEnter]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -525,9 +546,10 @@ export default function LandingPage({ onBegin }) {
 
   return (
     <motion.div
+      onClick={fastForwardAndEnter}
       initial={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.8, ease: 'easeInOut' } }}
-      className="fixed inset-0 w-full h-full bg-[#020704] text-white flex flex-col justify-between p-8 md:p-10 z-[1000] overflow-hidden select-none"
+      exit={{ opacity: 0, transition: { duration: 0.4, ease: 'easeInOut' } }}
+      className="fixed inset-0 w-full h-full bg-[#020704] text-white flex flex-col justify-between p-8 md:p-10 z-[1000] overflow-hidden select-none cursor-pointer"
     >
       {/* 1. Cyber Laboratory Image Background */}
       <CyberLabImageBackground />

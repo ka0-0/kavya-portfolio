@@ -275,10 +275,18 @@ export default function App() {
     });
 
     if (Object.keys(newCoords).length > 0) {
-      setCoords(prev => ({
-        ...prev,
-        ...newCoords
-      }));
+      setCoords(prev => {
+        let hasChanged = false;
+        for (const key in newCoords) {
+          const n = newCoords[key];
+          const p = prev[key];
+          if (!p || Math.abs(n.centerX - p.centerX) > 0.5 || Math.abs(n.centerY - p.centerY) > 0.5 || n.size !== p.size) {
+            hasChanged = true;
+            break;
+          }
+        }
+        return hasChanged ? { ...prev, ...newCoords } : prev;
+      });
     }
   }, [coreSize]);
 
@@ -288,11 +296,29 @@ export default function App() {
 
     updateCoords();
 
-    window.addEventListener('resize', updateCoords);
-    window.addEventListener('scroll', updateCoords);
+    let rafId = null;
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        rafId = requestAnimationFrame(() => {
+          updateCoords();
+          ticking = false;
+        });
+      }
+    };
+
+    const handleResize = () => {
+      updateCoords();
+    };
+
+    window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
-      window.removeEventListener('resize', updateCoords);
-      window.removeEventListener('scroll', updateCoords);
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, [isTransitionComplete, updateCoords, activeSection, showLanding]);
 
@@ -444,17 +470,23 @@ export default function App() {
     });
 
     // B. Scroll depth tracker (only tracks once per threshold)
+    let scrollDepthTicking = false;
     const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (docHeight <= 0) return;
+      if (scrollDepthTicking) return;
+      scrollDepthTicking = true;
+      requestAnimationFrame(() => {
+        scrollDepthTicking = false;
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        if (docHeight <= 0) return;
 
-      const scrollPercent = Math.round((scrollTop / docHeight) * 100);
-      const thresholds = [25, 50, 75, 100];
-      thresholds.forEach((threshold) => {
-        if (scrollPercent >= threshold) {
-          trackScrollDepth(threshold);
-        }
+        const scrollPercent = Math.round((scrollTop / docHeight) * 100);
+        const thresholds = [25, 50, 75, 100];
+        thresholds.forEach((threshold) => {
+          if (scrollPercent >= threshold) {
+            trackScrollDepth(threshold);
+          }
+        });
       });
     };
     window.addEventListener('scroll', handleScroll, { passive: true });

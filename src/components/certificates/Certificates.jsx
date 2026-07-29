@@ -159,52 +159,51 @@ function TiltCard({ image, title, onOpenViewer }) {
         }}
         className="w-full h-full bg-zinc-950/60 border border-white/10 backdrop-blur-xl rounded-[24px] shadow-[0_0_30px_rgba(59,130,246,0.12)] hover:shadow-[0_0_50px_rgba(34,211,238,0.4)] hover:border-cyan-400/50 p-1.5 relative group transition-all duration-500 overflow-hidden flex items-center justify-center"
       >
-      <div className="absolute inset-y-0 -left-[100%] w-1/2 bg-gradient-to-r from-transparent via-white/[0.04] to-transparent pointer-events-none z-30 group-hover:animate-glass-sheen" style={{ pointerEvents: 'none' }} />
+        <div className="absolute inset-y-0 -left-[100%] w-1/2 bg-gradient-to-r from-transparent via-white/[0.04] to-transparent pointer-events-none z-30 group-hover:animate-glass-sheen" style={{ pointerEvents: 'none' }} />
 
-      {/* Darkening Overlay for Contrast */}
-      <div className="absolute inset-0 bg-black/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10" style={{ pointerEvents: 'none' }} />
+        {/* Darkening Overlay for Contrast */}
+        <div className="absolute inset-0 bg-black/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10" style={{ pointerEvents: 'none' }} />
 
-      {(!image || hasError) ? (
-        <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800/40 rounded-[20px] pointer-events-none" style={{ pointerEvents: 'none' }}>
-          <span className="font-mono text-[9px] tracking-widest text-cyan-400 mb-2 font-bold pointer-events-none" style={{ pointerEvents: 'none' }}>[ PREVIEW_OFFLINE ]</span>
-          <h4 className="text-xs font-display text-zinc-500 font-bold uppercase tracking-wider text-center pointer-events-none" style={{ pointerEvents: 'none' }}>{title}</h4>
-        </div>
-      ) : (
-        <div className="relative w-full h-full rounded-[20px] overflow-hidden flex items-center justify-center pointer-events-none" style={{ pointerEvents: 'none' }}>
-          {isLoading && !hasError && (
-            <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/85 z-20 pointer-events-none" style={{ pointerEvents: 'none' }}>
-              <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin pointer-events-none" style={{ pointerEvents: 'none' }} />
-            </div>
-          )}
-          <img
-            key={image}
-            src={image}
-            alt={title}
-            loading="lazy"
-            onError={() => {
-              setHasError(true);
-              setIsLoading(false);
-            }}
-            onLoad={() => setIsLoading(false)}
-            style={{ pointerEvents: 'none' }}
-            className={`w-full h-full select-none object-center transition-transform duration-300 pointer-events-none ${
-              isDeloitte
+        {(!image || hasError) ? (
+          <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800/40 rounded-[20px] pointer-events-none" style={{ pointerEvents: 'none' }}>
+            <span className="font-mono text-[9px] tracking-widest text-cyan-400 mb-2 font-bold pointer-events-none" style={{ pointerEvents: 'none' }}>[ PREVIEW_OFFLINE ]</span>
+            <h4 className="text-xs font-display text-zinc-500 font-bold uppercase tracking-wider text-center pointer-events-none" style={{ pointerEvents: 'none' }}>{title}</h4>
+          </div>
+        ) : (
+          <div className="relative w-full h-full rounded-[20px] overflow-hidden flex items-center justify-center pointer-events-none" style={{ pointerEvents: 'none' }}>
+            {isLoading && !hasError && (
+              <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/85 z-20 pointer-events-none" style={{ pointerEvents: 'none' }}>
+                <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin pointer-events-none" style={{ pointerEvents: 'none' }} />
+              </div>
+            )}
+            <img
+              key={image}
+              src={image}
+              alt={title}
+              loading="lazy"
+              onError={() => {
+                setHasError(true);
+                setIsLoading(false);
+              }}
+              onLoad={() => setIsLoading(false)}
+              style={{ pointerEvents: 'none' }}
+              className={`w-full h-full select-none object-center transition-transform duration-300 pointer-events-none ${isDeloitte
                 ? 'object-contain scale-[1.10] rounded-[16px] group-hover:scale-[1.13]'
                 : isGoogle
-                ? 'object-contain scale-[1.20] translate-x-[14px] translate-y-[34px] rounded-[16px] group-hover:scale-[1.23]'
-                : 'object-cover rounded-[18px] scale-[1.01] group-hover:scale-[1.04]'
-            }`}
-          />
-        </div>
-      )}
-    </motion.div>
+                  ? 'object-contain scale-[1.20] translate-x-[14px] translate-y-[34px] rounded-[16px] group-hover:scale-[1.23]'
+                  : 'object-cover rounded-[18px] scale-[1.01] group-hover:scale-[1.04]'
+                }`}
+            />
+          </div>
+        )}
+      </motion.div>
     </div>
   );
 }
 
 function CertificateViewerImage({ src, alt }) {
   return (
-    <div 
+    <div
       className="rounded-[16px] overflow-hidden"
       style={{ borderRadius: 'inherit', overflow: 'hidden' }}
     >
@@ -225,7 +224,7 @@ function CertificateViewerImage({ src, alt }) {
   );
 }
 
-{/* Certificate Viewer Modal matching Resume Viewer Architecture 1:1 */}
+{/* Certificate Viewer Modal matching Resume Viewer Architecture 1:1 */ }
 function CertificateViewerModal({ selectedCert, onClose }) {
   const [zoomScale, setZoomScale] = useState(1.0);
   const modalContainerRef = useRef(null);
@@ -384,13 +383,13 @@ function CertificateViewerModal({ selectedCert, onClose }) {
             </div>
 
             {/* Document Viewing Area */}
-            <div 
+            <div
               className="flex-1 overflow-auto bg-zinc-950/70 p-4 sm:p-6 md:p-10 flex items-start justify-center modal-scroll-container"
               style={{ overscrollBehavior: 'contain' }}
             >
-              <div 
+              <div
                 className="transition-transform duration-200 ease-out origin-top shadow-[0_20px_50px_rgba(0,0,0,0.6)] rounded-[16px] overflow-hidden"
-                style={{ 
+                style={{
                   transform: `scale(${zoomScale})`,
                   borderRadius: 'inherit',
                   overflow: 'hidden'
@@ -420,15 +419,15 @@ function CylinderItem({ cert, i, rotIndexMotion, radius, angleStep, activeIndex,
   const absDiff = useTransform(diff, (val) => Math.abs(val));
 
   // Radian angle based on index step
-  const angleRad = useTransform(diff, (d) => d * angleStep); 
-  
+  const angleRad = useTransform(diff, (d) => d * angleStep);
+
   // Calculate X, Y coordinates around the pivot point on the left (compact radius)
   const x = useTransform(angleRad, (a) => radius * Math.cos(a) - radius);
   const y = useTransform(angleRad, (a) => radius * Math.sin(a));
-  
+
   // Calculate rotation (tangent to curve)
   const rotateVal = useTransform(angleRad, (a) => a * (180 / Math.PI));
-  
+
   // Calculate depth Z (inactive items recede)
   const z = useTransform(absDiff, (d) => -d * 40);
 
@@ -453,11 +452,10 @@ function CylinderItem({ cert, i, rotIndexMotion, radius, angleStep, activeIndex,
         transformOrigin: 'left center',
         transformStyle: 'preserve-3d',
       }}
-      className={`flex items-center gap-3 cursor-pointer py-2 pl-4 pr-3 whitespace-nowrap transition-colors duration-300 ${
-        isActive
-          ? 'text-cyan-400 font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]'
-          : 'text-zinc-500 hover:text-zinc-300 font-medium'
-      }`}
+      className={`flex items-center gap-3 cursor-pointer py-2 pl-4 pr-3 whitespace-nowrap transition-colors duration-300 ${isActive
+        ? 'text-cyan-400 font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]'
+        : 'text-zinc-500 hover:text-zinc-300 font-medium'
+        }`}
       onClick={() => handleClickItem(i)}
     >
       {/* Cyan Highlight Indicator Dot */}
@@ -481,9 +479,8 @@ function CylinderItem({ cert, i, rotIndexMotion, radius, angleStep, activeIndex,
           />
         )}
       </motion.div>
-      <span className={`font-display text-xs sm:text-sm md:text-base tracking-wider uppercase transition-all duration-300 ${
-        isActive ? 'pl-4' : ''
-      }`}>
+      <span className={`font-display text-xs sm:text-sm md:text-base tracking-wider uppercase transition-all duration-300 ${isActive ? 'pl-4' : ''
+        }`}>
         {cert.cylinderTitle}
       </span>
     </motion.div>
@@ -683,15 +680,15 @@ export default function Certificates() {
         {/* Grid Layout Container */}
         <div className="w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16 z-10 flex items-center justify-center">
           <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-12 items-center">
-            
+
             {/* Left Column (3D Cylinder Wheel Navigation) */}
             <div className="col-span-1 md:col-span-5 flex flex-col items-center md:items-start justify-center">
               {/* 3D Cylinder Wheel Container */}
-              <div 
+              <div
                 className="w-full h-[150px] sm:h-[170px] md:h-[280px] lg:h-[300px] relative flex items-center justify-center md:justify-start select-none"
-                style={{ 
-                  perspective: "1200px", 
-                  transformStyle: "preserve-3d" 
+                style={{
+                  perspective: "1200px",
+                  transformStyle: "preserve-3d"
                 }}
               >
                 <div
@@ -718,7 +715,7 @@ export default function Certificates() {
             </div>
 
             {/* Right Column (Hero certificate preview with 1s auto-transition) */}
-            <div 
+            <div
               className="col-span-1 md:col-span-7 flex flex-col justify-center items-center md:items-start md:pl-6"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
