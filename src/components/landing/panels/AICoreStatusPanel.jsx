@@ -38,9 +38,30 @@ const AICoreStatusPanel = memo(
       video.addEventListener('timeupdate', handleTimeUpdate);
       video.addEventListener('ended', handleEnded);
 
+      // Pause decoding whenever this panel is off-screen. On desktop the panel is always within
+      // the viewport during the landing sequence, so it plays continuously exactly as before.
+      // On mobile the panel lives in a horizontally-scrolled carousel where it is usually
+      // scrolled out of view — and this is a 2560x1440 source, so leaving it decoding costs a
+      // phone real GPU/CPU budget during the most startup-sensitive moment.
+      let observer = null;
+      if (typeof IntersectionObserver !== 'undefined' && containerRef.current) {
+        observer = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              if (video.paused) video.play().catch(() => {});
+            } else if (!video.paused) {
+              video.pause();
+            }
+          },
+          { rootMargin: '100px' }
+        );
+        observer.observe(containerRef.current);
+      }
+
       return () => {
         video.removeEventListener('timeupdate', handleTimeUpdate);
         video.removeEventListener('ended', handleEnded);
+        if (observer) observer.disconnect();
       };
     }, []);
 
@@ -56,7 +77,13 @@ const AICoreStatusPanel = memo(
           ...style,
         }}
       >
-        {/* Zoomed Monitoring Feed Video inside Panel */}
+        {/* Zoomed Monitoring Feed Video inside Panel.
+            preload is "metadata" rather than "auto" so this decorative panel feed does not
+            compete with the main background video for startup bandwidth. NOTE: this element
+            displays at ~335x210 but decodes the same 2560x1440 source as the fullscreen
+            background — roughly 52x more pixels per frame than it can show. A downscaled
+            variant of the asset for this panel is the single largest remaining win here, but
+            that is an asset change, not a code change. */}
         <video
           key="ai-core-panel-video"
           ref={videoRef}
@@ -65,7 +92,7 @@ const AICoreStatusPanel = memo(
           muted
           loop
           playsInline
-          preload="auto"
+          preload="metadata"
           controls={false}
           draggable={false}
           disablePictureInPicture

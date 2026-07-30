@@ -1,9 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SectionHeader from '../navigation/SectionHeader';
+import { isTouchOnlyDevice } from '../../utils/device';
 
-gsap.registerPlugin(ScrollTrigger);
+// GSAP's ScrollTrigger was registered here and refreshed on mount, but this file (and the whole
+// codebase) never creates a single ScrollTrigger instance — the sticky card stack is pure CSS
+// `position: sticky`. Registering the plugin installs global scroll + resize listeners, a
+// ResizeObserver, and a permanent gsap.ticker callback that keeps GSAP's rAF loop awake for the
+// entire session. All of that was pure overhead on every scroll frame for zero triggers, so the
+// registration and its ScrollTrigger.refresh() call are removed. `gsap` itself is still used
+// elsewhere (MouseEffects click ripple) and is untouched.
 
 export const projectsData = [
   {
@@ -217,6 +222,13 @@ const onSharedLayoutChange = () => {
   layoutEpoch++;
 };
 
+// MOBILE-ONLY: the heading glow is driven purely by cursor proximity to the Visit button. A
+// touch-only device has no cursor, so `sharedPointer` never leaves its (-9999, -9999) init and
+// the computed factor is permanently 0 — the effect is unobservable by construction. On phones
+// we therefore skip the rAF loop, its per-frame getBoundingClientRect, and the shared pointer /
+// scroll / resize subscriptions entirely. Desktop keeps the full effect unchanged.
+const SKIP_POINTER_EFFECTS = isTouchOnlyDevice();
+
 function subscribeCardGlobals() {
   globalSubscribers++;
   if (globalSubscribers === 1) {
@@ -240,9 +252,14 @@ function ProjectCard({ project, idx, addToCardRefs }) {
   const cardElRef = useRef(null);
   const currentIllumination = useRef(0);
 
-  useEffect(() => subscribeCardGlobals(), []);
+  useEffect(() => {
+    if (SKIP_POINTER_EFFECTS) return;
+    return subscribeCardGlobals();
+  }, []);
 
   useEffect(() => {
+    if (SKIP_POINTER_EFFECTS) return;
+
     let animId = null;
     let cachedRect = null;
     let cachedEpoch = -1;
@@ -427,10 +444,6 @@ export default function Projects() {
       cardRefs.current.push(el);
     }
   };
-
-  useEffect(() => {
-    ScrollTrigger.refresh();
-  }, []);
 
   return (
     <section

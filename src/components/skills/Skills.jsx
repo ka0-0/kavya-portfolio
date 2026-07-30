@@ -77,7 +77,7 @@ const pillVariants = {
 // ==========================================
 // 1. SkillPill Subcomponent (Apple VisionOS Physics)
 // ==========================================
-function SkillPill({ name, category, registerPill, unregisterPill, prefersReducedMotion }) {
+function SkillPill({ name, category, registerPill, unregisterPill, prefersReducedMotion, isActive = true }) {
   const ref = useRef(null);
 
   // Motion values for magnetic repulsion
@@ -180,10 +180,14 @@ function SkillPill({ name, category, registerPill, unregisterPill, prefersReduce
           }}
           className={`cursor-grab ${isDraggingState ? 'cursor-grabbing z-30' : 'z-10'}`}
         >
-          {/* Float Layer */}
+          {/* Float Layer.
+              The infinite float is suspended while the section is off-screen. Framer Motion
+              leaves x/y at their current value when the target is removed, so on resume the
+              keyframe cycle restarts from 0 — a jump of at most the float amplitude (±1.5px),
+              which is both sub-perceptual and happens entirely off-screen. */}
           <motion.div
             animate={
-              prefersReducedMotion
+              prefersReducedMotion || !isActive
                 ? {}
                 : {
                   x: floatX,
@@ -191,7 +195,7 @@ function SkillPill({ name, category, registerPill, unregisterPill, prefersReduce
                 }
             }
             transition={
-              prefersReducedMotion
+              prefersReducedMotion || !isActive
                 ? {}
                 : {
                   duration: floatDuration,
@@ -424,6 +428,12 @@ export default function Skills() {
   // Orbit rotation controls using requestAnimationFrame for smooth pause/resume
   const rotation = useMotionValue(0);
   const isHoveredRef = useRef(false);
+
+  // Drives whether the 25 skill pills run their infinite float animation. Each pill is a
+  // backdrop-blur element, so animating all of them every frame forces 25 blur re-rasters per
+  // frame — and Skills is off-screen for most of the session. Starts true so the very first
+  // paint is identical to before even if the observer has not fired yet.
+  const [isSectionActive, setIsSectionActive] = useState(true);
   const angleRef = useRef(0);
   const hoverTimeoutRef = useRef(null);
 
@@ -474,6 +484,9 @@ export default function Skills() {
         ([entry]) => {
           if (entry.isIntersecting) startLoop();
           else stopLoop();
+          // Reuse this same observer (rather than adding a second one) to also gate the pill
+          // float animations below.
+          setIsSectionActive(entry.isIntersecting);
         },
         { rootMargin: '200px' }
       );
@@ -845,6 +858,7 @@ export default function Skills() {
                         registerPill={registerPill}
                         unregisterPill={unregisterPill}
                         prefersReducedMotion={prefersReducedMotion}
+                        isActive={isSectionActive}
                       />
                     ))}
                   </div>

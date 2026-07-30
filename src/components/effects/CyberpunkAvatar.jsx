@@ -139,9 +139,17 @@ export default function CyberpunkAvatar({
       }}
     >
       {/* Base Avatar Layer (White) - ALWAYS VISIBLE FOUNDATION */}
+      {/* KAVYA.png is ~3.1MB and KAVYA2.png ~2.8MB. Both sit inside the About section (below
+          the fold) but were being fetched eagerly on initial page load — 5.9MB competing with
+          the landing sequence's own assets. loading="lazy" defers them until the About section
+          approaches the viewport; decoding="async" keeps the decode off the main thread so it
+          cannot stall a scroll frame. By the time the section is hoverable it is in-viewport,
+          so the hover reveal is unaffected. */}
       <img
         src="/KAVYA.png"
         alt="Kavya Cyberpunk Avatar Base"
+        loading="lazy"
+        decoding="async"
         className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
         style={{
           filter: 'drop-shadow(0 0 12px rgba(34, 211, 238, 0.22)) drop-shadow(0 0 28px rgba(34, 211, 238, 0.12))'
@@ -153,6 +161,8 @@ export default function CyberpunkAvatar({
         ref={revealImgRef}
         src="/KAVYA2.png"
         alt="Kavya Cyberpunk Avatar Reveal Layer"
+        loading="lazy"
+        decoding="async"
         className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none opacity-0"
         style={{
           filter: 'drop-shadow(0 0 12px rgba(34, 211, 238, 0.22)) drop-shadow(0 0 28px rgba(34, 211, 238, 0.12))',

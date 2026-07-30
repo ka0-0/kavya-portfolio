@@ -2,6 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { downloadResume } from '../../utils/resume';
+import { isTouchOnlyDevice } from '../../utils/device';
+
+// MOBILE-ONLY: as in Projects, the heading glow is cursor-proximity driven and therefore
+// permanently inert on a touch-only device. Skip the rAF loop and its mousemove listener there.
+const SKIP_POINTER_EFFECTS = isTouchOnlyDevice();
 
 // SVG Icons
 const GithubIcon = () => (
@@ -117,6 +122,8 @@ export default function ContactSection() {
   const currentIllumination = useRef(0);
 
   useEffect(() => {
+    if (SKIP_POINTER_EFFECTS) return;
+
     const handleMouseMove = (e) => {
       mousePosition.current = { x: e.clientX, y: e.clientY };
     };
@@ -125,6 +132,8 @@ export default function ContactSection() {
   }, []);
 
   useEffect(() => {
+    if (SKIP_POINTER_EFFECTS) return;
+
     let animId = null;
     let cachedButton = null;
     let cachedRect = null;

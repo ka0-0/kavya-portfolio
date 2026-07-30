@@ -341,6 +341,27 @@ function HeaderContainer() {
 
 export default function LandingPage({ onBegin }) {
   const [size, setSize] = useState({ width: 0, height: 0 });
+
+  // MOBILE-ONLY: HeaderContainer is `hidden md:flex`, so below 768px it is never painted — yet
+  // PortfolioHeader inside it was still mounting ~26 letter spans and running a
+  // `useAnimationFrame` loop that calls window.matchMedia() TWICE PER FRAME before bailing out
+  // on touch. That ran for the entire ~12s startup sequence on phones, for zero visible output.
+  // Tracked with matchMedia at the same 768px breakpoint the Tailwind `md:` class uses, so
+  // tablets (768-1023px) that DO show the header keep it.
+  const [isAtLeastMd, setIsAtLeastMd] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(min-width: 768px)').matches
+      : true
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const media = window.matchMedia('(min-width: 768px)');
+    const listener = (e) => setIsAtLeastMd(e.matches);
+    setIsAtLeastMd(media.matches);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, []);
   const frameRef = useRef(null);
   const coreWrapperRef = useRef(null);
 
@@ -640,7 +661,17 @@ export default function LandingPage({ onBegin }) {
         )}
       </AnimatePresence>
 
-      {/* 7. 7 PRO HACKER HUD SCREENS (DESKTOP LAYOUT) */}
+      {/* 7. 7 PRO HACKER HUD SCREENS (DESKTOP LAYOUT)
+          MOBILE-ONLY FIX: this container is `hidden lg:block`, so below 1024px it is
+          display:none — but every panel inside it still MOUNTED. On a phone that meant 16 HUD
+          panels alive at once (these 8 plus the 8 in the mobile carousel below), each running
+          its own setInterval, plus a second AISecurityVaultPanel with 2 rAF loops, plus a
+          second 2560x1440 <video> element — all completely invisible. It also meant two vault
+          panels were both firing onUnlock/onPhaseChange into the boot sequence.
+          Gating on `isDesktop` (the same flag already used for HoloLaserConnectors and the
+          mobile carousel) removes all of that from phones. Desktop is unaffected: isDesktop is
+          true at >=1024px, exactly where `lg:block` makes this visible. */}
+      {isDesktop && (
       <div className="hidden lg:block absolute inset-0 z-20 pointer-events-none">
         {/* Box 0 (Step 0): Biometric Fingerprint Sensing */}
         <FingerprintPanel
@@ -701,6 +732,7 @@ export default function LandingPage({ onBegin }) {
           style={{ left: '36%', top: '63%', transform: 'translateX(-50%)' }}
         />
       </div>
+      )}
 
       {/* MOBILE / TABLET CAROUSEL LAYOUT */}
       {!isDesktop && (
@@ -754,8 +786,8 @@ export default function LandingPage({ onBegin }) {
         />
       </div>
 
-      {/* 9. PORTFOLIO 2026 HERO HEADER */}
-      <HeaderContainer />
+      {/* 9. PORTFOLIO 2026 HERO HEADER (hidden below md — not mounted there, see above) */}
+      {isAtLeastMd && <HeaderContainer />}
 
       {/* FOOTER SPACE */}
       <footer className="relative w-full h-[20px] z-20 pointer-events-none" />

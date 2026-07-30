@@ -2,6 +2,14 @@ import React, { Suspense, useEffect, useState, useCallback, memo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { SpaceBoi, CameraFitter } from '../outro/SpaceBoi';
+import { getMobileDprCap } from '../../utils/device';
+
+// MOBILE-ONLY: this Canvas passed no `dpr` at all, so R3F fell back to the raw
+// window.devicePixelRatio — uncapped. A DPR-3 phone therefore rendered this scene at 9x the
+// fragment count of DPR 1 (RobotModel already caps at 2; this one never did). Resolved once at
+// module scope so it is not recomputed per render. Returns `undefined` on desktop, and passing
+// `dpr={undefined}` is identical to omitting the prop — so desktop keeps R3F's existing default.
+const MOBILE_DPR = getMobileDprCap();
 
 // `isActive` defaults to true so any consumer that does not pass it keeps rendering continuously.
 const LoadingPlanet = memo(function LoadingPlanet({ onReady, scale = 0.38, yOffset = -0.18, isActive = true }) {
@@ -26,6 +34,7 @@ const LoadingPlanet = memo(function LoadingPlanet({ onReady, scale = 0.38, yOffs
         // SpaceBoi drives rotation/float from the shared clock's elapsed time, so on resume it
         // lands on exactly the pose it would have held had the loop never paused.
         frameloop={isActive ? 'always' : 'never'}
+        dpr={MOBILE_DPR}
         camera={{ position: [0, 0, 10], fov: 45 }}
         gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
         style={{ width: '100%', height: '100%', background: 'transparent' }}

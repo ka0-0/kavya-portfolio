@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useMotionValue, useSpring, useTransform, useMotionValueEvent, useMotionTemplate, AnimatePresence } from 'framer-motion';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { X, FileText, ZoomIn, ZoomOut, RotateCcw, Download, Pause, Play } from 'lucide-react';
 import SectionHeader from '../navigation/SectionHeader';
 

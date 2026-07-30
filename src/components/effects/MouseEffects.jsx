@@ -172,6 +172,16 @@ export default function MouseEffects() {
       document.removeEventListener('mousedown', handleStart);
       document.removeEventListener('touchstart', handleStart);
       document.removeEventListener('click', handleClick, { capture: true });
+
+      // Each click spawns ~13 DOM nodes with ~13 GSAP tweens plus a delayedCall that removes
+      // them. If this unmounts mid-flight those tweens keep ticking GSAP's rAF loop against
+      // detached nodes, and the delayedCall never fires. Kill anything still running inside
+      // this container and drop the nodes.
+      const container = document.getElementById('global-click-effects');
+      if (container) {
+        gsap.killTweensOf(container.querySelectorAll('*'));
+        container.replaceChildren();
+      }
     };
   }, []);
 

@@ -55,7 +55,11 @@ const CyberLabImageBackground = memo(
             WebkitClipPath: 'polygon(16px 0px, calc(100% - 16px) 0px, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0px calc(100% - 16px), 0px 16px)',
           }}
         >
-          {/* Main Fullscreen Background Video */}
+          {/* Main Fullscreen Background Video.
+              preload is "metadata" rather than "auto": autoPlay still begins playback
+              immediately, but this stops the browser racing to buffer the whole 30MB /
+              2560x1440 source ahead of playback while startup is concurrently fetching the GLB
+              models, HDRI environment, geojson and webfonts. */}
           <video
             key="main-bg-video"
             ref={videoRef}
@@ -64,7 +68,7 @@ const CyberLabImageBackground = memo(
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             controls={false}
             draggable={false}
             disablePictureInPicture

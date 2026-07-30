@@ -24,6 +24,7 @@ import Lenis from 'lenis';
 import { useGLTF, useEnvironment } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import LandingPage from './components/landing/LandingPage';
+import { isTouchOnlyDevice } from './utils/device';
 
 // Preload the Hero robot model asset and HDRI environment during the loading screen phase
 useGLTF.preload('/models/small_robot.glb');
@@ -440,6 +441,28 @@ export default function App() {
   const isTransitionComplete = true;
   const [showLanding, setShowLanding] = useState(true);
 
+  // Hero (and with it the robot's Canvas, GLB material setup, shader compilation and PMREM
+  // environment generation) is pre-warmed behind the landing screen so the reveal is
+  // instantaneous. But doing that work the instant the app mounts puts it in direct contention
+  // with the landing screen's own opening animation and its asset fetches. Deferring the mount
+  // to the first idle callback lets the landing sequence start cleanly, then pre-warms during
+  // spare time — there is a ~12s landing sequence to absorb it. If the user skips straight in,
+  // `!showLanding` below forces the mount immediately, matching the original behavior exactly.
+  const [heroPrewarmed, setHeroPrewarmed] = useState(false);
+  useEffect(() => {
+    if (heroPrewarmed) return;
+
+    if (typeof requestIdleCallback === 'function') {
+      const id = requestIdleCallback(() => setHeroPrewarmed(true), { timeout: 2000 });
+      return () => cancelIdleCallback(id);
+    }
+    // Safari / older browsers have no requestIdleCallback
+    const id = setTimeout(() => setHeroPrewarmed(true), 600);
+    return () => clearTimeout(id);
+  }, [heroPrewarmed]);
+
+  const shouldMountHero = heroPrewarmed || !showLanding;
+
   // Disable scroll and stop Lenis during landing page overlay active phase
   useEffect(() => {
     const lockScroll = () => {
@@ -477,8 +500,16 @@ export default function App() {
     activeSectionRef.current = activeSection;
   }, [activeSection]);
 
-  // Responsive device query using matchMedia
-  const [isMobile, setIsMobile] = useState(false);
+  // Responsive device query using matchMedia.
+  // Initialized synchronously from matchMedia rather than hardcoded `false`: on desktop this
+  // resolves to `false` exactly as before (zero change), but on a phone it avoids a mount →
+  // unmount → remount cycle of every mobile-gated child on the very first commit, which was
+  // wasted work during the most startup-sensitive moment.
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(max-width: 767px)').matches
+      : false
+  );
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 767px)');
@@ -743,7 +774,16 @@ export default function App() {
       // visible glide. 1.3 keeps travel brisk on this page's long scroll length without
       // fighting the smoother settle.
       wheelMultiplier: 1.3,
-      syncTouch: true, // Sync touch scroll if supported
+      // MOBILE-ONLY: `syncTouch` makes Lenis fully hijack touch scrolling — it preventDefaults
+      // every touchmove and re-drives the scroll position from JS. Lenis documents this as
+      // experimental, and on touch hardware it replaces the platform's hardware-accelerated
+      // momentum scrolling with main-thread interpolation, which is exactly what produces
+      // touch lag and stutter on phones. Disabling it on touch-only devices hands scrolling
+      // back to the compositor (native iOS/Android momentum), removing the input delay.
+      //
+      // Desktop is untouched: `syncTouch` only ever applies to touch events, and this stays
+      // `true` for any device that has hover (including hybrid touch laptops).
+      syncTouch: !isTouchOnlyDevice(),
       touchMultiplier: 1.1, // Responsiveness multiplier on touch screens (approx 1.0-1.2)
       infinite: false,
       // Lenis only takes the fixed-duration eased path when BOTH `duration` and `easing` are
@@ -820,7 +860,14 @@ export default function App() {
         <CustomCursor />
         <MouseEffects />
         <ThemeToggle isLanding={showLanding} onClick={() => console.log('Theme toggle clicked!')} />
-        <CursorTelemetry activeSection={showLanding ? 'landing page' : activeSection} />
+        {/* CursorTelemetry is `display: none !important` below 768px AND under
+            `@media (hover: none)` (see CursorTelemetry.css) — it is never visible on a phone.
+            It was still mounting there and paying for a 5s status-cycle interval that triggers
+            a re-render plus an AnimatePresence swap, and a window `mousemove` subscription, all
+            for output nobody can see. Desktop renders it exactly as before. */}
+        {!isMobile && (
+          <CursorTelemetry activeSection={showLanding ? 'landing page' : activeSection} />
+        )}
 
         <AnimatePresence>
           {showLanding && (
@@ -853,7 +900,7 @@ export default function App() {
           <main>
             <section id="home">
               <Hero
-                showRobot={isTransitionComplete}
+                showRobot={isTransitionComplete && shouldMountHero}
                 glanceAtAIKAV={glanceAtAIKAV}
                 activeSection={activeSection}
                 isRevealed={!showLanding}
