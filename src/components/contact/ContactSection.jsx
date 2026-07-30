@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
+import emailjs from '@emailjs/browser';
 import { downloadResume } from '../../utils/resume';
 import { isTouchOnlyDevice } from '../../utils/device';
 
@@ -433,24 +434,25 @@ export default function ContactSection() {
 
     setIsSending(true);
     try {
-      const response = await fetch('/api/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        {
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
         },
-        body: JSON.stringify(formData),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to deliver message.');
-      }
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      );
 
       setIsSuccess(true);
+      setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (err) {
       console.error('Contact form submission error:', err);
-      setErrors({ submit: err.message || 'Failed to deliver message. Please check connection and try again.' });
+      // EmailJS rejects with an EmailJSResponseStatus ({ status, text }) rather than an Error,
+      // so `text` is checked alongside `message` before falling back to the generic copy.
+      setErrors({ submit: err?.text || err?.message || 'Failed to deliver message. Please check connection and try again.' });
     } finally {
       setIsSending(false);
     }
