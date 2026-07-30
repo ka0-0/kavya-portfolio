@@ -714,8 +714,8 @@ export default function ThemeToggle({ onClick, isLanding = false }) {
     updatePanelCoords();
     const timer = setTimeout(updatePanelCoords, 30);
     
-    window.addEventListener('resize', updatePanelCoords);
-    window.addEventListener('scroll', updatePanelCoords);
+    window.addEventListener('resize', updatePanelCoords, { passive: true });
+    window.addEventListener('scroll', updatePanelCoords, { passive: true });
     
     return () => {
       clearTimeout(timer);

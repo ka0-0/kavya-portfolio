@@ -125,11 +125,32 @@ export default function ContactSection() {
   }, []);
 
   useEffect(() => {
-    let animId;
+    let animId = null;
+    let cachedButton = null;
+    let cachedRect = null;
+    let rectDirty = true;
+    let lastWritten = -1;
+
+    // The CTA button moves with the page, so its rect is re-read after scroll / resize
+    // instead of on every single frame.
+    const markRectDirty = () => {
+      rectDirty = true;
+    };
+
     const update = () => {
-      const button = document.getElementById('contact-cta-button');
-      if (button && headingWordsRef.current.length > 0) {
-        const rect = button.getBoundingClientRect();
+      if (!cachedButton || !cachedButton.isConnected) {
+        cachedButton = document.getElementById('contact-cta-button');
+        rectDirty = true;
+      }
+      const button = cachedButton;
+      const words = headingWordsRef.current;
+
+      if (button && words.length > 0) {
+        if (rectDirty || !cachedRect) {
+          cachedRect = button.getBoundingClientRect();
+          rectDirty = false;
+        }
+        const rect = cachedRect;
         const buttonCenterX = rect.left + rect.width / 2;
         const buttonCenterY = rect.top + rect.height / 2;
 
@@ -145,25 +166,67 @@ export default function ContactSection() {
         }
 
         currentIllumination.current += (targetFactor - currentIllumination.current) * 0.15;
+        const factor = currentIllumination.current;
 
-        headingWordsRef.current.forEach(el => {
-          if (el) {
-            const factor = currentIllumination.current;
-            el.style.setProperty('-webkit-text-fill-color', `rgba(var(--title-glow-rgb), ${factor * 0.18})`);
+        // Skip redundant style writes once the eased value has converged. The final written
+        // value is the settled value, so the rendered result is identical.
+        if (Math.abs(factor - lastWritten) > 0.001) {
+          lastWritten = factor;
 
-            if (factor > 0.01) {
-              el.style.setProperty('text-shadow', `0 0 4px rgba(255, 255, 255, ${factor * 0.35}), 0 0 16px rgba(var(--title-glow-rgb), ${factor * 0.6})`);
-            } else {
-              el.style.setProperty('text-shadow', 'none');
+          words.forEach(el => {
+            if (el) {
+              el.style.setProperty('-webkit-text-fill-color', `rgba(var(--title-glow-rgb), ${factor * 0.18})`);
+
+              if (factor > 0.01) {
+                el.style.setProperty('text-shadow', `0 0 4px rgba(255, 255, 255, ${factor * 0.35}), 0 0 16px rgba(var(--title-glow-rgb), ${factor * 0.6})`);
+              } else {
+                el.style.setProperty('text-shadow', 'none');
+              }
             }
-          }
-        });
+          });
+        }
       }
       animId = requestAnimationFrame(update);
     };
 
-    animId = requestAnimationFrame(update);
-    return () => cancelAnimationFrame(animId);
+    const startLoop = () => {
+      if (animId === null) {
+        rectDirty = true; // force a fresh measurement on resume
+        animId = requestAnimationFrame(update);
+      }
+    };
+
+    const stopLoop = () => {
+      if (animId !== null) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      }
+    };
+
+    window.addEventListener('scroll', markRectDirty, { passive: true });
+    window.addEventListener('resize', markRectDirty, { passive: true });
+
+    // The proximity glow is only observable while the contact heading is on screen
+    let observer = null;
+    if (typeof IntersectionObserver !== 'undefined' && containerRef.current) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) startLoop();
+          else stopLoop();
+        },
+        { rootMargin: '100px' }
+      );
+      observer.observe(containerRef.current);
+    } else {
+      startLoop();
+    }
+
+    return () => {
+      window.removeEventListener('scroll', markRectDirty);
+      window.removeEventListener('resize', markRectDirty);
+      if (observer) observer.disconnect();
+      stopLoop();
+    };
   }, []);
 
   // Form state
@@ -660,7 +723,6 @@ export default function ContactSection() {
         {/* RIGHT COLUMN */}
         <motion.div
           id="contact-cards-panel"
-          rightPanelVariants
           variants={rightPanelVariants}
           style={{ willChange: 'transform, opacity' }}
           className="lg:col-span-4 relative rounded-3xl overflow-hidden bg-[var(--card-bg)]/60 border border-[var(--border-color)] backdrop-blur-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full p-6 md:p-8 flex flex-col justify-start"

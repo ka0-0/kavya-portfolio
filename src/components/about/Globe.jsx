@@ -168,11 +168,23 @@ export default function Globe() {
     const container = containerRef.current;
     const canvas = canvasRef.current;
 
-    const width = container.clientWidth || 400;
-    const height = container.clientHeight || 400;
+    let width = container.clientWidth || 400;
+    let height = container.clientHeight || 400;
 
     // Clock for delta timing and uniform animations
     const clock = new Clock();
+
+    // Accessibility preference resolved once and kept in sync via change events, instead of
+    // querying matchMedia on every single animation frame.
+    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let prefersReduced = reducedMotionQuery.matches;
+    const handleReducedMotionChange = () => {
+      prefersReduced = reducedMotionQuery.matches;
+    };
+    reducedMotionQuery.addEventListener("change", handleReducedMotionChange);
+
+    // Guards async work that may resolve after unmount
+    let isCancelled = false;
 
     // 1. Scene & Render Engine Setup
     const scene = new Scene();
@@ -350,6 +362,7 @@ export default function Globe() {
         const response = await fetch("/data/world.geojson");
         if (!response.ok) throw new Error("GeoJSON not found locally");
         const geojsonData = await response.json();
+        if (isCancelled) return;
 
         // Canvas for coordinate land detection
         const offscreenW = 1024;
@@ -482,6 +495,7 @@ export default function Globe() {
 
         setDataLoaded(true);
       } catch (err) {
+        if (isCancelled) return;
         console.error("Land loading failed, falling back", err);
         setDataLoaded(true);
       }
@@ -520,12 +534,116 @@ export default function Globe() {
     const mouse = new Vector2();
     let animationFrameId = null;
 
+    // Reused across frames to avoid per-frame allocations
+    const beaconWorldPos = new Vector3();
+    const projectedPos = new Vector3();
+    let lastPopover = null;
+
+    /**
+     * Projects the Delhi beacon to screen space and positions the HTML popover.
+     * Only invoked while the beacon is actually hovered (the popover is not rendered
+     * otherwise), instead of pushing React state on every single frame.
+     * Returns false when the beacon has rotated behind the globe.
+     */
+    const updatePopoverPosition = () => {
+      centerDot.getWorldPosition(beaconWorldPos);
+
+      // Check if the marker is facing away from the camera
+      const isBehind = beaconWorldPos.dot(camera.position) < 0;
+      if (isBehind) return false;
+
+      // Project world coords to normalized device coords (NDC)
+      const projected = projectedPos.copy(beaconWorldPos).project(camera);
+
+      // Map to pixel offset inside container
+      const pixelX = (projected.x * 0.5 + 0.5) * width;
+      const pixelY = (-(projected.y * 0.5) + 0.5) * height;
+
+      // Tooltip dimensions and safe margins
+      const W = 190;
+      const H = 95;
+      const edgeMargin = 15;
+      const offsetDist = 26;
+
+      // Candidate positions: above-right, above-left, below-right, below-left
+      const pAboveRight = {
+        left: pixelX + offsetDist,
+        top: pixelY - offsetDist - H,
+        origin: "bottom left"
+      };
+      const pAboveLeft = {
+        left: pixelX - offsetDist - W,
+        top: pixelY - offsetDist - H,
+        origin: "bottom right"
+      };
+      const pBelowRight = {
+        left: pixelX + offsetDist,
+        top: pixelY + offsetDist,
+        origin: "top left"
+      };
+      const pBelowLeft = {
+        left: pixelX - offsetDist - W,
+        top: pixelY + offsetDist,
+        origin: "top right"
+      };
+
+      const positions = [pAboveRight, pAboveLeft, pBelowRight, pBelowLeft];
+      let selected = null;
+
+      for (const pos of positions) {
+        const isInside =
+          pos.left >= edgeMargin &&
+          (pos.left + W) <= width - edgeMargin &&
+          pos.top >= edgeMargin &&
+          (pos.top + H) <= height - edgeMargin;
+        if (isInside) {
+          selected = pos;
+          break;
+        }
+      }
+
+      if (!selected) {
+        // Fallback to above-right, but clamp to boundaries
+        selected = { ...pAboveRight };
+        selected.left = Math.max(edgeMargin, Math.min(width - W - edgeMargin, selected.left));
+        selected.top = Math.max(edgeMargin, Math.min(height - H - edgeMargin, selected.top));
+      }
+
+      const origin = selected.origin;
+      const left = selected.left;
+      const top = selected.top;
+      const anchorX = origin.includes("left") ? left : left + W;
+      const anchorY = origin.includes("bottom") ? top + H - 12 : top + 12;
+
+      // Skip the React update when nothing moved enough to be visible
+      if (
+        lastPopover &&
+        lastPopover.origin === origin &&
+        Math.abs(lastPopover.left - left) < 0.5 &&
+        Math.abs(lastPopover.top - top) < 0.5 &&
+        Math.abs(lastPopover.markerX - pixelX) < 0.5 &&
+        Math.abs(lastPopover.markerY - pixelY) < 0.5
+      ) {
+        return true;
+      }
+
+      lastPopover = {
+        left,
+        top,
+        markerX: pixelX,
+        markerY: pixelY,
+        anchorX,
+        anchorY,
+        origin
+      };
+
+      setPopoverPos(lastPopover);
+      return true;
+    };
+
     const animate = () => {
       const dt = Math.min(clock.getDelta(), 0.1); // Clamp to avoid spikes on tab blur
       const time = clock.getElapsedTime();
-
-      // Accessibility: Respect user settings
-      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       // First load camera intro ease-in (over 1.6s)
       if (introProgress < 1.0) {
@@ -661,95 +779,54 @@ export default function Globe() {
       renderer.render(scene, camera);
 
       // 11. Compute Delhi Beacon Screen position for HTML Popover positioning
-      if (introProgress >= 1.0) {
-        const beaconWorldPos = new Vector3();
-        centerDot.getWorldPosition(beaconWorldPos);
-
-        // Check if the marker is facing away from the camera
-        const isBehind = beaconWorldPos.dot(camera.position) < 0;
-
-        if (isBehind) {
+      // (only while the beacon is hovered — the popover is not rendered otherwise)
+      if (introProgress >= 1.0 && isHoveringBeacon) {
+        if (!updatePopoverPosition()) {
           setShowPopover(false);
-        } else {
-          // Project world coords to normalized device coords (NDC)
-          const projected = beaconWorldPos.clone().project(camera);
-
-          // Map to pixel offset inside container
-          const pixelX = (projected.x * 0.5 + 0.5) * width;
-          const pixelY = (-(projected.y * 0.5) + 0.5) * height;
-
-          // Tooltip dimensions and safe margins
-          const W = 190;
-          const H = 95;
-          const edgeMargin = 15;
-          const offsetDist = 26;
-
-          // Candidate positions: above-right, above-left, below-right, below-left
-          const pAboveRight = {
-            left: pixelX + offsetDist,
-            top: pixelY - offsetDist - H,
-            origin: "bottom left"
-          };
-          const pAboveLeft = {
-            left: pixelX - offsetDist - W,
-            top: pixelY - offsetDist - H,
-            origin: "bottom right"
-          };
-          const pBelowRight = {
-            left: pixelX + offsetDist,
-            top: pixelY + offsetDist,
-            origin: "top left"
-          };
-          const pBelowLeft = {
-            left: pixelX - offsetDist - W,
-            top: pixelY + offsetDist,
-            origin: "top right"
-          };
-
-          const positions = [pAboveRight, pAboveLeft, pBelowRight, pBelowLeft];
-          let selected = null;
-
-          for (const pos of positions) {
-            const isInside =
-              pos.left >= edgeMargin &&
-              (pos.left + W) <= width - edgeMargin &&
-              pos.top >= edgeMargin &&
-              (pos.top + H) <= height - edgeMargin;
-            if (isInside) {
-              selected = pos;
-              break;
-            }
-          }
-
-          if (!selected) {
-            // Fallback to above-right, but clamp to boundaries
-            selected = { ...pAboveRight };
-            selected.left = Math.max(edgeMargin, Math.min(width - W - edgeMargin, selected.left));
-            selected.top = Math.max(edgeMargin, Math.min(height - H - edgeMargin, selected.top));
-          }
-
-          const origin = selected.origin;
-          const left = selected.left;
-          const top = selected.top;
-          const anchorX = origin.includes("left") ? left : left + W;
-          const anchorY = origin.includes("bottom") ? top + H - 12 : top + 12;
-
-          setPopoverPos({
-            left,
-            top,
-            markerX: pixelX,
-            markerY: pixelY,
-            anchorX,
-            anchorY,
-            origin
-          });
         }
       }
 
       animationFrameId = requestAnimationFrame(animate);
     };
 
-    animate();
+    // Visibility-driven loop control: the globe stops rendering entirely while the About card is
+    // off-screen. THREE.Clock keeps tracking wall-clock time, so every time-based animation
+    // resumes exactly in phase and nothing visibly jumps.
+    //
+    // Deliberately NOT gated on document.hidden as well: browsers already suspend
+    // requestAnimationFrame for hidden tabs, and IntersectionObserver does not deliver while
+    // hidden — combining the two would risk resuming with a stale intersection state and
+    // leaving the globe frozen. The observer stays the single source of truth.
+    let isInView = true;
+
+    const startLoop = () => {
+      if (animationFrameId === null && isInView) {
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+
+    const stopLoop = () => {
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    };
+
+    let visibilityObserver = null;
+    if (typeof IntersectionObserver !== "undefined") {
+      visibilityObserver = new IntersectionObserver(
+        ([entry]) => {
+          isInView = entry.isIntersecting;
+          if (isInView) startLoop();
+          else stopLoop();
+        },
+        // Resume slightly before the globe scrolls into view
+        { rootMargin: "200px" }
+      );
+      visibilityObserver.observe(container);
+    }
+
+    startLoop();
 
     // 10. Drag-to-rotate listener setup
     const handleMouseDown = (e) => {
@@ -788,8 +865,21 @@ export default function Globe() {
     canvas.addEventListener("mousedown", handleMouseDown);
 
     // 11. Hover and Raycast Detection
+    // Canvas rect is cached and invalidated on scroll / resize instead of forcing a
+    // synchronous layout read on every pointer move.
+    let cachedCanvasRect = null;
+    const markCanvasRectDirty = () => {
+      cachedCanvasRect = null;
+    };
+    window.addEventListener("scroll", markCanvasRectDirty, { passive: true, capture: true });
+    window.addEventListener("resize", markCanvasRectDirty, { passive: true });
+
     const handleMouseMoveHover = (e) => {
-      const rect = canvas.getBoundingClientRect();
+      let rect = cachedCanvasRect;
+      if (!rect) {
+        rect = canvas.getBoundingClientRect();
+        cachedCanvasRect = rect;
+      }
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
@@ -799,6 +889,9 @@ export default function Globe() {
       if (intersects.length > 0) {
         if (!isHoveringBeacon) {
           isHoveringBeacon = true;
+          // Position the popover in the same React batch that reveals it, so it can never
+          // appear for a frame at a stale coordinate.
+          if (introProgress >= 1.0) updatePopoverPosition();
           setShowPopover(true);
           setLatency(Math.floor(10 + Math.random() * 4));
         }
@@ -816,6 +909,9 @@ export default function Globe() {
     const resizeObserver = new ResizeObserver(() => {
       const newWidth = container.clientWidth || 400;
       const newHeight = container.clientHeight || 400;
+      width = newWidth;
+      height = newHeight;
+      cachedCanvasRect = null;
       camera.aspect = newWidth / newHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(newWidth, newHeight);
@@ -824,10 +920,16 @@ export default function Globe() {
 
     // Clean up Three.js resources on unmount (traverse handles all items recursively)
     return () => {
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      isCancelled = true;
+      stopLoop();
       canvas.removeEventListener("mousedown", handleMouseDown);
       canvas.removeEventListener("mousemove", handleMouseMoveHover);
+      window.removeEventListener("scroll", markCanvasRectDirty, { capture: true });
+      window.removeEventListener("resize", markCanvasRectDirty);
+      reducedMotionQuery.removeEventListener("change", handleReducedMotionChange);
+      if (visibilityObserver) visibilityObserver.disconnect();
       resizeObserver.disconnect();
+      if (dotInstances) dotInstances.dispose();
       renderer.dispose();
 
       globeGroup.traverse((child) => {
@@ -843,8 +945,22 @@ export default function Globe() {
 
       atmosphereGeo.dispose();
       atmosphereMat.dispose();
+
+      pulseRingsRef.current = [];
+      centerMatRef.current = null;
+      glowMatRef.current = null;
+      atmosphereMatRef.current = null;
+      hitSphereRef.current = null;
+      delhiBeaconGroupRef.current = null;
+      sceneRef.current = null;
+      cameraRef.current = null;
+      rendererRef.current = null;
     };
-  }, [dataLoaded]);
+    // Intentionally runs ONCE. `dataLoaded` used to be a dependency, which tore down and
+    // rebuilt the entire scene — re-fetching the geojson, re-rasterizing the 1024x512 land
+    // mask and re-building every dot instance a second time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Recolor effect: updates target colors dynamically when theme changes (transition lerped in animate loop)
   useEffect(() => {

@@ -26,57 +26,91 @@ export default function CursorTelemetry({ activeSection }) {
   const rafActiveRef = useRef(false);
   const idleTimeoutRef = useRef(null);
 
+  // Mirrors of state read inside listeners, so the mousemove subscription never has to be
+  // torn down and re-attached when the theme terminal panel opens or closes.
+  const isHiddenRef = useRef(isHidden);
+  useEffect(() => {
+    isHiddenRef.current = isHidden;
+  }, [isHidden]);
+
   // 1. Mouse Tracking & LCD Interpolation Loop (highly optimized, stops when idle)
   useEffect(() => {
+    const IDLE_MS = 2000;
+    let lastMoveTime = 0;
+    // Cached so we never write an identical opacity value back to the DOM
+    let appliedOpacity = null;
+
+    const setOpacity = (value) => {
+      if (appliedOpacity === value) return;
+      appliedOpacity = value;
+      if (containerRef.current) {
+        containerRef.current.style.opacity = value;
+      }
+    };
+
+    // Single self-rearming idle timer instead of a clear+create pair on every mousemove
+    // (previously 100+ timer allocations per second). Fade timing is unchanged: the fade
+    // still lands exactly IDLE_MS after the final cursor movement.
+    const armIdleTimer = (delay) => {
+      idleTimeoutRef.current = setTimeout(() => {
+        idleTimeoutRef.current = null;
+        const remaining = IDLE_MS - (performance.now() - lastMoveTime);
+        if (remaining > 0) {
+          armIdleTimer(remaining);
+          return;
+        }
+        setOpacity('0.25');
+      }, delay);
+    };
+
+    const updateCoords = () => {
+      const state = coordsRef.current;
+      const dx = state.tx - state.cx;
+      const dy = state.ty - state.cy;
+
+      // Snap to target if difference is negligible to save CPU
+      if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) {
+        state.cx = state.tx;
+        state.cy = state.ty;
+        rafActiveRef.current = false;
+      } else {
+        state.cx += dx * 0.2; // Lerp factor
+        state.cy += dy * 0.2; // Lerp factor
+        requestAnimationFrame(updateCoords);
+      }
+
+      if (xRef.current) xRef.current.textContent = String(Math.round(state.cx)).padStart(4, '0');
+      if (yRef.current) yRef.current.textContent = String(Math.round(state.cy)).padStart(4, '0');
+    };
+
     const handleMouseMove = (e) => {
       coordsRef.current.tx = e.clientX;
       coordsRef.current.ty = e.clientY;
+      lastMoveTime = performance.now();
 
       // Bring telemetry to moving opacity (0.75)
-      if (containerRef.current && !isHidden) {
-        containerRef.current.style.opacity = '0.75';
+      if (!isHiddenRef.current) {
+        setOpacity('0.75');
       }
 
-      // Reset idle opacity timer (fades to 0.25 after 2 seconds)
-      if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
-      idleTimeoutRef.current = setTimeout(() => {
-        if (containerRef.current) {
-          containerRef.current.style.opacity = '0.25';
-        }
-      }, 2000);
+      // Idle opacity timer (fades to 0.25 after 2 seconds)
+      if (idleTimeoutRef.current === null) {
+        armIdleTimer(IDLE_MS);
+      }
 
       // Start the Lerp animation loop if it's inactive
       if (!rafActiveRef.current) {
         rafActiveRef.current = true;
-        const updateCoords = () => {
-          const state = coordsRef.current;
-          const dx = state.tx - state.cx;
-          const dy = state.ty - state.cy;
-
-          // Snap to target if difference is negligible to save CPU
-          if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) {
-            state.cx = state.tx;
-            state.cy = state.ty;
-            rafActiveRef.current = false;
-          } else {
-            state.cx += dx * 0.2; // Lerp factor
-            state.cy += dy * 0.2; // Lerp factor
-            requestAnimationFrame(updateCoords);
-          }
-
-          if (xRef.current) xRef.current.textContent = String(Math.round(state.cx)).padStart(4, '0');
-          if (yRef.current) yRef.current.textContent = String(Math.round(state.cy)).padStart(4, '0');
-        };
         requestAnimationFrame(updateCoords);
       }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
     };
-  }, [isHidden]);
+  }, []);
 
   // 2. Status message cycler (5 seconds interval, avoids repeats)
   useEffect(() => {

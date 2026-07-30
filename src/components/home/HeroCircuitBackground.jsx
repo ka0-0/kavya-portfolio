@@ -12,6 +12,7 @@ import React, { useEffect, useRef, memo } from 'react';
  */
 const HeroCircuitBackground = memo(function HeroCircuitBackground() {
   const canvasRef = useRef(null);
+  const wrapperRef = useRef(null);
 
   // Minimal floating dust particles (8 particles max)
   useEffect(() => {
@@ -21,7 +22,7 @@ const HeroCircuitBackground = memo(function HeroCircuitBackground() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animId;
+    let animId = null;
     let width = (canvas.width = canvas.parentElement?.clientWidth || window.innerWidth);
     let height = (canvas.height = canvas.parentElement?.clientHeight || window.innerHeight);
 
@@ -75,16 +76,45 @@ const HeroCircuitBackground = memo(function HeroCircuitBackground() {
       animId = requestAnimationFrame(render);
     };
 
-    render();
+    // Only burn frames while the hero is actually on screen. Particle motion is
+    // position-integrated rather than time-based, so pausing simply freezes the drift and
+    // resuming continues from the same positions with no jump.
+    const startLoop = () => {
+      if (animId === null) {
+        animId = requestAnimationFrame(render);
+      }
+    };
+
+    const stopLoop = () => {
+      if (animId !== null) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      }
+    };
+
+    let observer = null;
+    if (typeof IntersectionObserver !== 'undefined' && wrapperRef.current) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) startLoop();
+          else stopLoop();
+        },
+        { rootMargin: '100px' }
+      );
+      observer.observe(wrapperRef.current);
+    }
+
+    startLoop();
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animId);
+      if (observer) observer.disconnect();
+      stopLoop();
     };
   }, []);
 
   return (
-    <div className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none bg-[#050608]">
+    <div ref={wrapperRef} className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none bg-[#050608]">
       {/* 1. Deep Ambient Dark Navy Overlay */}
       <div
         className="absolute inset-0 pointer-events-none"

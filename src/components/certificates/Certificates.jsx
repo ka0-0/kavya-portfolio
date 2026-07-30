@@ -1,10 +1,35 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useMotionValue, useSpring, useTransform, useMotionValueEvent, useMotionTemplate, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { X, FileText, ZoomIn, ZoomOut, RotateCcw, Download, Pause, Play } from 'lucide-react';
 import SectionHeader from '../navigation/SectionHeader';
+
+// Hoisted so the CSS string is allocated once instead of on every render
+const CERTIFICATES_STYLES = `
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        @keyframes glassSheen {
+          0% {
+            transform: translateX(-150%) rotate(25deg);
+          }
+          50% {
+            transform: translateX(150%) rotate(25deg);
+          }
+          100% {
+            transform: translateX(-150%) rotate(25deg);
+          }
+        }
+        .animate-glass-sheen {
+          animation: glassSheen 15s ease-in-out infinite;
+        }
+`;
 
 function getPdfFilename(title) {
   if (!title) return "DOCUMENT.PDF";
@@ -409,7 +434,7 @@ function CertificateViewerModal({ selectedCert, onClose }) {
   );
 }
 
-function CylinderItem({ cert, i, rotIndexMotion, radius, angleStep, activeIndex, handleClickItem, totalItems }) {
+const CylinderItem = React.memo(function CylinderItem({ cert, i, rotIndexMotion, radius, angleStep, activeIndex, handleClickItem, totalItems }) {
   const diff = useTransform(rotIndexMotion, (rotVal) => {
     let d = (i - (rotVal % totalItems)) % totalItems;
     if (d < -totalItems / 2) d += totalItems;
@@ -485,7 +510,7 @@ function CylinderItem({ cert, i, rotIndexMotion, radius, angleStep, activeIndex,
       </span>
     </motion.div>
   );
-}
+});
 
 export default function Certificates() {
   const sectionRef = useRef(null);
@@ -495,6 +520,19 @@ export default function Certificates() {
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [selectedViewerCert, setSelectedViewerCert] = useState(null);
+  const [isInView, setIsInView] = useState(true);
+
+  // Freeze the carousel while the section is off screen. This stops the 1s interval, the
+  // section re-render, the AnimatePresence card swap and all six cylinder spring chains.
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined' || !sectionRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { rootMargin: '200px' }
+    );
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   const totalItems = certificatesData.length;
   const activeIndex = ((virtualIndex % totalItems) + totalItems) % totalItems;
@@ -524,57 +562,61 @@ export default function Certificates() {
 
   // Auto advance loop every 1 second (1000ms)
   useEffect(() => {
-    if (!isAutoPlaying || isHovered) return;
+    if (!isAutoPlaying || isHovered || !isInView) return;
 
     const timer = setInterval(() => {
       setVirtualIndex((prev) => prev + 1);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isAutoPlaying, isHovered]);
+  }, [isAutoPlaying, isHovered, isInView]);
 
   const toggleAutoPlay = () => {
     setIsAutoPlaying((prev) => !prev);
   };
 
-  const handleClickItem = (targetIdx) => {
+  const handleClickItem = useCallback((targetIdx) => {
     setVirtualIndex((prev) => {
       const currentModulo = ((prev % totalItems) + totalItems) % totalItems;
       let diff = targetIdx - currentModulo;
       if (diff <= 0) diff += totalItems;
       return prev + diff;
     });
-  };
+  }, [totalItems]);
 
-  // Compact responsive radius & angleStep
+  // Compact responsive radius & angleStep. Both are written through an equality guard so
+  // ordinary resize events no longer re-render the section on every tick.
   const [radius, setRadius] = useState(250);
   const [angleStep, setAngleStep] = useState(0.26);
 
   useEffect(() => {
     const handleResize = () => {
+      let nextRadius, nextAngleStep;
       if (window.innerWidth < 768) {
-        setRadius(120);
-        setAngleStep(0.42);
+        nextRadius = 120;
+        nextAngleStep = 0.42;
       } else if (window.innerWidth < 1024) {
-        setRadius(200);
-        setAngleStep(0.28);
+        nextRadius = 200;
+        nextAngleStep = 0.28;
       } else {
-        setRadius(250);
-        setAngleStep(0.26);
+        nextRadius = 250;
+        nextAngleStep = 0.26;
       }
+      setRadius((prev) => (prev === nextRadius ? prev : nextRadius));
+      setAngleStep((prev) => (prev === nextAngleStep ? prev : nextAngleStep));
     };
     handleResize();
     window.addEventListener('resize', handleResize, { passive: true });
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleOpenViewer = (image, title) => {
+  const handleOpenViewer = useCallback((image, title) => {
     setSelectedViewerCert({ image, title });
-  };
+  }, []);
 
-  const handleCloseViewer = () => {
+  const handleCloseViewer = useCallback(() => {
     setSelectedViewerCert(null);
-  };
+  }, []);
 
   useEffect(() => {
     if (selectedViewerCert) {
@@ -592,29 +634,7 @@ export default function Certificates() {
       id="certificates"
       className="relative w-full min-h-screen flex flex-col justify-center bg-[var(--bg-dark)] border-t border-[var(--border-color)] overflow-hidden z-20 select-none py-6 md:py-10"
     >
-      <style>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        @keyframes glassSheen {
-          0% {
-            transform: translateX(-150%) rotate(25deg);
-          }
-          50% {
-            transform: translateX(150%) rotate(25deg);
-          }
-          100% {
-            transform: translateX(-150%) rotate(25deg);
-          }
-        }
-        .animate-glass-sheen {
-          animation: glassSheen 15s ease-in-out infinite;
-        }
-      `}</style>
+      <style>{CERTIFICATES_STYLES}</style>
 
       {/* 1. Header Area */}
       <div className="w-full flex-none z-10 pb-2 md:pb-4">

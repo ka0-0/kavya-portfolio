@@ -84,23 +84,30 @@ const CORE_STYLES = `
           inset: 0;
           width: 300px;
           height: 300px;
-          transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.45s;
           pointer-events: none;
           opacity: 0;
+          visibility: hidden;
         }
 
         .aikav-theme-orange .aikav-orange-skin-container {
           opacity: 1;
+          visibility: visible;
+          transition-delay: 0s;
           pointer-events: auto;
         }
 
         .aikav-theme-green .aikav-green-skin-container {
           opacity: 1;
+          visibility: visible;
+          transition-delay: 0s;
           pointer-events: auto;
         }
 
         .aikav-theme-red .aikav-red-skin-container {
           opacity: 1;
+          visibility: visible;
+          transition-delay: 0s;
           pointer-events: auto;
         }
 
@@ -909,13 +916,16 @@ const CORE_STYLES = `
           inset: 0;
           width: 300px;
           height: 300px;
-          transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.45s;
           pointer-events: none;
           opacity: 0;
+          visibility: hidden;
         }
 
         .aikav-theme-pink .aikav-pink-skin-container {
           opacity: 1;
+          visibility: visible;
+          transition-delay: 0s;
           pointer-events: auto;
         }
 
@@ -1217,18 +1227,23 @@ const CORE_STYLES = `
           inset: 0;
           width: 300px;
           height: 300px;
-          transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.45s;
           pointer-events: none;
           opacity: 0;
+          visibility: hidden;
         }
 
         .aikav-theme-blue .aikav-circle-skin-container {
           opacity: 1;
+          visibility: visible;
+          transition-delay: 0s;
           pointer-events: auto;
         }
 
         .aikav-theme-black .aikav-capsule-skin-container {
           opacity: 1;
+          visibility: visible;
+          transition-delay: 0s;
           pointer-events: auto;
         }
 
@@ -1696,9 +1711,10 @@ const CORE_STYLES = `
           inset: 0;
           width: 300px;
           height: 300px;
-          transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.45s;
           pointer-events: none;
           opacity: 0;
+          visibility: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1708,6 +1724,8 @@ const CORE_STYLES = `
 
         .aikav-theme-purple .aikav-purple-skin-container {
           opacity: 1;
+          visibility: visible;
+          transition-delay: 0s;
           pointer-events: auto;
         }
 
@@ -1933,6 +1951,14 @@ const AIKAVCore = ({
   isMovingRef.current = isMoving;
   const lastPupilPosRef = useRef({ x: '', y: '' });
 
+  // Active theme mirrored for the tracking loop, plus the theme the pupil transform was last
+  // written for. Only the visible skin's pupils are updated each frame; on a theme change the
+  // write is forced so the incoming skin is positioned on its very first frame, while it is
+  // still fully transparent at the start of the 450ms crossfade.
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
+  const lastAppliedThemeRef = useRef(null);
+
   // Safety fallback to ensure styles are attached
   useEffect(() => {
     injectCoreStyles();
@@ -2149,68 +2175,85 @@ const AIKAVCore = ({
       const pxStr = currentX.toFixed(2);
       const pyStr = currentY.toFixed(2);
 
-      const hasChanged = lastPupilPosRef.current.x !== pxStr || lastPupilPosRef.current.y !== pyStr;
+      const activeTheme = themeRef.current;
+      const themeChanged = lastAppliedThemeRef.current !== activeTheme;
+      const hasChanged = themeChanged || lastPupilPosRef.current.x !== pxStr || lastPupilPosRef.current.y !== pyStr;
       if (hasChanged) {
         lastPupilPosRef.current.x = pxStr;
         lastPupilPosRef.current.y = pyStr;
-        if (circlePupilRef.current) {
-          circlePupilRef.current.style.transform = 'translate(' + pxStr + 'px, ' + pyStr + 'px)';
-        }
-        if (orangePupilRef.current) {
-          orangePupilRef.current.style.transform = 'translate(' + pxStr + 'px, ' + pyStr + 'px)';
-        }
-        if (greenPupilRef.current) {
-          greenPupilRef.current.style.transform = 'translate(' + pxStr + 'px, ' + pyStr + 'px)';
-        }
-        if (redPupilRef.current) {
-          redPupilRef.current.style.transform = 'translate(' + pxStr + 'px, ' + pyStr + 'px)';
-        }
-        if (capsulePupilsRef.current) {
-          capsulePupilsRef.current.forEach(el => {
-            if (el) {
-              el.style.transform = 'translate(' + pxStr + 'px, ' + pyStr + 'px)';
+        lastAppliedThemeRef.current = activeTheme;
+
+        const pupilTransform = 'translate(' + pxStr + 'px, ' + pyStr + 'px)';
+
+        // Only the skin that is actually being composited needs its pupils moved. Every other
+        // skin is opacity:0 / visibility:hidden, so its transform contributes no pixels.
+        if (activeTheme === 'black') {
+          if (capsulePupilsRef.current) {
+            capsulePupilsRef.current.forEach(el => {
+              if (el) {
+                el.style.transform = pupilTransform;
+              }
+            });
+          }
+          if (hudRef.current) {
+            const hudX = (currentX * -0.15).toFixed(2);
+            const hudY = (currentY * -0.15).toFixed(2);
+            hudRef.current.style.transform = 'translate(' + hudX + 'px, ' + hudY + 'px)';
+          }
+        } else if (activeTheme === 'pink') {
+          if (pinkPupilsRef.current) {
+            pinkPupilsRef.current.forEach(el => {
+              if (el) {
+                el.style.transform = pupilTransform;
+              }
+            });
+          }
+          if (pinkHudRef.current) {
+            const hudX = (currentX * -0.15).toFixed(2);
+            const hudY = (currentY * -0.15).toFixed(2);
+            pinkHudRef.current.style.transform = 'translate(' + hudX + 'px, ' + hudY + 'px)';
+          }
+        } else if (activeTheme === 'purple') {
+          if (purplePupilsRef.current) {
+            purplePupilsRef.current.forEach(el => {
+              if (el) {
+                el.style.transform = pupilTransform;
+              }
+            });
+          }
+          if (purpleMatrixRef.current) {
+            const rotX = (currentY * -1.5).toFixed(2);
+            const rotY = (currentX * 1.5).toFixed(2);
+            purpleMatrixRef.current.style.transform = 'rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg)';
+
+            if (purpleGlowRef.current) {
+              if (isCursorActive && cachedRect) {
+                const rx = ((clientX - cachedRect.left) / cachedRect.width * 100).toFixed(1);
+                const ry = ((clientY - cachedRect.top) / cachedRect.height * 100).toFixed(1);
+                purpleGlowRef.current.setAttribute('cx', rx + '%');
+                purpleGlowRef.current.setAttribute('cy', ry + '%');
+                purpleGlowRef.current.style.opacity = '1';
+              } else {
+                purpleGlowRef.current.style.opacity = '0';
+              }
             }
-          });
-        }
-        if (pinkPupilsRef.current) {
-          pinkPupilsRef.current.forEach(el => {
-            if (el) {
-              el.style.transform = 'translate(' + pxStr + 'px, ' + pyStr + 'px)';
-            }
-          });
-        }
-        if (purplePupilsRef.current) {
-          purplePupilsRef.current.forEach(el => {
-            if (el) {
-              el.style.transform = 'translate(' + pxStr + 'px, ' + pyStr + 'px)';
-            }
-          });
-        }
-        if (hudRef.current) {
-          const hudX = (currentX * -0.15).toFixed(2);
-          const hudY = (currentY * -0.15).toFixed(2);
-          hudRef.current.style.transform = 'translate(' + hudX + 'px, ' + hudY + 'px)';
-        }
-        if (pinkHudRef.current) {
-          const hudX = (currentX * -0.15).toFixed(2);
-          const hudY = (currentY * -0.15).toFixed(2);
-          pinkHudRef.current.style.transform = 'translate(' + hudX + 'px, ' + hudY + 'px)';
-        }
-        if (purpleMatrixRef.current) {
-          const rotX = (currentY * -1.5).toFixed(2);
-          const rotY = (currentX * 1.5).toFixed(2);
-          purpleMatrixRef.current.style.transform = 'rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg)';
-          
-          if (purpleGlowRef.current) {
-            if (isCursorActive && cachedRect) {
-              const rx = ((clientX - cachedRect.left) / cachedRect.width * 100).toFixed(1);
-              const ry = ((clientY - cachedRect.top) / cachedRect.height * 100).toFixed(1);
-              purpleGlowRef.current.setAttribute('cx', rx + '%');
-              purpleGlowRef.current.setAttribute('cy', ry + '%');
-              purpleGlowRef.current.style.opacity = '1';
-            } else {
-              purpleGlowRef.current.style.opacity = '0';
-            }
+          }
+        } else if (activeTheme === 'orange') {
+          if (orangePupilRef.current) {
+            orangePupilRef.current.style.transform = pupilTransform;
+          }
+        } else if (activeTheme === 'green') {
+          if (greenPupilRef.current) {
+            greenPupilRef.current.style.transform = pupilTransform;
+          }
+        } else if (activeTheme === 'red') {
+          if (redPupilRef.current) {
+            redPupilRef.current.style.transform = pupilTransform;
+          }
+        } else {
+          // 'blue' and any unrecognized theme fall back to the circle skin, matching themeClass
+          if (circlePupilRef.current) {
+            circlePupilRef.current.style.transform = pupilTransform;
           }
         }
       }
@@ -3477,4 +3520,6 @@ const SentinelLockSkin = ({
   );
 };
 
-export default AIKAVCore;
+// Pure with respect to its props, so a shallow prop guard is safe and prevents the 7-skin
+// subtree from being reconciled when an unrelated ancestor re-renders.
+export default React.memo(AIKAVCore);

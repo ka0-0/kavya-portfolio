@@ -533,7 +533,12 @@ const Robot = memo(function Robot({
   );
 });
 
-export default function RobotModel({ onLoad, glanceAtAIKAV, activeSection }) {
+// `isRevealed` lets the parent mount RobotModel far ahead of when it actually becomes visible
+// (e.g. hidden behind the landing screen, to pre-warm GLB parsing, material/shader compilation,
+// texture upload and PMREM environment generation while the user is still looking at the
+// loading sequence). Defaults to true so any caller that doesn't pass it behaves exactly as
+// before: ready-state and reveal-time collapse to the same moment.
+export default function RobotModel({ onLoad, glanceAtAIKAV, activeSection, isRevealed = true }) {
   const { theme } = useTheme();
   const containerRef = useRef(null);
   const robotBubbleRef = useRef(null);
@@ -542,18 +547,31 @@ export default function RobotModel({ onLoad, glanceAtAIKAV, activeSection }) {
   const [loadEnv, setLoadEnv] = useState(true); // Mount environment immediately for pre-rendering
   const [isRenderReady, setIsRenderReady] = useState(false);
   const [isEntranceStarted, setIsEntranceStarted] = useState(false);
-  const mountTimeRef = useRef(Date.now());
+
+  // Timestamp of the moment Hero actually became visible, not the moment RobotModel mounted.
+  // When pre-warmed while hidden, mount time and reveal time can be seconds apart.
+  const revealTimeRef = useRef(isRevealed ? Date.now() : null);
 
   useEffect(() => {
-    mountTimeRef.current = Date.now();
-  }, []);
+    if (isRevealed && revealTimeRef.current === null) {
+      revealTimeRef.current = Date.now();
+    }
+  }, [isRevealed]);
 
   const handleReady = useCallback(() => {
     if (isRenderReady) return;
     setIsRenderReady(true);
     if (onLoad) onLoad();
+  }, [isRenderReady, onLoad]);
 
-    const elapsed = Date.now() - mountTimeRef.current;
+  // Starts the entrance fade only once the model is GPU-ready AND Hero is actually revealed —
+  // preserves the original ~300ms minimum presentation pause, now measured from reveal time
+  // instead of mount time, so the visible entrance animation plays identically to before
+  // whenever the model was already warm ahead of reveal.
+  useEffect(() => {
+    if (!isRenderReady || !isRevealed) return;
+
+    const elapsed = revealTimeRef.current ? Date.now() - revealTimeRef.current : 0;
     const targetPause = 300; // Minimum presentation delay ~250-300ms
     const remainingDelay = Math.max(0, targetPause - elapsed);
 
@@ -562,7 +580,7 @@ export default function RobotModel({ onLoad, glanceAtAIKAV, activeSection }) {
     }, remainingDelay);
 
     return () => clearTimeout(timer);
-  }, [isRenderReady, onLoad]);
+  }, [isRenderReady, isRevealed]);
 
   const mouseRef = useRef({ targetX: 0, targetY: 0, lastMove: 0, hasMoved: false });
   const viewportRef = useRef({ w: window.innerWidth || 1, h: window.innerHeight || 1 });

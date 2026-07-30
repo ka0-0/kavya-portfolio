@@ -38,6 +38,35 @@ export const projectsData = [
   }
 ];
 
+// Hoisted so the keyframe CSS string is allocated once instead of on every render
+const PROJECTS_KEYFRAMES = `
+        @keyframes floatMockup {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-4px);
+          }
+        }
+        .animate-float-mockup {
+          animation: floatMockup 7s ease-in-out infinite;
+        }
+        @keyframes glassSheen {
+          0% {
+            transform: translateX(-150%) rotate(25deg);
+          }
+          50% {
+            transform: translateX(150%) rotate(25deg);
+          }
+          100% {
+            transform: translateX(-150%) rotate(25deg);
+          }
+        }
+        .animate-glass-sheen {
+          animation: glassSheen 15s ease-in-out infinite;
+        }
+`;
+
 function ProjectImage({ src, title }) {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -168,31 +197,72 @@ function BrowserMockup({ project }) {
   );
 }
 
+/**
+ * Shared cursor position and layout epoch for every ProjectCard.
+ *
+ * Previously each of the three cards installed its own `mousemove` listener and ran its own
+ * unconditional rAF loop that called getBoundingClientRect() every frame. These module-level
+ * subscriptions collapse that to a single mousemove + scroll + resize listener total, and the
+ * epoch counter lets each card re-read its button rect only after the layout could have moved.
+ */
+const sharedPointer = { x: -9999, y: -9999 };
+let layoutEpoch = 0;
+let globalSubscribers = 0;
+
+const onSharedPointerMove = (e) => {
+  sharedPointer.x = e.clientX;
+  sharedPointer.y = e.clientY;
+};
+const onSharedLayoutChange = () => {
+  layoutEpoch++;
+};
+
+function subscribeCardGlobals() {
+  globalSubscribers++;
+  if (globalSubscribers === 1) {
+    window.addEventListener('mousemove', onSharedPointerMove, { passive: true });
+    window.addEventListener('scroll', onSharedLayoutChange, { passive: true });
+    window.addEventListener('resize', onSharedLayoutChange, { passive: true });
+  }
+  return () => {
+    globalSubscribers--;
+    if (globalSubscribers === 0) {
+      window.removeEventListener('mousemove', onSharedPointerMove);
+      window.removeEventListener('scroll', onSharedLayoutChange);
+      window.removeEventListener('resize', onSharedLayoutChange);
+    }
+  };
+}
+
 function ProjectCard({ project, idx, addToCardRefs }) {
   const headingWordsRef = useRef([]);
   const buttonRef = useRef(null);
-  const mousePosition = useRef({ x: -9999, y: -9999 });
+  const cardElRef = useRef(null);
   const currentIllumination = useRef(0);
 
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      mousePosition.current = { x: e.clientX, y: e.clientY };
-    };
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  useEffect(() => subscribeCardGlobals(), []);
 
   useEffect(() => {
-    let animId;
+    let animId = null;
+    let cachedRect = null;
+    let cachedEpoch = -1;
+    let lastWritten = -1;
+
     const update = () => {
       const button = buttonRef.current;
-      if (button && headingWordsRef.current.length > 0) {
-        const rect = button.getBoundingClientRect();
+      const words = headingWordsRef.current;
+      if (button && words.length > 0) {
+        // Re-measure only when a scroll or resize could have moved the sticky card
+        if (cachedRect === null || cachedEpoch !== layoutEpoch) {
+          cachedRect = button.getBoundingClientRect();
+          cachedEpoch = layoutEpoch;
+        }
+        const rect = cachedRect;
         const buttonCenterX = rect.left + rect.width / 2;
         const buttonCenterY = rect.top + rect.height / 2;
 
-        const dx = mousePosition.current.x - buttonCenterX;
-        const dy = mousePosition.current.y - buttonCenterY;
+        const dx = sharedPointer.x - buttonCenterX;
+        const dy = sharedPointer.y - buttonCenterY;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         const maxDistance = 350; // Proximity influence radius
@@ -203,32 +273,72 @@ function ProjectCard({ project, idx, addToCardRefs }) {
         }
 
         currentIllumination.current += (targetFactor - currentIllumination.current) * 0.15;
+        const factor = currentIllumination.current;
 
-        headingWordsRef.current.forEach(el => {
-          if (el) {
-            const factor = currentIllumination.current;
-            el.style.setProperty('-webkit-text-fill-color', `rgba(var(--title-glow-rgb), ${factor * 0.18})`);
+        // Once the eased value has effectively converged, stop rewriting identical styles.
+        // The final written value is the settled value, so the rendered result is unchanged.
+        if (Math.abs(factor - lastWritten) > 0.001) {
+          lastWritten = factor;
 
-            if (factor > 0.01) {
-              el.style.setProperty('text-shadow', `0 0 4px rgba(255, 255, 255, ${factor * 0.35}), 0 0 16px rgba(var(--title-glow-rgb), ${factor * 0.6})`);
-            } else {
-              el.style.setProperty('text-shadow', 'none');
+          words.forEach(el => {
+            if (el) {
+              el.style.setProperty('-webkit-text-fill-color', `rgba(var(--title-glow-rgb), ${factor * 0.18})`);
+
+              if (factor > 0.01) {
+                el.style.setProperty('text-shadow', `0 0 4px rgba(255, 255, 255, ${factor * 0.35}), 0 0 16px rgba(var(--title-glow-rgb), ${factor * 0.6})`);
+              } else {
+                el.style.setProperty('text-shadow', 'none');
+              }
             }
-          }
-        });
+          });
+        }
       }
       animId = requestAnimationFrame(update);
     };
 
-    animId = requestAnimationFrame(update);
-    return () => cancelAnimationFrame(animId);
+    const startLoop = () => {
+      if (animId === null) {
+        cachedRect = null; // force a fresh measurement on resume
+        animId = requestAnimationFrame(update);
+      }
+    };
+
+    const stopLoop = () => {
+      if (animId !== null) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      }
+    };
+
+    // The proximity glow is only observable while the card is on screen
+    let observer = null;
+    if (typeof IntersectionObserver !== 'undefined' && cardElRef.current) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) startLoop();
+          else stopLoop();
+        },
+        { rootMargin: '100px' }
+      );
+      observer.observe(cardElRef.current);
+    } else {
+      startLoop();
+    }
+
+    return () => {
+      if (observer) observer.disconnect();
+      stopLoop();
+    };
   }, []);
 
   const words = project.title.split(' ');
 
   return (
     <div
-      ref={addToCardRefs}
+      ref={(el) => {
+        cardElRef.current = el;
+        addToCardRefs(el);
+      }}
       className="sticky top-[120px] w-[94vw] h-[80vh] bg-[var(--card-bg-alt)] border border-[rgba(var(--accent-rgb),0.2)] rounded-3xl shadow-[0_0_50px_rgba(var(--accent-rgb),0.15)] overflow-hidden flex flex-col justify-between mx-auto projects-card-item"
       style={{
         zIndex: idx + 10,
@@ -328,33 +438,7 @@ export default function Projects() {
       id="projects"
       className="relative bg-[var(--bg-dark)] w-full select-none pb-0"
     >
-      <style>{`
-        @keyframes floatMockup {
-          0%, 100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-4px);
-          }
-        }
-        .animate-float-mockup {
-          animation: floatMockup 7s ease-in-out infinite;
-        }
-        @keyframes glassSheen {
-          0% {
-            transform: translateX(-150%) rotate(25deg);
-          }
-          50% {
-            transform: translateX(150%) rotate(25deg);
-          }
-          100% {
-            transform: translateX(-150%) rotate(25deg);
-          }
-        }
-        .animate-glass-sheen {
-          animation: glassSheen 15s ease-in-out infinite;
-        }
-      `}</style>
+      <style>{PROJECTS_KEYFRAMES}</style>
 
       <div
         ref={headerRef}

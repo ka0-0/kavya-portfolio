@@ -18,6 +18,62 @@ import {
   LeetcodeIcon
 } from './Icons';
 
+// Hoisted animation variants and static style objects. These were re-allocated on every
+// render, which made Framer Motion treat them as new variant definitions each time.
+const SKILLS_SECTION_STYLE = {
+  contain: 'layout paint style',
+};
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.8,
+      ease: [0.16, 1, 0.3, 1],
+      staggerChildren: 0.1,
+    }
+  }
+};
+
+const quadrantVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.03,
+      delayChildren: 0.1,
+    }
+  }
+};
+
+const titleVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.45,
+      ease: 'easeOut',
+    }
+  }
+};
+
+const pillVariants = {
+  hidden: { opacity: 0, scale: 0.85, y: 10 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 260,
+      damping: 22,
+    }
+  }
+};
+
 // ==========================================
 // 1. SkillPill Subcomponent (Apple VisionOS Physics)
 // ==========================================
@@ -99,20 +155,6 @@ function SkillPill({ name, category, registerPill, unregisterPill, prefersReduce
     }
   }, [category]);
 
-  const pillVariants = {
-    hidden: { opacity: 0, scale: 0.85, y: 10 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: {
-        type: 'spring',
-        stiffness: 260,
-        damping: 22,
-      }
-    }
-  };
-
   return (
     <motion.div
       variants={pillVariants}
@@ -184,7 +226,9 @@ function SkillPill({ name, category, registerPill, unregisterPill, prefersReduce
   );
 }
 
-const OrbitIcon = React.memo(function OrbitIcon({ skill, index, total, radius, rotation, hoveredSkill, setHoveredSkill, activeSkill, setActiveSkill, isHoveredRef, hoverTimeoutRef }) {
+// `activeSkill` is deliberately not accepted here: it was passed but never read, and it changes
+// on every icon hover, which forced a redundant re-render of all 14 orbit icons.
+const OrbitIcon = React.memo(function OrbitIcon({ skill, index, total, radius, rotation, hoveredSkill, setHoveredSkill, setActiveSkill, isHoveredRef, hoverTimeoutRef }) {
   const angle = (index * 360) / total;
   const angleInRadians = (angle * Math.PI) / 180;
 
@@ -370,6 +414,7 @@ const orbitSkills = [
 // ==========================================
 export default function Skills() {
   const containerRef = useRef(null);
+  const sectionRef = useRef(null);
   const registryRef = useRef([]);
   const prefersReducedMotion = useReducedMotion() || false;
 
@@ -390,7 +435,7 @@ export default function Skills() {
 
   useEffect(() => {
     let lastTime = performance.now();
-    let animationFrameId;
+    let animationFrameId = null;
 
     const updateRotation = (time) => {
       const delta = time - lastTime;
@@ -406,22 +451,64 @@ export default function Skills() {
       animationFrameId = requestAnimationFrame(updateRotation);
     };
 
-    animationFrameId = requestAnimationFrame(updateRotation);
-    return () => cancelAnimationFrame(animationFrameId);
+    // Pause the orbit loop while the section is off screen. `lastTime` is deliberately NOT
+    // reset on resume, so the first resumed frame integrates the entire paused duration and
+    // the orbit lands on exactly the angle it would have reached had it never stopped. The
+    // 200px rootMargin means that catch-up happens before the section is visible.
+    const startLoop = () => {
+      if (animationFrameId === null) {
+        animationFrameId = requestAnimationFrame(updateRotation);
+      }
+    };
+
+    const stopLoop = () => {
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    };
+
+    let observer = null;
+    if (typeof IntersectionObserver !== 'undefined' && sectionRef.current) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) startLoop();
+          else stopLoop();
+        },
+        { rootMargin: '200px' }
+      );
+      observer.observe(sectionRef.current);
+    } else {
+      startLoop();
+    }
+
+    return () => {
+      if (observer) observer.disconnect();
+      stopLoop();
+    };
   }, [rotation]);
 
-  // Window size tracking for responsive orbit radius
-  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  // Responsive orbit radius. Only the derived radius is held in state, so ordinary resize
+  // events no longer re-render the whole section (and all 14 orbit icons) on every tick.
+  const getRadius = () => {
+    if (typeof window === 'undefined') return 216;
+    const w = window.innerWidth;
+    if (w < 768) return 110;
+    if (w < 1024) return 165;
+    return 216;
+  };
+
+  const [radius, setRadius] = useState(getRadius);
 
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
+    const handleResize = () => {
+      const next = getRadius();
+      setRadius((prev) => (prev === next ? prev : next));
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize, { passive: true });
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  const isMobile = windowWidth < 768;
-  const isTablet = windowWidth >= 768 && windowWidth < 1024;
-  const radius = isMobile ? 110 : isTablet ? 165 : 216;
 
   // 3D Perspective Tilt on mouse move
   const tiltX = useMotionValue(0);
@@ -560,50 +647,12 @@ export default function Skills() {
     };
   }, [recalculateCenters]);
 
-  // Animation Variants
-  const containerVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.8,
-        ease: [0.16, 1, 0.3, 1],
-        staggerChildren: 0.1,
-      }
-    }
-  };
-
-  const quadrantVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.03,
-        delayChildren: 0.1,
-      }
-    }
-  };
-
-  const titleVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.45,
-        ease: 'easeOut',
-      }
-    }
-  };
-
   return (
     <section
+      ref={sectionRef}
       id="skills"
       className="relative min-h-screen bg-[var(--bg-dark)] text-white flex flex-col pt-14 pb-8 overflow-hidden select-none skills-section"
-      style={{
-        contain: 'layout paint style',
-      }}
+      style={SKILLS_SECTION_STYLE}
     >
       <SectionHeader
         number="02"
@@ -718,7 +767,6 @@ export default function Skills() {
                   rotation={rotation}
                   hoveredSkill={hoveredSkill}
                   setHoveredSkill={setHoveredSkill}
-                  activeSkill={activeSkill}
                   setActiveSkill={setActiveSkill}
                   isHoveredRef={isHoveredRef}
                   hoverTimeoutRef={hoverTimeoutRef}

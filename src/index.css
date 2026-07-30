@@ -226,6 +226,12 @@
     scrollbar-gutter: stable;
     -ms-overflow-style: none;
     scrollbar-width: none;
+    /* Prevents the browser's native pull-to-refresh / rubber-band chaining at the very top
+       and bottom of the page from fighting Lenis's own boundary handling — a classic source
+       of a perceptible "hiccup" right at the scroll limits. Purely a scroll-chaining behavior;
+       no effect on layout, visuals, or nested scroll containers (e.g. modal viewers), which
+       are already excluded from Lenis via the `prevent` option and scroll independently. */
+    overscroll-behavior: none;
   }
 
   html::-webkit-scrollbar {

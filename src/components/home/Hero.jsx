@@ -3,19 +3,24 @@ import { motion, useAnimationFrame } from 'framer-motion';
 import RobotModel from './RobotModel';
 import HeroCircuitBackground from './HeroCircuitBackground';
 
-function Hero({ showRobot, glanceAtAIKAV, activeSection }) {
+// Hoisted so these arrays are not re-allocated on every render
+const roles = [
+  'AI ENGINEER',
+  'MECHANICAL ENGINEER',
+];
+
+const line1 = "KAVYA".split("");
+const line2 = "MAKHAN.".split("");
+
+const FROM_WEIGHT = 900;
+const TO_WEIGHT = 300; // Animate to lighter weight
+const FROM_SETTINGS = `'wght' ${FROM_WEIGHT}`;
+const TAU = 0.25; // Transition easing speed (duration)
+const REACH = 220; // Reach bounds in pixels
+
+function Hero({ showRobot, glanceAtAIKAV, activeSection, isRevealed }) {
   const heroRef = useRef(null);
   const [currentRoleIndex, setCurrentRoleIndex] = useState(0);
-
-  const roles = [
-    'AI ENGINEER',
-    'MECHANICAL ENGINEER',
-  ];
-
-  const line1 = "KAVYA".split("");
-  const line2 = "MAKHAN.".split("");
-
-
 
   useEffect(() => {
     // Role Switcher Interval
@@ -23,7 +28,7 @@ function Hero({ showRobot, glanceAtAIKAV, activeSection }) {
       setCurrentRoleIndex((prev) => (prev + 1) % roles.length);
     }, 2800);
     return () => clearInterval(interval);
-  }, [roles.length]);
+  }, []);
 
   // Proximity dynamic weight references & settings
   const containerRef = useRef(null);
@@ -33,88 +38,201 @@ function Hero({ showRobot, glanceAtAIKAV, activeSection }) {
   const mousePositionRef = useRef({ x: -99999, y: -99999 });
   const isNearRef = useRef(false);
 
+  // Cached environment queries (previously evaluated twice on EVERY animation frame)
+  const motionAllowedRef = useRef(true);
+
+  // Cached geometry. Letter centres are relative to the container and never shift while the
+  // weight animates, because each letter cell reserves its width with a hidden 900-weight span.
+  const letterOffsetsRef = useRef([]);
+  const geometryDirtyRef = useRef(true);
+  const containerRectRef = useRef(null);
+
+  // Loop gating: skip work entirely while the hero is off-screen or fully settled at rest
+  const isVisibleRef = useRef(true);
+  const isSettledRef = useRef(true);
+
+  // Resolve reduced-motion / touch capability once, then keep it in sync via change events
   useEffect(() => {
-    // Accessibility and mobile touch exclusions
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const isTouch = window.matchMedia("(pointer: coarse)").matches;
-    if (prefersReduced || isTouch) return;
+    const reducedQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const touchQuery = window.matchMedia("(pointer: coarse)");
+
+    const sync = () => {
+      motionAllowedRef.current = !reducedQuery.matches && !touchQuery.matches;
+    };
+    sync();
+
+    reducedQuery.addEventListener('change', sync);
+    touchQuery.addEventListener('change', sync);
+    return () => {
+      reducedQuery.removeEventListener('change', sync);
+      touchQuery.removeEventListener('change', sync);
+    };
+  }, []);
+
+  useEffect(() => {
+    const markGeometryDirty = () => {
+      geometryDirtyRef.current = true;
+      containerRectRef.current = null;
+    };
+
+    // The container's viewport position changes as the page scrolls
+    const markRectDirty = () => {
+      containerRectRef.current = null;
+    };
 
     const updatePosition = (clientX, clientY) => {
       const el = containerRef.current;
       if (!el) return;
-      const rect = el.getBoundingClientRect();
+      let rect = containerRectRef.current;
+      if (!rect) {
+        rect = el.getBoundingClientRect();
+        containerRectRef.current = rect;
+      }
       mousePositionRef.current = {
         x: clientX - rect.left,
         y: clientY - rect.top,
       };
       isNearRef.current = true;
+      // Only reset the frame clock when waking the loop back up, so continuous cursor
+      // movement never zeroes out the interpolation delta.
+      if (isSettledRef.current) {
+        isSettledRef.current = false;
+        lastFrameRef.current = 0;
+      }
     };
 
     const handleMouseMove = (ev) => {
+      if (!motionAllowedRef.current) return;
       updatePosition(ev.clientX, ev.clientY);
     };
 
     const handleMouseLeave = () => {
       mousePositionRef.current = { x: -99999, y: -99999 };
       isNearRef.current = false;
+      if (isSettledRef.current) {
+        isSettledRef.current = false;
+        lastFrameRef.current = 0;
+      }
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     document.addEventListener("mouseleave", handleMouseLeave);
+    window.addEventListener("scroll", markRectDirty, { passive: true });
+    window.addEventListener("resize", markGeometryDirty, { passive: true });
+
+    // Any internal layout change (font swap, breakpoint reflow) invalidates cached geometry
+    let resizeObserver = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(markGeometryDirty);
+      if (containerRef.current) resizeObserver.observe(containerRef.current);
+      if (heroRef.current) resizeObserver.observe(heroRef.current);
+    }
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(markGeometryDirty).catch(() => { });
+    }
+
+    // Pause the proximity loop while the hero is out of view
+    let observer = null;
+    if (typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          isVisibleRef.current = entry.isIntersecting;
+          if (entry.isIntersecting) {
+            geometryDirtyRef.current = true;
+            containerRectRef.current = null;
+            lastFrameRef.current = 0;
+          }
+        },
+        { threshold: 0 }
+      );
+      if (heroRef.current) observer.observe(heroRef.current);
+    }
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseleave", handleMouseLeave);
+      window.removeEventListener("scroll", markRectDirty);
+      window.removeEventListener("resize", markGeometryDirty);
+      if (resizeObserver) resizeObserver.disconnect();
+      if (observer) observer.disconnect();
     };
   }, []);
 
   useAnimationFrame((now) => {
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const isTouch = window.matchMedia("(pointer: coarse)").matches;
-    if (prefersReduced || isTouch) return;
+    if (!motionAllowedRef.current) return;
+    if (!isVisibleRef.current) return;
+    if (isSettledRef.current) return;
 
     const container = containerRef.current;
     if (!container) return;
-    const containerRect = container.getBoundingClientRect();
+
+    const letters = letterRefs.current;
+    const offsets = letterOffsetsRef.current;
+
+    // Batched, cached measurement pass (runs on mount / resize / font swap only)
+    if (geometryDirtyRef.current) {
+      const containerRect = container.getBoundingClientRect();
+      containerRectRef.current = containerRect;
+      offsets.length = letters.length;
+      for (let i = 0; i < letters.length; i++) {
+        const letterEl = letters[i];
+        if (!letterEl) {
+          offsets[i] = null;
+          continue;
+        }
+        const rect = letterEl.getBoundingClientRect();
+        offsets[i] = {
+          cx: rect.left + rect.width / 2 - containerRect.left,
+          cy: rect.top + rect.height / 2 - containerRect.top,
+        };
+      }
+      geometryDirtyRef.current = false;
+    }
+
     const mx = mousePositionRef.current.x;
     const my = mousePositionRef.current.y;
+    const isNear = isNearRef.current;
 
     const prevT = lastFrameRef.current || now;
     const dtSec = Math.min(0.1, Math.max(0, (now - prevT) / 1000));
     lastFrameRef.current = now;
 
-    const tau = 0.25; // Transition easing speed (duration)
-    const a = 1 - Math.exp(-dtSec / tau);
-    const reach = 220; // Reach bounds in pixels
+    const a = 1 - Math.exp(-dtSec / TAU);
 
-    for (let i = 0; i < letterRefs.current.length; i++) {
-      const letterEl = letterRefs.current[i];
+    let maxFactor = 0;
+
+    for (let i = 0; i < letters.length; i++) {
+      const letterEl = letters[i];
       if (!letterEl) continue;
 
-      const rect = letterEl.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2 - containerRect.left;
-      const cy = rect.top + rect.height / 2 - containerRect.top;
-      const dx = mx - cx;
-      const dy = my - cy;
+      const offset = offsets[i];
+      if (!offset) continue;
+
+      const dx = mx - offset.cx;
+      const dy = my - offset.cy;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      const target = isNearRef.current ? Math.min(Math.max(1 - dist / reach, 0), 1) : 0;
+      const target = isNear ? Math.min(Math.max(1 - dist / REACH, 0), 1) : 0;
       const prev = letterFactorsRef.current[i] || 0;
       const f = prev + (target - prev) * a;
       letterFactorsRef.current[i] = f;
 
-      const fromWeight = 900;
-      const toWeight = 300; // Animate to lighter weight
+      if (f > maxFactor) maxFactor = f;
 
       if (f < 0.001) {
-        const fromSettings = `'wght' ${fromWeight}`;
-        if (letterEl.style.fontVariationSettings !== fromSettings) {
-          letterEl.style.fontVariationSettings = fromSettings;
+        if (letterEl.style.fontVariationSettings !== FROM_SETTINGS) {
+          letterEl.style.fontVariationSettings = FROM_SETTINGS;
         }
       } else {
-        const w = Math.round(fromWeight + (toWeight - fromWeight) * f);
+        const w = Math.round(FROM_WEIGHT + (TO_WEIGHT - FROM_WEIGHT) * f);
         letterEl.style.fontVariationSettings = `'wght' ${w}`;
       }
+    }
+
+    // Fully at rest with the cursor out of range: stop burning frames until the next input
+    if (!isNear && maxFactor < 0.001) {
+      isSettledRef.current = true;
     }
   });
 
@@ -279,7 +397,7 @@ function Hero({ showRobot, glanceAtAIKAV, activeSection }) {
 
           {/* Render ONLY the NEW Hero GLB Avatar (/models/small_robot.glb) */}
           <div id="hero-robot-container" className="relative z-10 w-full h-full flex items-center justify-center">
-            {showRobot && <RobotModel glanceAtAIKAV={glanceAtAIKAV} activeSection={activeSection} />}
+            {showRobot && <RobotModel glanceAtAIKAV={glanceAtAIKAV} activeSection={activeSection} isRevealed={isRevealed} />}
           </div>
         </div>
 
