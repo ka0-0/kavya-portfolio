@@ -643,7 +643,7 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                 <div className="flex items-center gap-3">
                   <FileText className="w-5 h-5 theme-text-accent" />
                   <span className="font-mono text-xs font-bold uppercase tracking-wider text-zinc-400">
-                    KAVYA_MAKHAN_CV.pdf
+                    KAVYA MAKHAN RESUME.pdf
                   </span>
                 </div>
 
@@ -724,18 +724,18 @@ function Navbar({ activeSection, handleNavClick, showEmblem }) {
                   style={{ transform: `scale(${zoomScale})` }}
                 >
                   <object
-                    data="/KAVYA_MAKHAN_CV.pdf"
+                    data="/KAVYA%20MAKHAN%20RESUME.pdf"
                     type="application/pdf"
                     className="w-full h-full rounded-xl border border-zinc-800 bg-white"
                   >
                     <iframe
-                      src="/KAVYA_MAKHAN_CV.pdf"
+                      src="/KAVYA%20MAKHAN%20RESUME.pdf"
                       className="w-full h-full rounded-xl border border-zinc-800 bg-white"
                       title="Kavya Makhan Resume PDF"
                     >
                       <div className="p-8 text-center text-white">
                         <p>Your browser does not support inline PDF viewing.</p>
-                        <a href="/KAVYA_MAKHAN_CV.pdf" download className="text-cyan-400 underline mt-2 inline-block">Download PDF directly</a>
+                        <a href="/KAVYA%20MAKHAN%20RESUME.pdf" download className="text-cyan-400 underline mt-2 inline-block">Download PDF directly</a>
                       </div>
                     </iframe>
                   </object>

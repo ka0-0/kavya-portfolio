@@ -885,7 +885,7 @@ export default function ContactSection() {
               </div>
               <div className="relative z-10 mt-3 pt-3 border-t border-white/[0.03] flex justify-between items-center text-[11px] sm:text-xs">
                 <span className={`font-mono transition-colors duration-300 ${downloaded ? 'text-cyan-400' : 'text-zinc-500'}`}>
-                  Latest CV (PDF)
+                  Kavya Makhan Resume (PDF)
                 </span>
                 <span className={`font-mono font-semibold transition-all duration-300 flex items-center ${downloaded ? 'text-cyan-400' : 'text-cyan-400 group-hover:translate-x-1'}`}>
                   {downloaded ? (
